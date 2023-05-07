@@ -1,6 +1,12 @@
 name: Continuous Integration
 on:
   workflow_call:
+    inputs:
+      jsonPattern:
+        description: The pattern to match which JSON files to check
+        default: "\\.json$"
+        required: false
+        type: string
 jobs:
   lint-yaml:
     name: Lint YAML
@@ -26,7 +32,7 @@ jobs:
       - name: json-syntax-check
         uses: limitusus/json-syntax-check@v2
         with:
-          pattern: "\\.json$"
+          pattern: inputs.jsonPattern
   package-name:
     name: Package Name
     runs-on: ubuntu-latest
