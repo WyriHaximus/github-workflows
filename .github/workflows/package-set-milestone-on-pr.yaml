@@ -1,0 +1,84 @@
+name: Set Milestone
+on:
+  workflow_call:
+    inputs:
+      initialTag:
+        description: The tag to fallback to when no previous tag could be found.
+        default: 1.0.0
+        required: false
+        type: string
+      dependencyUpdaters:
+        description: CSV list of bot AppId's that create PR's to updated dependencies like RenovateBot and DependaBot
+        default: 49699333
+        required: false
+        type: string
+env:
+  FALLBACK_TAG: not_found
+jobs:
+  supported-versions-matrix:
+    name: Supported Versions Matrix
+    runs-on: ubuntu-latest
+    outputs:
+      highest: ${{ steps.supported-versions-matrix.outputs.highest }}
+    steps:
+      - uses: actions/checkout@v3
+      - id: supported-versions-matrix
+        uses: WyriHaximus/github-action-composer-php-versions-in-range@v1
+        with:
+          upcomingReleases: true
+  set-milestone:
+    needs:
+      - supported-versions-matrix
+    name: Set Milestone
+    if: github.event.pull_request.milestone == null
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/wyrihaximusnet/php:${{ needs.supported-versions-matrix.outputs.highest }}-nts-alpine-dev-root
+    outputs:
+      check: ${{ steps.generate-checks-strategy.outputs.check }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # Required due to the way Git works, without it this action won't be able to find any or the correct tags
+      - run: git config --global --add safe.directory $GITHUB_WORKSPACE # Do this ourself because `actions/checkout@v3 doesn't succeed in doing this
+      - name: 'Get Previous tag'
+        id: previoustag
+        uses: "WyriHaximus/github-action-get-previous-tag@v1"
+        with:
+          fallback: ${{ env.FALLBACK_TAG }}
+      - name: 'Get next versions'
+        id: semvers
+        if: steps.previoustag.outputs.tag != env.FALLBACK_TAG
+        uses: "WyriHaximus/github-action-next-semvers@v1"
+        with:
+          version: ${{ steps.previoustag.outputs.tag }}
+      - name: 'Decide which version fits this PR'
+        id: decidedversion
+        run: |
+          if [ "${PREVIOUS_TAG}" = "${FALLBACK_TAG}" ]; then
+            printf "::set-output name=version::%s" "${{ inputs.initialTag }}"
+            exit 0
+          fi
+
+          if [ "$(jq '.sender.id' -r ${GITHUB_EVENT_PATH})" = "${{ inputs.dependencyUpdaters }}" ]; then
+            printf "::set-output name=version::%s" "${PATCH}"
+            exit 0
+          fi
+
+          composer install --no-progress --ansi --no-interaction --prefer-dist -o -q
+
+          if ! (./vendor/bin/roave-backward-compatibility-check); then
+            printf "::set-output name=version::%s" "${MAJOR}"
+            exit 0
+          fi
+
+          printf "::set-output name=version::%s" "${MINOR}"
+        env:
+          PREVIOUS_TAG: ${{ steps.previoustag.outputs.tag }}
+          MAJOR: ${{ steps.semvers.outputs.major }}
+          MINOR: ${{ steps.semvers.outputs.minor }}
+          PATCH: ${{ steps.semvers.outputs.patch }}
+      - name: 'Set Milestone through Chores.Dev'
+        uses: "chores-dev/set-milestone-action@main"
+        with:
+          milestone: ${{ steps.decidedversion.outputs.version }}
