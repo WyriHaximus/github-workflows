@@ -10,6 +10,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      - uses: gaurav-nelson/github-action-markdown-link-check@v1
+      - name: Check Markdown links
+        uses: gaurav-nelson/github-action-markdown-link-check@v1
         with:
           config-file: etc/ci/markdown-link-checker.json
