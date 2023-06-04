@@ -17,6 +17,21 @@ on:
         default: "\\.json$"
         required: false
         type: string
+      disableSetMilestone:
+        description: Disable the setting of milestones
+        default: false
+        required: false
+        type: boolean
+      disableMarkdownLinkCheck:
+        description: Disable the setting of milestones
+        default: false
+        required: false
+        type: boolean
+      disableComposerLockDiff:
+        description: Disable the setting of milestones
+        default: false
+        required: false
+        type: boolean
 jobs:
   ci:
     name: Continuous Integration
@@ -25,14 +40,17 @@ jobs:
       jsonPattern: inputs.jsonPattern
   set-milestone:
     name: Set Milestone
+    if: inputs.disableSetMilestone == false
     uses: ./.github/workflows/package-set-milestone-on-pr.yaml
     with:
       initialTag: inputs.initialTag
       dependencyUpdaters: inputs.dependencyUpdaters
   markdown-link-check:
     name: Check Markdown links
+    if: inputs.disableMarkdownLinkCheck == false
     uses: ./.github/workflows/markdown-check-links.yaml
   comment-composer-lock-diff:
     name: Composer Diff
+    if: inputs.disableComposerLockDiff == false
     uses: ./.github/workflows/composer-diff.yaml
 
