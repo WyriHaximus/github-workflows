@@ -1,6 +1,18 @@
 name: Composer Diff
+
 on:
   workflow_call:
+    inputs:
+      workingDirectory:
+        description: The directory to run this workflow in
+        default: ""
+        required: false
+        type: string
+
+#defaults:
+#  run:
+#    working-directory: inputs.workingDirectory
+
 jobs:
   comment-composer-lock-diff:
     name: Comment composer.lock diff
@@ -12,6 +24,8 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
       - name: Comment composer.lock diff
-        uses: WyriHaximus/github-action-composer.lock-diff@v1
+        uses: WyriHaximus/github-action-composer.lock-diff@add-working-directory-support
+        with:
+          workingDirectory: ${{ inputs.workingDirectory }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

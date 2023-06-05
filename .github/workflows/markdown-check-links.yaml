@@ -2,6 +2,16 @@ name: Check Markdown links
 
 on:
   workflow_call:
+    inputs:
+      workingDirectory:
+        description: The directory to run this workflow in
+        default: ""
+        required: false
+        type: string
+
+#defaults:
+#  run:
+#    working-directory: ${{ inputs.workingDirectory }}
 
 jobs:
   markdown-link-check:
