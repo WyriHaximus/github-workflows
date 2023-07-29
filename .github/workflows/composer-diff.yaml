@@ -24,7 +24,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
       - name: Comment composer.lock diff
-        uses: WyriHaximus/github-action-composer.lock-diff@add-working-directory-support
+        uses: WyriHaximus/github-action-composer.lock-diff@v2
         with:
           workingDirectory: ${{ inputs.workingDirectory }}
         env:
