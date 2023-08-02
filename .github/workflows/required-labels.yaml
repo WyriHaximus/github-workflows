@@ -1,0 +1,23 @@
+name: Required Labels
+
+on:
+  workflow_call:
+    inputs:
+      requiredLabels:
+        description: One of the labels to be set on PR
+        default: "Bug 🐞,Dependencies 📦,Feature 🏗,Enhancement ✨"
+        required: false
+        type: string
+
+jobs:
+  required-labels:
+    name: Required Labels
+    runs-on: ubuntu-latest
+    steps:
+      - uses: mheap/github-action-required-labels@v5
+        with:
+          mode: minimum
+          count: 1
+          labels: ${{ inputs.requiredLabels }}
+          add_comment: true
+          message: "This PR is being prevented from merging because it requires one of the following labels to be set: {{ provided }}. These labels are required for automatic changelog generation."
