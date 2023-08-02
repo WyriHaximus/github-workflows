@@ -75,7 +75,7 @@ jobs:
     with:
       workingDirectory: ${{ inputs.workingDirectory }}
   required-labels:
-    name: Composer Diff
+    name: Required Labels
     if: inputs.disableRequiredLabels == false && github.event_name == 'pull_request'
     uses: ./.github/workflows/required-labels.yaml
     with:
