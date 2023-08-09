@@ -50,27 +50,26 @@ on:
 jobs:
   ci:
     name: Continuous Integration
-    if:  github.event_name != 'pull_request' || (github.event_name == 'pull_request' && contains(fromJSON('["opened", "synchronize", "reopened"]'), github.event.action))
     uses: ./.github/workflows/ci.yaml
     with:
       jsonPattern: ${{ inputs.jsonPattern }}
       workingDirectory: ${{ inputs.workingDirectory }}
   set-milestone:
     name: Set Milestone
-    if: inputs.disableSetMilestone == false && github.event_name == 'pull_request' && contains(fromJSON('["opened", "synchronize", "reopened"]'), github.event.action)
+    if: inputs.disableSetMilestone == false
     uses: ./.github/workflows/package-set-milestone-on-pr.yaml
     with:
       initialTag: ${{ inputs.initialTag }}
       dependencyUpdaters: ${{ inputs.dependencyUpdaters }}
   markdown-link-check:
     name: Check Markdown links
-    if: inputs.disableMarkdownLinkCheck == false && (github.event_name != 'pull_request' || (github.event_name == 'pull_request' && contains(fromJSON('["opened", "synchronize", "reopened"]'), github.event.action)))
+    if: inputs.disableMarkdownLinkCheck == false
     uses: ./.github/workflows/markdown-check-links.yaml
     with:
       workingDirectory: ${{ inputs.workingDirectory }}
   comment-composer-lock-diff:
     name: Composer Diff
-    if: inputs.disableComposerLockDiff == false && github.event_name == 'pull_request' && contains(fromJSON('["opened", "synchronize", "reopened"]'), github.event.action)
+    if: inputs.disableComposerLockDiff == false
     uses: ./.github/workflows/composer-diff.yaml
     with:
       workingDirectory: ${{ inputs.workingDirectory }}
