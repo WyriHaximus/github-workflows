@@ -69,7 +69,7 @@ jobs:
       workingDirectory: ${{ inputs.workingDirectory }}
   comment-composer-lock-diff:
     name: Composer Diff
-    if: inputs.disableComposerLockDiff == false && github.event_name == 'pull_request' && contains(fromJSON('["opened", "synchronize", "reopened"]'), github.event.action)
+    if: inputs.disableComposerLockDiff == false && github.event_name == 'pull_request'
     uses: ./.github/workflows/composer-diff.yaml
     with:
       workingDirectory: ${{ inputs.workingDirectory }}
