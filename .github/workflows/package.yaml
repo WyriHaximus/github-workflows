@@ -17,11 +17,6 @@ on:
         default: "\\.json$"
         required: false
         type: string
-      requiredLabels:
-        description: One of the labels to be set on PR
-        default: "Bug 🐞,Dependencies 📦,Feature 🏗,Enhancement ✨"
-        required: false
-        type: string
       workingDirectory:
         description: The directory to run this workflow in
         default: ""
@@ -73,9 +68,3 @@ jobs:
     uses: ./.github/workflows/composer-diff.yaml
     with:
       workingDirectory: ${{ inputs.workingDirectory }}
-  required-labels:
-    name: Required Labels
-    if: inputs.disableRequiredLabels == false && github.event_name == 'pull_request'
-    uses: ./.github/workflows/required-labels.yaml
-    with:
-      requiredLabels: ${{ inputs.requiredLabels }}
