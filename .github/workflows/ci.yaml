@@ -44,6 +44,7 @@ jobs:
 #        with:
 #          pattern: inputs.jsonPattern
   package-name:
+    name: Package Name
     runs-on: ubuntu-latest
 #    needs:
 #      - lint-json
