@@ -206,6 +206,11 @@ jobs:
           php-version: ${{ matrix.php }}
           coverage: pcov
           tools: pecl
+      - uses: shivammathur/setup-php@v2
+        env:
+          phpts: ${{ matrix.php-to-thread-or-not-to-thread }}
+        with:
+          php-version: ${{ matrix.php }}
           extensions: ${{ join(fromJson(needs.supported-versions-matrix.outputs.extensions), ',') }}
       - uses: ramsey/composer-install@v2
         with:
