@@ -205,6 +205,7 @@ jobs:
         with:
           php-version: ${{ matrix.php }}
           coverage: pcov
+          tools: pecl
           extensions: ${{ join(fromJson(needs.supported-versions-matrix.outputs.extensions), ',') }}
       - uses: ramsey/composer-install@v2
         with:
