@@ -51,7 +51,7 @@ jobs:
     outputs:
       package-name: ${{ steps.package-name.outputs.package-name }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - id: package-name
         working-directory: ${{ inputs.workingDirectory }}
         run: |
@@ -67,7 +67,7 @@ jobs:
       upcoming: ${{ steps.supported-versions-matrix.outputs.upcoming }}
       extensions: ${{ steps.supported-versions-matrix.outputs.extensions }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - id: supported-versions-matrix
         uses: WyriHaximus/github-action-composer-php-versions-in-range@v1
         with:
@@ -81,7 +81,7 @@ jobs:
     outputs:
       version: ${{ steps.supported-threading-matrix.outputs.result }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - id: supported-threading-matrix
         uses: actions/github-script@v7
         env:
@@ -103,7 +103,7 @@ jobs:
     outputs:
       check: ${{ steps.supported-checks-matrix.outputs.check }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - id: supported-checks-matrix
         name: Generate check
         run: |
@@ -128,7 +128,7 @@ jobs:
     container:
       image: ghcr.io/wyrihaximusnet/php:${{ matrix.php }}-${{ matrix.php-to-thread-or-not-to-thread }}-alpine-dev-root
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           path: checked_out_package
       - name: Set Up composer.json
@@ -160,7 +160,7 @@ jobs:
     container:
       image: ghcr.io/wyrihaximusnet/php:${{ matrix.php }}-${{ matrix.php-to-thread-or-not-to-thread }}-alpine-dev-root
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0 # Required due to the way Git works, without it this action won't be able to find any or the correct tags
       - uses: ramsey/composer-install@v2
@@ -198,7 +198,7 @@ jobs:
       - supported-threading-matrix
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: shivammathur/setup-php@v2
         env:
           phpts: ${{ matrix.php-to-thread-or-not-to-thread }}
