@@ -21,7 +21,7 @@ jobs:
     outputs:
       highest: ${{ steps.supported-versions-matrix.outputs.highest }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - id: supported-versions-matrix
         uses: WyriHaximus/github-action-composer-php-versions-in-range@v1
         with:
@@ -37,7 +37,7 @@ jobs:
     outputs:
       check: ${{ steps.generate-checks-strategy.outputs.check }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0 # Required due to the way Git works, without it this action won't be able to find any or the correct tags
       - run: git config --global --add safe.directory $GITHUB_WORKSPACE # Do this ourself because `actions/checkout@v3 doesn't succeed in doing this
