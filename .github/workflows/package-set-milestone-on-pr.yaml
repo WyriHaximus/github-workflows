@@ -38,7 +38,7 @@ jobs:
       check: ${{ steps.generate-checks-strategy.outputs.check }}
     steps:
       - uses: actions/checkout@v4
-      - run: git config --global --add safe.directory $GITHUB_WORKSPACE # Do this ourself because `actions/checkout@v3 doesn't succeed in doing this
+      - run: git config --global --add safe.directory $GITHUB_WORKSPACE # Do this ourself because `actions/checkout@v4 doesn't succeed in doing this
       - run: git fetch --tags origin
       - name: 'Get Previous tag'
         id: previoustag
