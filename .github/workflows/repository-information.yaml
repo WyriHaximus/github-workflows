@@ -1,0 +1,26 @@
+name: Gather Repository information
+on:
+  workflow_call:
+jobs:
+  repository-information:
+    name: Gather Repository information
+    runs-on: ubuntu-latest
+    outputs:
+      type: ${{ steps.repository-information.outputs.type }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: DamianReeves/write-file-action@master
+        id: repository-information
+        with:
+          path: /tmp/repository-information.php
+          contents: |
+            <?php
+          
+            $type = 'action-docker';
+            
+            echo $type, PHP_EOL;
+            
+            file_put_contents(getenv('GITHUB_OUTPUT'), 'type=action-docker' . "\n", FILE_APPEND);
+          write-mode: append
+      - run: php /tmp/repository-information.php
+      - run: rm /tmp/repository-information.php

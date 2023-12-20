@@ -24,16 +24,63 @@ on:
 jobs:
   required-labels:
     name: Required Labels
+    needs:
+      - repository-information
     if: inputs.disableRequiredLabels == false && github.event_name == 'pull_request'
     uses: ./.github/workflows/required-labels.yaml
     with:
       requiredLabels: ${{ inputs.labels }}
-  create-release:
-    name: Craft Release
-    if: inputs.disableRequiredLabels == false && github.event_name == 'milestone' && contains(fromJSON('["closed"]'), github.event.action)
+  repository-information:
+    name: Gather Repository information
+    runs-on: ubuntu-latest
+    outputs:
+      type: ${{ steps.repository-information.outputs.type }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: DamianReeves/write-file-action@master
+        id: repository-information
+        with:
+          path: /tmp/repository-information.php
+          contents: |
+            <?php
+            
+            $type = 'action-docker';
+            
+            echo $type, PHP_EOL;
+            
+            file_put_contents(getenv('GITHUB_OUTPUT'), 'type="' . $type . "\"\n", FILE_APPEND);
+            echo file_get_contents(getenv('GITHUB_OUTPUT'));
+          write-mode: append
+      - run: cat /tmp/repository-information.php
+      - run: php /tmp/repository-information.php
+      - run: rm /tmp/repository-information.php
+      - run: ls -lasth "$GITHUB_OUTPUT"
+  create-package-release:
+    name: Craft Package Release
+    needs:
+      - repository-information
+    if: needs.repository-information.outputs.type == 'package' && inputs.disableRequiredLabels == false && github.event_name == 'milestone' && contains(fromJSON('["closed"]'), github.event.action)
     uses: ./.github/workflows/package-craft-release.yaml
     with:
       milestone: ${{ inputs.milestone }}
       description: ${{ inputs.description }}
       branch: ${{ inputs.branch }}
       labels: ${{ inputs.labels }}
+#  create-action-docker-release:
+#    name: Craft Docker based GitHub Action Release
+#    needs:
+#      - repository-information
+#    if: needs.repository-information.outputs.type == 'action-docker'
+#    uses: ./.github/workflows/action-docker-craft-release.yaml
+#    with:
+#      milestone: ${{ inputs.milestone }}
+#      description: ${{ inputs.description }}
+#      branch: ${{ inputs.branch }}
+#      labels: ${{ inputs.labels }}
+  debug:
+    name: Debug
+    runs-on: ubuntu-latest
+    needs:
+      - repository-information
+    steps:
+      - run: echo "${{ needs.repository-information.outputs.type }}"
