@@ -1,0 +1,39 @@
+name: Create Release
+on:
+  workflow_call:
+    inputs:
+      milestone:
+        description: The milestone to tag
+        required: false
+        type: string
+      description:
+        description: Additional information to add above the changelog in the release
+        default: ""
+        required: false
+        type: string
+      branch:
+        description: The branch to tag the release on
+        default: ""
+        required: false
+        type: string
+      labels:
+        description: The labels to for the sections of the changelog
+        default: "Bug 🐞,Dependencies 📦,Feature 🏗,Enhancement ✨"
+        required: false
+        type: string
+jobs:
+  required-labels:
+    name: Required Labels
+    if: inputs.disableRequiredLabels == false && github.event_name == 'pull_request'
+    uses: ./.github/workflows/required-labels.yaml
+    with:
+      requiredLabels: ${{ inputs.labels }}
+  create-release:
+    name: Craft Release
+    if: inputs.disableRequiredLabels == false && github.event_name == 'milestone' && contains(fromJSON('["closed"]'), github.event.action)
+    uses: ./.github/workflows/package-craft-release.yaml
+    with:
+      milestone: ${{ inputs.milestone }}
+      description: ${{ inputs.description }}
+      branch: ${{ inputs.branch }}
+      labels: ${{ inputs.labels }}
