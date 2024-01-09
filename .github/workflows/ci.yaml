@@ -55,7 +55,7 @@ jobs:
       - id: package-name
         working-directory: ${{ inputs.workingDirectory }}
         run: |
-          printf "::set-output name=package-name::[\"%s\"]" $(docker run --rm -v "`pwd`:`pwd`" jess/jq jq -r -c '.name' "$(pwd)/composer.json")
+          printf "package-name=[\"%s\"]" $(docker run --rm -v "`pwd`:`pwd`" jess/jq jq -r -c '.name' "$(pwd)/composer.json") >> $GITHUB_OUTPUT
   supported-versions-matrix:
     name: Supported Versions Matrix
     runs-on: ubuntu-latest
