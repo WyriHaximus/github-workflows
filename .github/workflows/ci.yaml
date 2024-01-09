@@ -108,7 +108,7 @@ jobs:
         name: Generate check
         run: |
           printf "Checks found: %s\r\n" $(make task-list-ci)
-          printf "::set-output name=check::%s" $(make task-list-ci)
+          printf "check=%s" $(make task-list-ci) >> $GITHUB_OUTPUT
         working-directory: ${{ inputs.workingDirectory }}
   can-require:
     name: Test we can require "${{ matrix.package-name }}" on PHP ${{ matrix.php }} (${{ matrix.php-to-thread-or-not-to-thread }})
@@ -171,13 +171,13 @@ jobs:
         working-directory: ${{ inputs.workingDirectory }}
       - run: make ${{ matrix.check }} || true
         working-directory: ${{ inputs.workingDirectory }}
-        if: needs.supported-versions-matrix.outputs.upcoming == matrix.php
+        if: needs.supported-versions-matrix.outputs.upcoming == matrix.php || (matrix.php-to-thread-or-not-to-thread == 'zts' && matrix.check == 'psalm')
         env:
           COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
           COVERALLS_RUN_LOCALLY: ${{ secrets.COVERALLS_RUN_LOCALLY }}
       - run: make ${{ matrix.check }}
         working-directory: ${{ inputs.workingDirectory }}
-        if: needs.supported-versions-matrix.outputs.upcoming != matrix.php
+        if: needs.supported-versions-matrix.outputs.upcoming == matrix.php || (matrix.php-to-thread-or-not-to-thread == 'zts' && matrix.check == 'psalm') == false
         env:
           COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
           COVERALLS_RUN_LOCALLY: ${{ secrets.COVERALLS_RUN_LOCALLY }}
