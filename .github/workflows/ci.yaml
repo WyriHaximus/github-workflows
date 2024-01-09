@@ -206,7 +206,7 @@ jobs:
           php-version: ${{ matrix.php }}
           coverage: pcov
           tools: pecl
-          extensions: sodium
+          extensions: sodium,intl
       - uses: shivammathur/setup-php@v2
         env:
           phpts: ${{ matrix.php-to-thread-or-not-to-thread }}
