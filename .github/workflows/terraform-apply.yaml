@@ -1,0 +1,80 @@
+name: TerraForm Apply
+
+on:
+  workflow_call:
+    inputs:
+      runsOn:
+        description: Define on which runner this workflow should run
+        default: "ubuntu-latest"
+        required: false
+        type: string
+      workingDirectory:
+        description: The directory to run this workflow in
+        default: ""
+        required: false
+        type: string
+      terraformDirectory:
+        description: The directory to run this workflow in
+        default: ""
+        required: true
+        type: string
+      terraformVars:
+        description: The directory to run this workflow in
+        default: ""
+        required: false
+        type: string
+      terraformParallelism:
+        description: Value for the -parallelism plan/apply flag
+        default: 10
+        required: false
+        type: number
+      terraformLogLevel:
+        description: Value for the TF_LOG environment value
+        default: 10
+        required: false
+        type: string
+      kubeConfigSecret:
+        description: The secret name that holds the kubeconfig to connect with Kubernetes
+        required: true
+        type: string
+jobs:
+  terraform-apply:
+    name: TerraForm Apply
+    runs-on: ${{ inputs.runsOn }}
+    env:
+      TF_LOG: ${{ inputs.terraformLogLevel }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          architecture: 'arm64'
+      - uses: hashicorp/setup-terraform@v3
+      - name: Put Kubernetes Configuration In Place
+        run: |
+          mkdir ~/.kube
+          printf "$HOME_KUBECONFIG" >> ~/.kube/config
+        env:
+          HOME_KUBECONFIG: ${{ secrets[inputs.kubeConfigSecret] }}
+      - name: Create terraform.tfvars file
+        run: |
+          cat >> ${{ inputs.terraformDirectory }}terraform.tfvars <<EOL
+          ${{ inputs.terraformVars }}
+          EOL
+          echo "" >> ${{ inputs.terraformDirectory }}terraform.tfvars
+        env: ${{ secrets }}
+      - name: Init
+        run: terraform -chdir=${{ inputs.terraformDirectory }} init -backend-config="access_key=$TERRAFORM_STATE_KEY" -backend-config="secret_key=$TERRAFORM_STATE_SECRET" -backend-config="bucket=$TERRAFORM_STATE_BUCKET" -backend-config="region=$TERRAFORM_STATE_REGION"
+        id: init
+        env: ${{ secrets }}
+      - name: Terraform fmt
+        id: fmt
+        run: terraform -chdir=${{ inputs.terraformDirectory }} fmt -check
+        continue-on-error: true
+      - name: Terraform Validate
+        id: validate
+        run: terraform -chdir=${{ inputs.terraformDirectory }} validate -no-color
+      - name: Plan
+        id: plan
+        run: terraform -chdir=${{ inputs.terraformDirectory }} apply -auto-approve -no-color -parallelism=${{ inputs.terraformParallelism }}
+        env: ${{ secrets }}

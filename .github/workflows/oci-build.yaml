@@ -1,0 +1,75 @@
+name: OCI Image Build
+
+on:
+  workflow_call:
+    inputs:
+      runsOn:
+        description: Define on which runner this workflow should run
+        default: "ubuntu-latest"
+        required: false
+        type: string
+      dockerfile:
+        description: The Dockerfile to build
+        required: true
+        type: string
+      dockerBuildTarget:
+        description: Value for the --target flag
+        default: ""
+        required: false
+        type: string
+      dockerBuildExtraArguments:
+        description: Extra arguments to pass to the docker build command
+        required: false
+        type: string
+      tag:
+        description: The tag for the image we're building
+        required: true
+        type: string
+      ociPlatforms:
+        description: The platforms to build the OCI image for, empty means autodetect
+        default: ""
+        required: false
+        type: string
+      ociPushSecretSecret:
+        description: The secret name that holds the token to push OCI images to GHCR.io
+        default: "GITHUB_TOKEN"
+        required: false
+        type: string
+jobs:
+  oci-build:
+    name: OCI Image Build
+    runs-on: ${{ inputs.runsOn }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets[inputs.ociPushSecretSecret] }}
+      - name: Set up QEMU
+        if: inputs.runsOn == 'ubuntu-latest'
+        uses: docker/setup-qemu-action@v3
+      - name: Set up QEMU
+        if: inputs.runsOn != 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y qemu-user-static
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          install: true
+      - name: Inspect builder
+        run: |
+          echo "Name:      ${{ steps.buildx.outputs.name }}"
+          echo "Endpoint:  ${{ steps.buildx.outputs.endpoint }}"
+          echo "Status:    ${{ steps.buildx.outputs.status }}"
+          echo "Flags:     ${{ steps.buildx.outputs.flags }}"
+          echo "Platforms: ${{ steps.buildx.outputs.platforms }}"
+      - name: Detect Platform Flag
+        if: inputs.ociPlatforms == ''
+        id: platform
+        run: |
+          printf "platform=%s" $(docker manifest inspect $(cat ${{ inputs.dockerfile }} | grep FROM | tail -n 1 | docker run -i --rm ghcr.io/wyrihaximusnet/php:8.3-nts-alpine-slim php -r 'echo explode(" ", trim(fgets(STDIN)))[1];') | docker run --rm -i backplane/jq '([.manifests[].platform | select(.os != "unknown")]?) | .[] | (.os + "/" + .architecture)' | docker run --rm -i backplane/jq -s '. | join(",")') >> $GITHUB_OUTPUT
+      - name: Build, and push image
+        run: docker build --platform=${{ inputs.ociPlatforms != '' && inputs.ociPlatforms || steps.platform.outputs.platform }} --output=type=registry -f ${{ inputs.dockerfile }} -t $(echo "${{ inputs.tag }}" | tr '[:upper:]' '[:lower:]') . ${{ inputs.dockerBuildTarget != '' && format('--target={0}', inputs.dockerBuildTarget) || ''}} ${{ inputs.dockerBuildExtraArguments }}

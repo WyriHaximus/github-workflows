@@ -81,3 +81,11 @@ jobs:
         uses: "chores-dev/set-milestone-action@main"
         with:
           milestone: ${{ steps.decidedversion.outputs.version }}
+      - name: 'Set Milestone'
+        uses: "WyriHaximus/github-action-set-milestone@master"
+        with:
+          issue_number: ${{ github.event.pull_request.number }}
+          milestone_number: ${{ steps.createmilestone.outputs.number }}
+        env:
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+
