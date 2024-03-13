@@ -102,6 +102,7 @@ jobs:
 #      - lint-yaml
     outputs:
       check: ${{ steps.supported-checks-matrix.outputs.check }}
+      run-tests: ${{ steps.run-tests.outputs.run-tests }}
     steps:
       - uses: actions/checkout@v4
       - id: supported-checks-matrix
@@ -109,6 +110,18 @@ jobs:
         run: |
           printf "Checks found: %s\r\n" $(make task-list-ci)
           printf "check=%s" $(make task-list-ci) >> $GITHUB_OUTPUT
+        working-directory: ${{ inputs.workingDirectory }}
+      - id: run-tests
+        name: Generate run-tests
+        run: |
+          string='unit-testing-raw'
+          if [[ $string == *"$(make task-list-ci)"* ]]; then
+            printf "run-tests=yes" >> $GITHUB_OUTPUT
+            printf "run-tests=yes"
+          else
+            printf "run-tests=no" >> $GITHUB_OUTPUT
+            printf "run-tests=no"
+          fi
         working-directory: ${{ inputs.workingDirectory }}
   can-require:
     name: Test we can require "${{ matrix.package-name }}" on PHP ${{ matrix.php }} (${{ matrix.php-to-thread-or-not-to-thread }})
@@ -197,6 +210,7 @@ jobs:
       - supported-versions-matrix
       - supported-threading-matrix
     runs-on: ${{ matrix.os }}
+    if: ${{ needs.supported-checks-matrix.outputs.run-tests == 'yes' }}
     steps:
       - uses: actions/checkout@v4
       - uses: shivammathur/setup-php@v2
