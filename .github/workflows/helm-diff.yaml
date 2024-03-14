@@ -50,7 +50,7 @@ jobs:
           echo -e "\r\nappVersion: ${{ steps.previousgittag.outputs.tag }}\r\n" >> ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}/Chart.yaml &&
           cat ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}/Chart.yaml
       - name: Diff
-        uses: WyriHaximus/github-action-helm3@v3
+        uses: WyriHaximus/github-action-helm3@v4
         id: diff
         with:
           exec: |
