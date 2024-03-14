@@ -17,6 +17,11 @@ on:
         default: "{}"
         required: false
         type: string
+      env:
+        description: Any additional environment variables
+        default: "{}"
+        required: false
+        type: string
 
 #defaults:
 #  run:
@@ -177,6 +182,7 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/wyrihaximusnet/php:${{ matrix.php }}-${{ matrix.php-to-thread-or-not-to-thread }}-alpine-dev-root
+    env: ${{ fromJson(inputs.env) }}
     services: ${{ fromJson(inputs.services) }}
     steps:
       - uses: actions/checkout@v4
@@ -217,6 +223,7 @@ jobs:
       - supported-threading-matrix
     runs-on: ${{ matrix.os }}
     if: ${{ needs.supported-checks-matrix.outputs.run-tests == 'yes' }}
+    env: ${{ fromJson(inputs.env) }}
     services: ${{ fromJson(inputs.services) }}
     steps:
       - uses: actions/checkout@v4
