@@ -42,6 +42,11 @@ on:
         default: false
         required: false
         type: boolean
+      services:
+        description: Any additional services to use
+        default: "{}"
+        required: false
+        type: string
 jobs:
   ci:
     name: Continuous Integration
@@ -49,6 +54,7 @@ jobs:
     with:
       jsonPattern: ${{ inputs.jsonPattern }}
       workingDirectory: ${{ inputs.workingDirectory }}
+      services: ${{ inputs.services }}
   set-milestone:
     name: Set Milestone
     if: inputs.disableSetMilestone == false

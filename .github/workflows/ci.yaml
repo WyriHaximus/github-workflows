@@ -12,6 +12,11 @@ on:
         default: ""
         required: false
         type: string
+      services:
+        description: Any additional services to use
+        default: "{}"
+        required: false
+        type: string
 
 #defaults:
 #  run:
@@ -172,6 +177,7 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/wyrihaximusnet/php:${{ matrix.php }}-${{ matrix.php-to-thread-or-not-to-thread }}-alpine-dev-root
+    services: ${{ fromJson(inputs.services) }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -211,6 +217,7 @@ jobs:
       - supported-threading-matrix
     runs-on: ${{ matrix.os }}
     if: ${{ needs.supported-checks-matrix.outputs.run-tests == 'yes' }}
+    services: ${{ fromJson(inputs.services) }}
     steps:
       - uses: actions/checkout@v4
       - uses: shivammathur/setup-php@v2
