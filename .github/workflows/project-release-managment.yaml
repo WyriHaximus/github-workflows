@@ -1,0 +1,72 @@
+name: Release Management
+on:
+  workflow_call:
+    inputs:
+      milestone:
+        description: The milestone to tag
+        required: false
+        type: string
+      description:
+        description: Additional information to add above the changelog in the release
+        default: ""
+        required: false
+        type: string
+      branch:
+        description: The branch to tag the release on
+        default: ""
+        required: false
+        type: string
+      labels:
+        description: The labels to for the sections of the changelog
+        default: "Bug 🐞,Dependencies 📦,Feature 🏗,Enhancement ✨"
+        required: false
+        type: string
+      runsOn:
+        description: Define on which runner that can touch projected hosting systems jobs should run
+        default: "ubuntu-latest"
+        required: false
+        type: string
+      helmDirectory:
+        description: The directory to run this workflow in
+        default: ""
+        required: false
+        type: string
+      helmAdditionalArguments:
+        description: The directory to run this workflow in
+        default: ""
+        required: false
+        type: string
+      kubeConfigSecret:
+        description: The secret name that holds the kubeconfig to connect with Kubernetes
+        required: true
+        type: string
+      terraformDirectory:
+        description: The directory to run this workflow in
+        default: ""
+        required: false
+        type: string
+jobs:
+  required-labels:
+    name: Required Labels
+    if: inputs.disableRequiredLabels == false && github.event_name == 'pull_request'
+    uses: ./.github/workflows/required-labels.yaml
+    with:
+      requiredLabels: ${{ inputs.labels }}
+  helm-diff:
+    name: Helm Diff
+    if: inputs.disableRequiredLabels == false && github.event_name == 'pull_request' && inputs.helmDirectory != ''
+    uses: ./.github/workflows/helm-diff.yaml
+    with:
+      runsOn: ${{ inputs.runsOn }}
+      helmDirectory: ${{ inputs.helmDirectory }}
+      helmAdditionalArguments: ${{ inputs.helmAdditionalArguments }}
+      kubeConfigSecret: ${{ inputs.kubeConfigSecret }}
+#  create-release:
+#    name: Craft Release
+#    if: inputs.disableRequiredLabels == false && github.event_name == 'milestone' && contains(fromJSON('["closed"]'), github.event.action)
+#    uses: ./.github/workflows/project-craft-release.yaml
+#    with:
+#      milestone: ${{ inputs.milestone }}
+#      description: ${{ inputs.description }}
+#      branch: ${{ inputs.branch }}
+#      labels: ${{ inputs.labels }}
