@@ -18,7 +18,7 @@ on:
         type: string
       labels:
         description: The labels to for the sections of the changelog
-        default: "Bug 🐞,Dependencies 📦,Feature 🏗,Enhancement ✨"
+        default: "Bug 🐞,Dependencies 📦,Feature 🏗,Enhancement ✨,Deprecations 👋"
         required: false
         type: string
 jobs:
