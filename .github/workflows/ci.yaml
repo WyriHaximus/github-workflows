@@ -195,7 +195,16 @@ jobs:
           php-version: ${{ matrix.php }}
           coverage: pcov
           tools: pecl
-          extensions: sodium,${{ join(fromJson(needs.supported-versions-matrix.outputs.extensions), ',') }}intl
+          extensions: sodium,intl
+          ini-file: development
+      - uses: shivammathur/setup-php@v2
+        env:
+          phpts: ${{ matrix.php-to-thread-or-not-to-thread }}
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: pcov
+          tools: pecl
+          extensions: ${{ join(fromJson(needs.supported-versions-matrix.outputs.extensions), ',') }}
           ini-file: development
       - uses: ramsey/composer-install@v2
         with:
