@@ -31,7 +31,8 @@ jobs:
   create-release:
     name: Craft Release
     if: github.event_name == 'milestone' && contains(fromJSON('["closed"]'), github.event.action)
-    uses: ./.github/workflows/package-craft-release.yaml
+    uses: ./.github/workflows/github-action-craft-release.yaml
+    secrets: inherit
     with:
       milestone: ${{ inputs.milestone }}
       description: ${{ inputs.description }}
