@@ -125,6 +125,9 @@ jobs:
         env:
           MILESTONE_DESCRIPTION: ${{ github.event.milestone.description }}
           CHANGELOG: ${{ needs.generate-changelog.outputs.changelog }}
+      - run: |
+          git config user.name '${{ github.actor }}'
+          git config user.email '${{ github.actor }}@users.noreply.github.com'
       - name: Run pre release script
         if: inputs.preReleaseScript != ''
         run: ${{ inputs.preReleaseScript }}
