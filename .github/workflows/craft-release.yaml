@@ -1,0 +1,116 @@
+name: Create Release
+on:
+  workflow_call:
+    inputs:
+      milestone:
+        description: The milestone to tag
+        required: true
+        type: string
+      description:
+        description: Additional information to add above the changelog in the release
+        default: ""
+        required: false
+        type: string
+      branch:
+        description: The branch to tag the release on
+        default: ""
+        required: false
+        type: string
+      labels:
+        description: The labels to for the sections of the changelog
+        default: "Bug 🐞,Dependencies 📦,Feature 🏗,Enhancement ✨,Deprecations 👋"
+        required: false
+        type: string
+      preReleaseScript:
+        description: Script that runs just before the release is created
+        default: ""
+        required: false
+        type: string
+      mustCreateCommit:
+        description: Create commit with release message as commit body
+        default: false
+        required: false
+        type: boolean
+      mustUpdateAllSemverTags:
+        description: Updates all same var vX, vX.Y to the same as vX.Y.Z. (Mainly for GitHub Actions.)
+        default: false
+        required: false
+        type: boolean
+jobs:
+  generate-changelog:
+    name: Generate Changelog
+    runs-on: ubuntu-latest
+    outputs:
+      changelog: ${{ steps.changelog.outputs.changelog }}
+    steps:
+      - name: Generate changelog
+        uses: WyriHaximus/github-action-jwage-changelog-generator@v1
+        id: changelog
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          milestone: ${{ inputs.milestone }}
+          labels: ${{ inputs.labels }}
+      - name: Show changelog
+        run: echo "${CHANGELOG}"
+        env:
+          CHANGELOG: ${{ steps.changelog.outputs.changelog }}
+  create-release:
+    name: Create Release
+    needs:
+      - generate-changelog
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create release/${{ inputs.milestone }} branch
+        run: git checkout -b release/${{ inputs.milestone }} ${GITHUB_SHA}
+      - run: echo -e "${CHANGELOG}" > release-${{ inputs.milestone }}-changelog.md
+        env:
+          CHANGELOG: ${{ needs.generate-changelog.outputs.changelog }}
+      - run: |
+          echo -e "${MILESTONE_DESCRIPTION}\r\n\r\n${CHANGELOG}" > release-${{ inputs.milestone }}-release-message.md
+          cat release-${{ inputs.milestone }}-release-message.md
+          release_message=$(cat release-${{ inputs.milestone }}-release-message.md)
+          release_message="${release_message//'%'/'%25'}"
+          release_message="${release_message//$'\n'/'%0A'}"
+          release_message="${release_message//$'\r'/'%0D'}"
+          echo "::set-output name=release_message::$release_message"
+        id: releasemessage
+        env:
+          MILESTONE_DESCRIPTION: ${{ github.event.milestone.description }}
+          CHANGELOG: ${{ needs.generate-changelog.outputs.changelog }}
+      - run: |
+          git config user.name '${{ github.actor }}'
+          git config user.email '${{ github.actor }}@users.noreply.github.com'
+      - name: Run pre release script
+        if: inputs.preReleaseScript != ''
+        run: ${{ inputs.preReleaseScript }}
+      - run: git commit -F release-${{ inputs.milestone }}-release-message.md
+        if: inputs.mustCreateCommit
+      - run: git tag -F release-${{ inputs.milestone }}-release-message.md ${{ inputs.milestone }}
+      - name: Push changes
+        uses: ad-m/github-push-action@v0.8.0
+        with:
+          tags: true
+          branch: release/${{ inputs.milestone }}
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ inputs.milestone }}
+          body: ${{ steps.releasemessage.outputs.release_message }}
+          draft: false
+          prerelease: false
+          generate_release_notes: false
+          target_commitish: release/${{ inputs.milestone }}
+      - name: Delete release/${{ inputs.milestone }} branch
+        uses: dawidd6/action-delete-branch@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branches: release/${{ inputs.milestone }}
+      - name: Updated related tags
+        if: inputs.mustUpdateAllSemverTags
+        uses: haya14busa/action-update-semver@v1
+        with:
+          tag: ${{ inputs.milestone }}

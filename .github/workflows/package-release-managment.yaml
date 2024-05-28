@@ -21,6 +21,11 @@ on:
         default: "Bug 🐞,Dependencies 📦,Feature 🏗,Enhancement ✨,Deprecations 👋"
         required: false
         type: string
+      preReleaseScript:
+        description: Script that runs just before the release is created
+        default: ""
+        required: false
+        type: string
 jobs:
   required-labels:
     name: Required Labels
@@ -31,9 +36,12 @@ jobs:
   create-release:
     name: Craft Release
     if: github.event_name == 'milestone' && contains(fromJSON('["closed"]'), github.event.action)
-    uses: ./.github/workflows/package-craft-release.yaml
+    uses: ./.github/workflows/craft-release.yaml
     with:
       milestone: ${{ inputs.milestone }}
       description: ${{ inputs.description }}
       branch: ${{ inputs.branch }}
       labels: ${{ inputs.labels }}
+      preReleaseScript: ${{ inputs.preReleaseScript }}
+      mustCreateCommit: false
+      mustUpdateAllSemverTags: false

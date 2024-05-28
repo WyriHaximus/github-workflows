@@ -26,6 +26,11 @@ on:
         default: ""
         required: false
         type: string
+      mustCreateCommit:
+        description: Create commit with release message as commit body
+        default: false
+        required: false
+        type: boolean
 jobs:
   required-labels:
     name: Required Labels
@@ -41,6 +46,7 @@ jobs:
     with:
       milestone: ${{ inputs.milestone }}
       description: ${{ inputs.description }}
-      preReleaseScript: ${{ inputs.preReleaseScript }}
       branch: ${{ inputs.branch }}
       labels: ${{ inputs.labels }}
+      preReleaseScript: ${{ inputs.preReleaseScript }}
+      mustCreateCommit: ${{ inputs.mustCreateCommit }}
