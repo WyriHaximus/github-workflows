@@ -56,7 +56,7 @@ jobs:
           cat tag.list
           printf "::set-output name=tag_versions::%s" $(jq --raw-input --slurp 'split("\n")' tag.list -c | php -r "echo json_encode(array_values(array_diff_assoc(json_decode('[\"${MAJOR}\",\"${MAJOR_MINOR}\",\"${MAJOR_MINOR_PATCH}\"]'), json_decode(stream_get_contents(STDIN)))));")
   tag-docker-image:
-    name: Tag Docker image for version ${{ inputs.milestone }}
+    name: Tag Docker image for version ${{ matrix.version }}
     needs:
       - generate-version-strategy
     strategy:
@@ -87,7 +87,7 @@ jobs:
             --username "${GITHUB_ACTOR}" \
             --password-stdin
           printf "FROM %s" $(echo "ghcr.io/${GITHUB_REPOSITORY}:sha-${GITHUB_SHA}" | tr '[:upper:]' '[:lower:]') >> Dockerfile.tag
-          docker build --platform=linux/arm64,linux/amd64 --output=type=registry --no-cache -f Dockerfile.tag -t $(echo "ghcr.io/${GITHUB_REPOSITORY}:${{ inputs.milestone }}" | tr '[:upper:]' '[:lower:]') .
+          docker build --platform=linux/arm64,linux/amd64 --output=type=registry --no-cache -f Dockerfile.tag -t $(echo "ghcr.io/${GITHUB_REPOSITORY}:${{ matrix.version }}" | tr '[:upper:]' '[:lower:]') .
   create-release:
     name: Craft Release
     needs:
