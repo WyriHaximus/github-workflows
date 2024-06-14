@@ -3,6 +3,11 @@ name: Check Markdown links
 on:
   workflow_call:
     inputs:
+      runsOn:
+        description: Define on which runner this workflow should run
+        default: "ubuntu-latest"
+        required: false
+        type: string
       workingDirectory:
         description: The directory to run this workflow in
         default: ""
@@ -16,11 +21,13 @@ on:
 jobs:
   markdown-link-check:
     name: Check Markdown links
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runsOn }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Check Markdown links
-        uses: gaurav-nelson/github-action-markdown-link-check@v1
+        uses: umbrelladocs/action-linkspector@v1
         with:
-          config-file: etc/ci/markdown-link-checker.json
+          reporter: github-pr-review
+          fail_on_error: true
+#          config_file: etc/ci/markdown-link-checker.json

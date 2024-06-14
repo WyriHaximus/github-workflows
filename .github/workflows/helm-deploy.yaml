@@ -1,8 +1,12 @@
-name: Helm Diff
+name: Helm Deploy
 
 on:
   workflow_call:
     inputs:
+      version:
+        description: The version to deploy
+        required: true
+        type: string
       runsOn:
         description: Define on which runner this workflow should run
         default: "ubuntu-latest"
@@ -43,48 +47,26 @@ on:
         required: true
         type: string
 jobs:
-  helm-diff:
-    name: Helm Diff
+  helm-deploy:
+    name: Helm Deploy
     runs-on: ${{ inputs.runsOn }}
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0 # Required due to the way Git works, without it this action won't be able to find any or the correct tags
-      - name: 'Get Previous tag'
-        id: previousgittag
-        continue-on-error: true
-        uses: "WyriHaximus/github-action-get-previous-tag@v1"
-        env:
-          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
       - name: Prep helm chart
         if: inputs.helmUpdateAppVersion
         run: |
           mv ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}/Chart.yaml ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}/Chart.old.yaml &&
           cat ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}/Chart.old.yaml | grep -v appVersion > ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}/Chart.yaml &&
           rm ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}/Chart.old.yaml
-          echo -e "\r\nappVersion: ${{ steps.previousgittag.outputs.tag }}\r\n" >> ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}/Chart.yaml &&
+          echo -e "\r\nappVersion: ${{ inputs.version }}\r\n" >> ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}/Chart.yaml &&
           cat ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}/Chart.yaml
-      - name: Diff
+      - name: Deploy
         uses: WyriHaximus/github-action-helm3@v4
-        id: diff
         with:
           exec: |
             helm repo add WyriHaximusNet https://helm.wyrihaximus.net/
             helm repo add MammatusPHP https://mammatusphp.github.io/helm-charts/
             helm dependency build ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}/
-            helm plugin install https://github.com/databus23/helm-diff
-            delimiter="$(openssl rand -hex 8)"
-            echo "diff<<${delimiter}" >> "${GITHUB_OUTPUT}"
-            echo "$(helm diff upgrade ${{ inputs.helmReleaseName }} ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }} --set ${{ inputs.helmReleaseValueName }}=${{ steps.previousgittag.outputs.tag }} ${{ inputs.helmAdditionalArguments }})" >> "${GITHUB_OUTPUT}"
-            echo "${delimiter}" >> "${GITHUB_OUTPUT}"
+            helm upgrade --install --wait --atomic --timeout 60m6s ${{ inputs.helmReleaseName }} ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}  --set ${{ inputs.helmReleaseValueName }}=${{ inputs.version }} ${{ inputs.helmAdditionalArguments }}
           kubeconfig: ${{ secrets[inputs.kubeConfigSecret] }}
           overrule_existing_kubeconfig: "true"
-      - name: 'Upsert comment'
-        uses: marocchino/sticky-pull-request-comment@v2
-        with:
-          header: helm-diff
-          message: |
-            Helm Diff:
-            ```diff
-            ${{ steps.diff.outputs.diff }}
-            ```

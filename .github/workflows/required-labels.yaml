@@ -3,6 +3,11 @@ name: Required Labels
 on:
   workflow_call:
     inputs:
+      runsOn:
+        description: Define on which runner this workflow should run
+        default: "ubuntu-latest"
+        required: false
+        type: string
       requiredLabels:
         description: One of the labels to be set on PR
         default: "Bug 🐞,Dependencies 📦,Feature 🏗,Enhancement ✨"
@@ -12,7 +17,7 @@ on:
 jobs:
   required-labels:
     name: Required Labels
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runsOn }}
     steps:
       - uses: mheap/github-action-required-labels@v5
         with:
