@@ -22,6 +22,16 @@ on:
         default: "{}"
         required: false
         type: string
+      supportedChecksCommand:
+        description: The make command to invoke listing the different tasks to run across all versions
+        default: "task-list-ci"
+        required: false
+        type: string
+      targetedChecksCommand:
+        description: The make command to invoke listing the different tasks to run only against the targetted version
+        default: "task-list-ci-targeted"
+        required: false
+        type: string
 
 #defaults:
 #  run:
@@ -43,6 +53,7 @@ jobs:
     name: Supported Versions Matrix
     runs-on: ubuntu-latest
     outputs:
+      lowest: ${{ steps.supported-versions-matrix.outputs.lowest }}
       version: ${{ steps.supported-versions-matrix.outputs.version }}
       upcoming: ${{ steps.supported-versions-matrix.outputs.upcoming }}
       extensions: ${{ steps.supported-versions-matrix.outputs.extensions }}
@@ -80,14 +91,17 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       check: ${{ steps.supported-checks-matrix.outputs.check }}
+      targeted: ${{ steps.supported-checks-matrix.outputs.targeted }}
       run-tests: ${{ steps.run-tests.outputs.result }}
     steps:
       - uses: actions/checkout@v4
       - id: supported-checks-matrix
         name: Generate check
         run: |
-          printf "Checks found: %s\r\n" $(make task-list-ci)
-          printf "check=%s" $(make task-list-ci) >> $GITHUB_OUTPUT
+          printf "Checks found: %s\r\n" $(make ${{ inputs.supportedChecksCommand }})
+          printf "check=%s\n" $(make ${{ inputs.supportedChecksCommand }}) >> $GITHUB_OUTPUT
+          printf "Targeted Checks found: %s\r\n" $(make ${{ inputs.targetedChecksCommand }})
+          printf "targeted=%s\n" $(make ${{ inputs.targetedChecksCommand }} || echo "['unit-testing']") >> $GITHUB_OUTPUT
         working-directory: ${{ inputs.workingDirectory }}
       - uses: actions/github-script@v7
         id: run-tests
@@ -100,6 +114,59 @@ jobs:
             console.log(checks.includes("unit-testing"));
             console.log(checks.includes("unit-testing") ? "yes" : "no");
             return checks.includes("unit-testing") ? "yes" : "no";
+  compile-matrix:
+    name: Compile the matrix
+    runs-on: ubuntu-latest
+    needs:
+      - supported-checks-matrix
+      - supported-versions-matrix
+      - supported-threading-matrix
+    outputs:
+      matrix: ${{ steps.compile-matrix.outputs.result }}
+    steps:
+      - uses: actions/github-script@v7
+        name: Compile the matrix
+        id: compile-matrix
+        env:
+          PHP_LOWEST: "${{ needs.supported-versions-matrix.outputs.lowest }}"
+          PHP_VERSIONS: ${{ needs.supported-versions-matrix.outputs.version }}
+          PHP_TO_THREAD_OR_NOT_TO_THREAD: ${{ needs.supported-threading-matrix.outputs.version }}
+          COMPOSER: '["lowest", "locked", "highest"]'
+          CHECKS: ${{ needs.supported-checks-matrix.outputs.check }}
+          CHECKS_TARGETED: ${{ needs.supported-checks-matrix.outputs.targeted }}
+        with:
+          script: |
+            let matrix = [];
+            const phpLowest = JSON.parse(process.env.PHP_LOWEST);
+            const phpVersions = JSON.parse(process.env.PHP_VERSIONS);
+            const phpToThreadOrNotToThread = JSON.parse(process.env.PHP_TO_THREAD_OR_NOT_TO_THREAD);
+            const composer = JSON.parse(process.env.COMPOSER);
+            const checks = JSON.parse(process.env.CHECKS);
+            const checksTargeted = JSON.parse(process.env.CHECKS_TARGETED);
+            for (const ztsOrNts in phpToThreadOrNotToThread) {
+              for (const checkTargeted in checksTargeted) {
+                  matrix.push({
+                    php: phpLowest,
+                    "php-to-thread-or-not-to-thread": phpToThreadOrNotToThread[ztsOrNts],
+                    composer: 'locked',
+                    check: checksTargeted[checkTargeted],
+                  });   
+              }
+              for (const composerAction in composer) {
+                for (const check in checks) {
+                  for (const phpVersion in phpVersions) {
+                    matrix.push({
+                      php: phpVersions[phpVersion],
+                      "php-to-thread-or-not-to-thread": phpToThreadOrNotToThread[ztsOrNts],
+                      composer: composer[composerAction],
+                      check: checks[check],
+                    });      
+                  }
+                }
+              }
+            }
+            console.log(matrix);
+            return matrix;
   can-require:
     name: Test we can require "${{ matrix.package-name }}" on PHP ${{ matrix.php }} (${{ matrix.php-to-thread-or-not-to-thread }})
     strategy:
@@ -134,14 +201,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php: ${{ fromJson(needs.supported-versions-matrix.outputs.version) }}
-        php-to-thread-or-not-to-thread: ${{ fromJson(needs.supported-threading-matrix.outputs.version) }}
-        composer: [lowest, locked, highest]
-        check: ${{ fromJson(needs.supported-checks-matrix.outputs.check) }}
+        include: ${{ fromJson(needs.compile-matrix.outputs.matrix) }}
     needs:
-      - supported-checks-matrix
-      - supported-versions-matrix
-      - supported-threading-matrix
+      - compile-matrix
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/wyrihaximusnet/php:${{ matrix.php }}-${{ matrix.php-to-thread-or-not-to-thread }}-alpine-dev-root

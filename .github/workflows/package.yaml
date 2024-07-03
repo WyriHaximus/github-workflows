@@ -52,6 +52,16 @@ on:
         default: "{}"
         required: false
         type: string
+      supportedChecksCommand:
+        description: The make command to invoke listing the different tasks to run across all versions
+        default: "task-list-ci"
+        required: false
+        type: string
+      targetedChecksCommand:
+        description: The make command to invoke listing the different tasks to run only against the targetted version
+        default: "task-list-ci-targeted"
+        required: false
+        type: string
 jobs:
   ci:
     name: Continuous Integration
@@ -61,6 +71,8 @@ jobs:
       workingDirectory: ${{ inputs.workingDirectory }}
       services: ${{ inputs.services }}
       env: ${{ inputs.env }}
+      supportedChecksCommand: ${{ inputs.supportedChecksCommand }}
+      targetedChecksCommand: ${{ inputs.targetedChecksCommand }}
   set-milestone:
     name: Set Milestone
     if: inputs.disableSetMilestone == false
