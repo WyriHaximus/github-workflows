@@ -1,0 +1,153 @@
+name: Create Release
+on:
+  workflow_call:
+    inputs:
+      milestone:
+        description: The milestone to tag
+        required: true
+        type: string
+      description:
+        description: Additional information to add above the changelog in the release
+        default: ""
+        required: false
+        type: string
+      branch:
+        description: The branch to tag the release on
+        default: ""
+        required: false
+        type: string
+      labels:
+        description: The labels to for the sections of the changelog
+        default: "Bug 🐞,Dependencies 📦,Feature 🏗,Enhancement ✨"
+        required: false
+        type: string
+      runsOnChaos:
+        description: Define on which runner to run workflows where order doesn't matter should run
+        default: "ubuntu-latest"
+        required: false
+        type: string
+      runsOnOrder:
+        description: Define on which runner to run workflows where order matters should run
+        default: "ubuntu-latest"
+        required: false
+        type: string
+      helmReleaseName:
+        description: The name of the helm release
+        default: ""
+        required: true
+        type: string
+      helmReleaseValueName:
+        description: The name of the value to use for releases
+        default: ""
+        required: true
+        type: string
+      helmDirectory:
+        description: The directory to run this workflow in
+        default: ""
+        required: false
+        type: string
+      helmAdditionalArguments:
+        description: The directory to run this workflow in
+        default: ""
+        required: false
+        type: string
+      helmUpdateAppVersion:
+        description: Update the helm charts appVersion with the passed version
+        default: false
+        required: false
+        type: boolean
+      kubeConfigSecret:
+        description: The secret name that holds the kubeconfig to connect with Kubernetes
+        required: true
+        type: string
+      terraformDirectory:
+        description: The directory to run this workflow in
+        default: ""
+        required: false
+        type: string
+      terraformVars:
+        description: The directory to run this workflow in
+        default: ""
+        required: false
+        type: string
+      terraformParallelism:
+        description: Value for the -parallelism plan/apply flag
+        default: 10
+        required: false
+        type: number
+      terraformLogLevel:
+        description: Value for the TF_LOG environment value
+        default: ""
+        required: false
+        type: string
+      ociRetag:
+        description: Whether or not to retag OCI images with the release tag
+        default: false
+        required: false
+        type: boolean
+      ociPlatforms:
+        description: The platforms to build the OCI image for, empty means autodetect
+        default: ""
+        required: false
+        type: string
+      ociPushSecretSecret:
+        description: The secret name that holds the token to push OCI images to GHCR.io
+        default: "GITHUB_TOKEN"
+        required: false
+        type: string
+jobs:
+  create-release:
+    name: Craft Release
+    uses: ./.github/workflows/craft-release.yaml
+    with:
+      runsOn: ${{ inputs.runsOnChaos }}
+      milestone: ${{ inputs.milestone }}
+      description: ${{ inputs.description }}
+      branch: ${{ inputs.branch }}
+      labels: ${{ inputs.labels }}
+      preReleaseScript: ${{ inputs.preReleaseScript }}
+      mustCreateCommit: false
+      mustUpdateAllSemverTags: false
+  terraform-apply:
+    name: Terraform Apply
+    needs:
+      - create-release
+    if: inputs.terraformDirectory != ''
+    uses: ./.github/workflows/terraform-apply.yaml
+    secrets: inherit
+    with:
+      runsOn: ${{ inputs.runsOnOrder }}
+      terraformDirectory: ${{ inputs.terraformDirectory }}
+      terraformVars: ${{ inputs.terraformVars }}
+      terraformParallelism: ${{ inputs.terraformParallelism }}
+      terraformLogLevel: ${{ inputs.terraformLogLevel }}
+      kubeConfigSecret: ${{ inputs.kubeConfigSecret }}
+  image-retag:
+    name: OCI Image Re-tag
+    needs:
+      - create-release
+    if: inputs.ociRetag
+    uses: ./.github/workflows/oci-retag.yaml
+    secrets: inherit
+    with:
+      runsOn: ${{ inputs.runsOnChaos }}
+      from: ghcr.io/${{ github.repository }}:sha-${{ github.sha }}
+      to: ghcr.io/${{ github.repository }}:${{ inputs.milestone }}
+      ociPlatforms: ${{ inputs.ociPlatforms }}
+      ociPushSecretSecret: ${{ inputs.ociPushSecretSecret }}
+  helm-deploy:
+    name: Helm Deploy
+    needs:
+      - terraform-apply
+      - image-retag
+    uses: ./.github/workflows/helm-deploy.yaml
+    secrets: inherit
+    with:
+      runsOn: ${{ inputs.runsOnOrder }}
+      version: ${{ inputs.milestone }}
+      helmReleaseName: ${{ inputs.helmReleaseName }}
+      helmReleaseValueName: ${{ inputs.helmReleaseValueName }}
+      helmDirectory: ${{ inputs.helmDirectory }}
+      helmAdditionalArguments: ${{ inputs.helmAdditionalArguments }}
+      helmUpdateAppVersion: ${{ inputs.helmUpdateAppVersion }}
+      kubeConfigSecret: ${{ inputs.kubeConfigSecret }}

@@ -1,0 +1,126 @@
+name: Package
+on:
+  workflow_call:
+    inputs:
+      initialTag:
+        description: The tag to fallback to when no previous tag could be found.
+        default: r1
+        required: false
+        type: string
+      dependencyUpdaters:
+        description: CSV list of bot AppId's that create PR's to updated dependencies like RenovateBot and DependaBot
+        default: 49699333
+        required: false
+        type: string
+      jsonPattern:
+        description: The pattern to match which JSON files to check
+        default: "\\.json$"
+        required: false
+        type: string
+      workingDirectory:
+        description: The directory to run this workflow in
+        default: ""
+        required: false
+        type: string
+      disableSetMilestone:
+        description: Disable the setting of milestones
+        default: false
+        required: false
+        type: boolean
+      disableMarkdownLinkCheck:
+        description: Disable the checking of links in markdown files
+        default: false
+        required: false
+        type: boolean
+      disableComposerLockDiff:
+        description: Disable the diffing of composer lock files
+        default: false
+        required: false
+        type: boolean
+      disableRequiredLabels:
+        description: Disable failing PR's when certain labels are missing
+        default: false
+        required: false
+        type: boolean
+      runsOnChaos:
+        description: Define on which runner to run workflows where order doesn't matter should run
+        default: "ubuntu-latest"
+        required: false
+        type: string
+      runsOnOrder:
+        description: Define on which runner to run workflows where order matters should run
+        default: "ubuntu-latest"
+        required: false
+        type: string
+      dockerfile:
+        description: The Dockerfile to build
+        default: ""
+        required: false
+        type: string
+      dockerBuildTarget:
+        description: Value for the --target flag
+        default: ""
+        required: false
+        type: string
+      dockerBuildExtraArguments:
+        description: Extra arguments to pass to the docker build command
+        required: false
+        type: string
+      ociPlatforms:
+        description: The platforms to build the OCI image for, empty means autodetect
+        default: ""
+        required: false
+        type: string
+      ociPushSecretSecret:
+        description: The secret name that holds the token to push OCI images to GHCR.io
+        default: "GITHUB_TOKEN"
+        required: false
+        type: string
+jobs:
+  ci:
+    name: Continuous Integration
+    uses: ./.github/workflows/ci.yaml
+    with:
+      jsonPattern: ${{ inputs.jsonPattern }}
+      workingDirectory: ${{ inputs.workingDirectory }}
+      isProject: true
+      runsOnChaos: ${{ inputs.runsOnChaos }}
+      runsOnOrder: ${{ inputs.runsOnOrder }}
+  oci-build:
+    name: OCI Image Build
+    if: inputs.dockerfile != ''
+    needs:
+      - ci
+    uses: ./.github/workflows/oci-build.yaml
+    secrets: inherit
+    with:
+      runsOn: ${{ inputs.runsOnChaos }}
+      dockerfile: ${{ inputs.dockerfile }}
+      dockerBuildTarget: ${{ inputs.dockerBuildTarget }}
+      dockerBuildExtraArguments: ${{ inputs.dockerBuildExtraArguments }}
+      tag: ghcr.io/${{ github.repository }}:sha-${{ github.sha }}
+      ociPlatforms: ${{ inputs.ociPlatforms }}
+      ociPushSecretSecret: ${{ inputs.ociPushSecretSecret }}
+  set-milestone:
+    name: Set Milestone
+    if: github.event.pull_request.milestone == null && inputs.disableSetMilestone == false && github.event_name == 'pull_request'
+    uses: ./.github/workflows/project-set-milestone-on-pr.yaml
+    secrets: inherit
+    with:
+      runsOn: ${{ inputs.runsOnChaos }}
+      initialTag: ${{ inputs.initialTag }}
+  markdown-link-check:
+    name: Check Markdown links
+    if: inputs.disableMarkdownLinkCheck == false && github.event_name == 'pull_request'
+    uses: ./.github/workflows/markdown-check-links.yaml
+    with:
+      runsOn: ${{ inputs.runsOnChaos }}
+      workingDirectory: ${{ inputs.workingDirectory }}
+  comment-composer-lock-diff:
+    name: Composer Diff
+    if: inputs.disableComposerLockDiff == false && github.event_name == 'pull_request'
+    uses: ./.github/workflows/composer-diff.yaml
+    secrets: inherit
+    with:
+      runsOn: ${{ inputs.runsOnChaos }}
+      workingDirectory: ${{ inputs.workingDirectory }}
