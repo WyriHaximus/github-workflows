@@ -121,7 +121,7 @@ jobs:
           path: checked_out_package
       - name: Set Up composer.json
         run: |
-          echo "{\"repositories\": [{\"name\": \"${{ matrix.package-name }}\",\"type\": \"path\",\"url\": \"./checked_out_package\"}]}" > composer.json
+          echo "{\"repositories\": [{\"name\": \"${{ matrix.package-name }}\",\"type\": \"path\",\"url\": \"./checked_out_package\"}],\"minimum-stability\":\"dev\",\"prefer-stable\":true}" > composer.json
         working-directory: ${{ inputs.workingDirectory }}
       - name: Require package
         if: needs.supported-versions-matrix.outputs.upcoming != matrix.php
