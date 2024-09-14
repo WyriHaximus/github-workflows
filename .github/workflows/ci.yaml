@@ -67,7 +67,7 @@ jobs:
         uses: WyriHaximus/github-action-composer-php-versions-in-range@v1
         with:
           upcomingReleases: true
-          working-directory: ${{ inputs.workingDirectory }}
+          workingDirectory: ${{ inputs.workingDirectory }}
   supported-threading-matrix:
     name: Supported Threading Matrix
     runs-on: ${{ inputs.runsOnChaos }}
@@ -171,7 +171,7 @@ jobs:
         with:
           dependency-versions: ${{ matrix.composer }}
           working-directory: ${{ inputs.workingDirectory }}
-      - run: git config --global --add safe.directory $GITHUB_WORKSPACE # Do this ourselves because `actions/checkout@v3 doesn't succeed in doing this
+      - run: git config --global --add safe.directory $GITHUB_WORKSPACE # Do this ourselves because `actions/checkout@v4 doesn't succeed in doing this
         working-directory: ${{ inputs.workingDirectory }}
       - run: make ${{ matrix.check }} || true
         working-directory: ${{ inputs.workingDirectory }}

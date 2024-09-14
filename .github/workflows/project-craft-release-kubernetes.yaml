@@ -1,25 +1,10 @@
-name: Create Release
+name: Deploy Service to Kubernetes
 on:
   workflow_call:
     inputs:
-      milestone:
-        description: The milestone to tag
+      version:
+        description: The version to deploy
         required: true
-        type: string
-      description:
-        description: Additional information to add above the changelog in the release
-        default: ""
-        required: false
-        type: string
-      branch:
-        description: The branch to tag the release on
-        default: ""
-        required: false
-        type: string
-      labels:
-        description: The labels to for the sections of the changelog
-        default: "Bug 🐞,Dependencies 📦,Feature 🏗,Enhancement ✨"
-        required: false
         type: string
       runsOnChaos:
         description: Define on which runner to run workflows where order doesn't matter should run
@@ -44,17 +29,17 @@ on:
       helmDirectory:
         description: The directory to run this workflow in
         default: ""
-        required: false
+        required: true
         type: string
       helmAdditionalArguments:
         description: The directory to run this workflow in
         default: ""
-        required: false
+        required: true
         type: string
       helmUpdateAppVersion:
         description: Update the helm charts appVersion with the passed version
         default: false
-        required: false
+        required: true
         type: boolean
       kubeConfigSecret:
         description: The secret name that holds the kubeconfig to connect with Kubernetes
@@ -63,55 +48,41 @@ on:
       terraformDirectory:
         description: The directory to run this workflow in
         default: ""
-        required: false
+        required: true
         type: string
       terraformVars:
         description: The directory to run this workflow in
         default: ""
-        required: false
+        required: true
         type: string
       terraformParallelism:
         description: Value for the -parallelism plan/apply flag
         default: 10
-        required: false
+        required: true
         type: number
       terraformLogLevel:
         description: Value for the TF_LOG environment value
         default: ""
-        required: false
+        required: true
         type: string
       ociRetag:
         description: Whether or not to retag OCI images with the release tag
         default: false
-        required: false
+        required: true
         type: boolean
       ociPlatforms:
         description: The platforms to build the OCI image for, empty means autodetect
         default: ""
-        required: false
+        required: true
         type: string
       ociPushSecretSecret:
         description: The secret name that holds the token to push OCI images to GHCR.io
         default: "GITHUB_TOKEN"
-        required: false
+        required: true
         type: string
 jobs:
-  create-release:
-    name: Craft Release
-    uses: ./.github/workflows/craft-release.yaml
-    with:
-      runsOn: ${{ inputs.runsOnChaos }}
-      milestone: ${{ inputs.milestone }}
-      description: ${{ inputs.description }}
-      branch: ${{ inputs.branch }}
-      labels: ${{ inputs.labels }}
-      preReleaseScript: ${{ inputs.preReleaseScript }}
-      mustCreateCommit: false
-      mustUpdateAllSemverTags: false
   terraform-apply:
     name: Terraform Apply
-    needs:
-      - create-release
     if: inputs.terraformDirectory != ''
     uses: ./.github/workflows/terraform-apply.yaml
     secrets: inherit
@@ -124,8 +95,6 @@ jobs:
       kubeConfigSecret: ${{ inputs.kubeConfigSecret }}
   image-retag:
     name: OCI Image Re-tag
-    needs:
-      - create-release
     if: inputs.ociRetag
     uses: ./.github/workflows/oci-retag.yaml
     secrets: inherit
@@ -144,7 +113,7 @@ jobs:
     secrets: inherit
     with:
       runsOn: ${{ inputs.runsOnOrder }}
-      version: ${{ inputs.milestone }}
+      version: ${{ inputs.version }}
       helmReleaseName: ${{ inputs.helmReleaseName }}
       helmReleaseValueName: ${{ inputs.helmReleaseValueName }}
       helmDirectory: ${{ inputs.helmDirectory }}
