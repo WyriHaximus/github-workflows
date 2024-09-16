@@ -1,0 +1,104 @@
+name: Diff
+on:
+  workflow_call:
+    inputs:
+      runsOnChaos:
+        description: Define on which runner to run workflows where order doesn't matter should run
+        default: "ubuntu-latest"
+        required: false
+        type: string
+      runsOnOrder:
+        description: Define on which runner to run workflows where order matters should run
+        default: "ubuntu-latest"
+        required: false
+        type: string
+      workingDirectory:
+        description: The directory to run this workflow in
+        default: ""
+        required: false
+        type: string
+      helmReleaseName:
+        description: The name of the helm release
+        default: ""
+        required: false
+        type: string
+      helmReleaseValueName:
+        description: The name of the value to use for releases
+        default: ""
+        required: false
+        type: string
+      helmDirectory:
+        description: The directory to run this workflow in
+        default: ""
+        required: false
+        type: string
+      helmAdditionalArguments:
+        description: The directory to run this workflow in
+        default: ""
+        required: false
+        type: string
+      helmUpdateAppVersion:
+        description: Update the helm charts appVersion with the passed version
+        default: false
+        required: false
+        type: boolean
+      kubeConfigSecret:
+        description: The secret name that holds the kubeconfig to connect with Kubernetes
+        required: false
+        type: string
+      terraformDirectory:
+        description: The directory to run this workflow in
+        default: ""
+        required: false
+        type: string
+      terraformVars:
+        description: The directory to run this workflow in
+        default: ""
+        required: false
+        type: string
+      terraformParallelism:
+        description: Value for the -parallelism plan/apply flag
+        default: 10
+        required: false
+        type: number
+      terraformLogLevel:
+        description: Value for the TF_LOG environment value
+        default: ""
+        required: false
+        type: string
+jobs:
+  helm-diff:
+    name: Helm Diff
+    if: inputs.helmDirectory != ''
+    uses: ./.github/workflows/helm-diff.yaml
+    secrets: inherit
+    with:
+      runsOn: ${{ inputs.runsOnOrder }}
+      workingDirectory: ${{ inputs.workingDirectory }}
+      helmReleaseName: ${{ inputs.helmReleaseName }}
+      helmReleaseValueName: ${{ inputs.helmReleaseValueName }}
+      helmDirectory: ${{ inputs.helmDirectory }}
+      helmAdditionalArguments: ${{ inputs.helmAdditionalArguments }}
+      helmUpdateAppVersion: ${{ inputs.helmUpdateAppVersion }}
+      kubeConfigSecret: ${{ inputs.kubeConfigSecret }}
+  terraform-diff:
+    name: Terraform Diff
+    if: inputs.terraformDirectory != ''
+    uses: ./.github/workflows/terraform-diff.yaml
+    secrets: inherit
+    with:
+      runsOn: ${{ inputs.runsOnOrder }}
+      workingDirectory: ${{ inputs.workingDirectory }}
+      terraformDirectory: ${{ inputs.terraformDirectory }}
+      terraformVars: ${{ inputs.terraformVars }}
+      terraformParallelism: ${{ inputs.terraformParallelism }}
+      terraformLogLevel: ${{ inputs.terraformLogLevel }}
+      kubeConfigSecret: ${{ inputs.kubeConfigSecret }}
+  comment-composer-lock-diff:
+    name: Composer Diff
+    if: inputs.disableComposerLockDiff == false
+    uses: ./.github/workflows/composer-diff.yaml
+    secrets: inherit
+    with:
+      runsOn: ${{ inputs.runsOnChaos }}
+      workingDirectory: ${{ inputs.workingDirectory }}

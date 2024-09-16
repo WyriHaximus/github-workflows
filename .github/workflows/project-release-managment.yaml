@@ -144,37 +144,35 @@ jobs:
   required-labels:
     name: Required Labels
     if: inputs.disableRequiredLabels == false && github.event_name == 'pull_request'
+    concurrency:
+      group: labels-${{ github.ref }}
+      cancel-in-progress: false
     uses: ./.github/workflows/required-labels.yaml
     with:
       runsOn: ${{ inputs.runsOnChaos }}
       requiredLabels: ${{ inputs.labels }}
-  helm-diff:
-    name: Helm Diff
-    if: github.event_name == 'pull_request' && github.ref_type != 'labeled' && github.ref_type != 'unlabeled' && inputs.helmDirectory != ''
-    uses: ./.github/workflows/helm-diff.yaml
+  diff:
+    name: Diff
+    if: github.event_name == 'pull_request' && github.ref_type != 'labeled' && github.ref_type != 'unlabeled'
+    concurrency:
+      group: diff-${{ github.ref }}
+      cancel-in-progress: false
+    uses: ./.github/workflows/diff.yaml
     secrets: inherit
     with:
-      runsOn: ${{ inputs.runsOnOrder }}
-      workingDirectory: ${{ inputs.workingDirectory }}
-      helmReleaseName: ${{ inputs.helmReleaseName }}
-      helmReleaseValueName: ${{ inputs.helmReleaseValueName }}
-      helmDirectory: ${{ inputs.helmDirectory }}
-      helmAdditionalArguments: ${{ inputs.helmAdditionalArguments }}
-      helmUpdateAppVersion: ${{ inputs.helmUpdateAppVersion }}
-      kubeConfigSecret: ${{ inputs.kubeConfigSecret }}
-  terraform-diff:
-    name: Terraform Diff
-    if: github.event_name == 'pull_request' && github.ref_type != 'labeled' && github.ref_type != 'unlabeled' && inputs.terraformDirectory != ''
-    uses: ./.github/workflows/terraform-diff.yaml
-    secrets: inherit
-    with:
-      runsOn: ${{ inputs.runsOnOrder }}
+      runsOnChaos: ${{ inputs.runsOnChaos }}
+      runsOnOrder: ${{ inputs.runsOnOrder }}
       workingDirectory: ${{ inputs.workingDirectory }}
       terraformDirectory: ${{ inputs.terraformDirectory }}
       terraformVars: ${{ inputs.terraformVars }}
       terraformParallelism: ${{ inputs.terraformParallelism }}
       terraformLogLevel: ${{ inputs.terraformLogLevel }}
       kubeConfigSecret: ${{ inputs.kubeConfigSecret }}
+      helmReleaseName: ${{ inputs.helmReleaseName }}
+      helmReleaseValueName: ${{ inputs.helmReleaseValueName }}
+      helmDirectory: ${{ inputs.helmDirectory }}
+      helmAdditionalArguments: ${{ inputs.helmAdditionalArguments }}
+      helmUpdateAppVersion: ${{ inputs.helmUpdateAppVersion }}
   create-release:
     name: Craft Release
     if: github.event_name == 'milestone' && contains(fromJSON('["closed"]'), github.event.action)
