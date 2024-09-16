@@ -101,7 +101,7 @@ jobs:
     with:
       runsOn: ${{ inputs.runsOnChaos }}
       from: ghcr.io/${{ github.repository }}:sha-${{ github.sha }}
-      to: ghcr.io/${{ github.repository }}:${{ inputs.milestone }}
+      to: ghcr.io/${{ github.repository }}:${{ inputs.version }}
       ociPlatforms: ${{ inputs.ociPlatforms }}
       ociPushSecretSecret: ${{ inputs.ociPushSecretSecret }}
   helm-deploy:
