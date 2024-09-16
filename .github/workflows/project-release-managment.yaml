@@ -11,6 +11,16 @@ on:
         default: ""
         required: false
         type: string
+      type:
+        description: The type of project this is, release and deployment wise
+        default: "kubernetes"
+        required: false
+        type: string
+      applicationType:
+        description: The type of project this is, release and deployment wise
+        default: ""
+        required: false
+        type: string
       branch:
         description: The branch to tag the release on
         default: ""
@@ -31,15 +41,20 @@ on:
         default: "ubuntu-latest"
         required: false
         type: string
+      workingDirectory:
+        description: The directory to run this workflow in
+        default: ""
+        required: false
+        type: string
       helmReleaseName:
         description: The name of the helm release
         default: ""
-        required: true
+        required: false
         type: string
       helmReleaseValueName:
         description: The name of the value to use for releases
         default: ""
-        required: true
+        required: false
         type: string
       helmDirectory:
         description: The directory to run this workflow in
@@ -58,7 +73,7 @@ on:
         type: boolean
       kubeConfigSecret:
         description: The secret name that holds the kubeconfig to connect with Kubernetes
-        required: true
+        required: false
         type: string
       terraformDirectory:
         description: The directory to run this workflow in
@@ -95,6 +110,36 @@ on:
         default: "GITHUB_TOKEN"
         required: false
         type: string
+      vitePressDirectory:
+        description: The directory that container VitePress
+        default: ""
+        required: false
+        type: string
+      cdnAwsAccessKeyIDSecret:
+        description: The secret name that holds the AWS access key ID
+        default: "CDN_HOSTED_S3_KEY"
+        required: false
+        type: string
+      cdnAwsSecretAccessKeySecret:
+        description: The secret name that holds the AWS access key secret
+        default: "CDN_HOSTED_S3_SECRET"
+        required: false
+        type: string
+      cdnAwsRegionSecret:
+        description: The secret name that holds the AWS region
+        default: "CDN_HOSTED_S3_REGION"
+        required: false
+        type: string
+      cdnAwsS3BucketSecret:
+        description: The secret name that holds the AWS S3 bucket name
+        default: "CDN_HOSTED_S3_BUCKET"
+        required: false
+        type: string
+      cdnAwsCloudFrontDistributionIDSecret:
+        description: The secret name that holds the AWS cloudfront distribution id
+        default: "CDN_HOSTED_DISTRIBUTION_ID"
+        required: false
+        type: string
 jobs:
   required-labels:
     name: Required Labels
@@ -110,6 +155,7 @@ jobs:
     secrets: inherit
     with:
       runsOn: ${{ inputs.runsOnOrder }}
+      workingDirectory: ${{ inputs.workingDirectory }}
       helmReleaseName: ${{ inputs.helmReleaseName }}
       helmReleaseValueName: ${{ inputs.helmReleaseValueName }}
       helmDirectory: ${{ inputs.helmDirectory }}
@@ -123,6 +169,7 @@ jobs:
     secrets: inherit
     with:
       runsOn: ${{ inputs.runsOnOrder }}
+      workingDirectory: ${{ inputs.workingDirectory }}
       terraformDirectory: ${{ inputs.terraformDirectory }}
       terraformVars: ${{ inputs.terraformVars }}
       terraformParallelism: ${{ inputs.terraformParallelism }}
@@ -131,25 +178,55 @@ jobs:
   create-release:
     name: Craft Release
     if: github.event_name == 'milestone' && contains(fromJSON('["closed"]'), github.event.action)
-    uses: ./.github/workflows/project-craft-release.yaml
-    secrets: inherit
+    uses: ./.github/workflows/craft-release.yaml
     with:
-      runsOnChaos: ${{ inputs.runsOnChaos }}
-      runsOnOrder: ${{ inputs.runsOnOrder }}
+      runsOn: ${{ inputs.runsOnChaos }}
       milestone: ${{ inputs.milestone }}
-      description: ${{ inputs.description }}
+      description: ${{ inputs.description }}workingDirectory
       branch: ${{ inputs.branch }}
       labels: ${{ inputs.labels }}
-      kubeConfigSecret: ${{ inputs.kubeConfigSecret }}
+      preReleaseScript: ${{ inputs.preReleaseScript }}
+      mustCreateCommit: false
+      mustUpdateAllSemverTags: false
+  deploy-release-kubernetes:
+    name: "Deploy Release: Kubernetes"
+    needs:
+      - create-release
+    if: inputs.type == 'kubernetes' && github.event_name == 'milestone' && contains(fromJSON('["closed"]'), github.event.action)
+    uses: ./.github/workflows/project-craft-release-kubernetes.yaml
+    secrets: inherit
+    with:
+      runsOnOrder: ${{ inputs.runsOnOrder }}
+      runsOnChaos: ${{ inputs.runsOnChaos }}
       terraformDirectory: ${{ inputs.terraformDirectory }}
       terraformVars: ${{ inputs.terraformVars }}
       terraformParallelism: ${{ inputs.terraformParallelism }}
       terraformLogLevel: ${{ inputs.terraformLogLevel }}
+      ociRetag: ${{ inputs.ociRetag }}
+      ociPlatforms: ${{ inputs.ociPlatforms }}
+      ociPushSecretSecret: ${{ inputs.ociPushSecretSecret }}
+      version: ${{ inputs.milestone }}
       helmReleaseName: ${{ inputs.helmReleaseName }}
       helmReleaseValueName: ${{ inputs.helmReleaseValueName }}
       helmDirectory: ${{ inputs.helmDirectory }}
       helmAdditionalArguments: ${{ inputs.helmAdditionalArguments }}
       helmUpdateAppVersion: ${{ inputs.helmUpdateAppVersion }}
-      ociRetag: ${{ inputs.ociRetag }}
-      ociPlatforms: ${{ inputs.ociPlatforms }}
-      ociPushSecretSecret: ${{ inputs.ociPushSecretSecret }}
+      kubeConfigSecret: ${{ inputs.kubeConfigSecret }}
+  deploy-release-cdn:
+    name: "Deploy Release: CDN"
+    needs:
+      - create-release
+    if: inputs.type == 'cdn' && github.event_name == 'milestone' && contains(fromJSON('["closed"]'), github.event.action)
+    uses: ./.github/workflows/project-craft-release-cdn.yaml
+    secrets: inherit
+    with:
+      runsOn: ${{ inputs.runsOnOrder }}
+      milestone: ${{ inputs.milestone }}
+      workingDirectory: ${{ inputs.workingDirectory }}
+      vitePressDirectory: ${{ inputs.vitePressDirectory }}
+      applicationType: ${{ inputs.applicationType }}
+      cdnAwsAccessKeyIdSecret: ${{ inputs.cdnAwsAccessKeyIdSecret }}
+      cdnAwsSecretAccessKeySecret: ${{ inputs.cdnAwsSecretAccessKeySecret }}
+      cdnAwsRegionSecret: ${{ inputs.cdnAwsRegionSecret }}
+      cdnAwsS3BucketSecret: ${{ inputs.cdnAwsS3BucketSecret }}
+      cdnAwsCloudFrontDistributionIDSecret: ${{ inputs.cdnAwsCloudFrontDistributionIDSecret }}

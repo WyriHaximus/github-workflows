@@ -1,0 +1,93 @@
+name: Deploy assets to CDN
+on:
+  workflow_call:
+    inputs:
+      milestone:
+        description: The tag to deploy
+        required: true
+        type: string
+      workingDirectory:
+        description: The directory to run this workflow in
+        default: ""
+        required: false
+        type: string
+      applicationType:
+        description: The type of project this is, release and deployment wise
+        default: ""
+        required: false
+        type: string
+      vitePressDirectory:
+        description: The directory that container VitePress
+        default: ""
+        required: true
+        type: string
+      runsOn:
+        description: Define on which runner to run workflows where order doesn't matter should run
+        default: "ubuntu-latest"
+        required: true
+        type: string
+      cdnAwsAccessKeyIDSecret:
+        description: The secret name that holds the AWS access key ID
+        default: "CDN_HOSTED_S3_KEY"
+        required: true
+        type: string
+      cdnAwsSecretAccessKeySecret:
+        description: The secret name that holds the AWS access key secret
+        default: "CDN_HOSTED_S3_SECRET"
+        required: true
+        type: string
+      cdnAwsRegionSecret:
+        description: The secret name that holds the AWS region
+        default: "CDN_HOSTED_S3_REGION"
+        required: true
+        type: string
+      cdnAwsS3BucketSecret:
+        description: The secret name that holds the AWS S3 bucket name
+        default: "CDN_HOSTED_S3_BUCKET"
+        required: true
+        type: string
+      cdnAwsCloudFrontDistributionIDSecret:
+        description: The secret name that holds the AWS cloudfront distribution id
+        default: "CDN_HOSTED_DISTRIBUTION_ID"
+        required: true
+        type: string
+jobs:
+  build-assets:
+    name: VitePress Build
+    runs-on: ${{ inputs.runsOn }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Install dependencies
+        run: npm ci
+        working-directory: ${{ inputs.workingDirectory }}
+      - name: Build with VitePress
+        run: npm run docs:build ${{ inputs.vitePressDirectory }}
+        working-directory: ${{ inputs.workingDirectory }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.milestone }}-dist
+          path: ${{ inputs.workingDirectory }}${{ inputs.vitePressDirectory }}/.vitepress/dist/
+  cdn-hosted-deploy-aws:
+    name: Deploy assets to CDN and invalidate caches
+    needs:
+      - build-assets
+    runs-on: ${{ inputs.runsOn }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.milestone }}-dist
+          path: ~/${{ inputs.milestone }}-dist
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets[inputs.cdnAwsAccessKeyIdSecret] }}
+          aws-secret-access-key: ${{ secrets[inputs.cdnAwsSecretAccessKeySecret] }}
+          aws-region: ${{ secrets[inputs.cdnAwsRegionSecret] }}
+      - name: Deploy Non-HTML
+        run: aws s3 cp ~/${{ inputs.milestone }}-dist s3://${{ secrets[inputs.cdnAwsS3BucketSecret] }} --recursive --acl=public-read --include="*" --exclude "*.html" --cache-control max-age=31536000,public
+      - name: Deploy HTML
+        run: aws s3 cp ~/${{ inputs.milestone }}-dist s3://${{ secrets[inputs.cdnAwsS3BucketSecret] }} --recursive --acl=public-read --exclude="*" --include "*.html" --cache-control max-age=3200,no-cache,no-store,must-revalidate
+      - name: Invalidate Cloudfront
+        run: aws cloudfront create-invalidation --distribution-id=${{ secrets[inputs.cdnAwsCloudFrontDistributionIDSecret] }} --paths '/*'
