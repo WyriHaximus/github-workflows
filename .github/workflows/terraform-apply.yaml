@@ -45,11 +45,6 @@ jobs:
       TF_LOG: ${{ inputs.terraformLogLevel }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          architecture: 'arm64'
-      - uses: hashicorp/setup-terraform@v3
       - name: Put Kubernetes Configuration In Place
         run: |
           mkdir ~/.kube
