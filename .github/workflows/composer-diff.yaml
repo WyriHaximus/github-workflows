@@ -3,6 +3,11 @@ name: Composer Diff
 on:
   workflow_call:
     inputs:
+      runsOn:
+        description: Define on which runner this workflow should run
+        default: "ubuntu-latest"
+        required: false
+        type: string
       workingDirectory:
         description: The directory to run this workflow in
         default: ""
@@ -16,7 +21,7 @@ on:
 jobs:
   comment-composer-lock-diff:
     name: Comment composer.lock diff
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runsOn }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4

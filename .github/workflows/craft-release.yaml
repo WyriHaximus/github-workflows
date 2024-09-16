@@ -2,6 +2,11 @@ name: Create Release
 on:
   workflow_call:
     inputs:
+      runsOn:
+        description: Define on which runner this workflow should run
+        default: "ubuntu-latest"
+        required: false
+        type: string
       milestone:
         description: The milestone to tag
         required: true
@@ -39,7 +44,7 @@ on:
 jobs:
   generate-changelog:
     name: Generate Changelog
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runsOn }}
     outputs:
       changelog: ${{ steps.changelog.outputs.changelog }}
     steps:
@@ -59,7 +64,7 @@ jobs:
     name: Create Release
     needs:
       - generate-changelog
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runsOn }}
     steps:
       - uses: actions/checkout@v4
       - name: Create release/${{ inputs.milestone }} branch

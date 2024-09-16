@@ -1,0 +1,122 @@
+name: Deploy Service to Kubernetes
+on:
+  workflow_call:
+    inputs:
+      version:
+        description: The version to deploy
+        required: true
+        type: string
+      runsOnChaos:
+        description: Define on which runner to run workflows where order doesn't matter should run
+        default: "ubuntu-latest"
+        required: false
+        type: string
+      runsOnOrder:
+        description: Define on which runner to run workflows where order matters should run
+        default: "ubuntu-latest"
+        required: false
+        type: string
+      helmReleaseName:
+        description: The name of the helm release
+        default: ""
+        required: true
+        type: string
+      helmReleaseValueName:
+        description: The name of the value to use for releases
+        default: ""
+        required: true
+        type: string
+      helmDirectory:
+        description: The directory to run this workflow in
+        default: ""
+        required: true
+        type: string
+      helmAdditionalArguments:
+        description: The directory to run this workflow in
+        default: ""
+        required: true
+        type: string
+      helmUpdateAppVersion:
+        description: Update the helm charts appVersion with the passed version
+        default: false
+        required: true
+        type: boolean
+      kubeConfigSecret:
+        description: The secret name that holds the kubeconfig to connect with Kubernetes
+        required: true
+        type: string
+      terraformDirectory:
+        description: The directory to run this workflow in
+        default: ""
+        required: true
+        type: string
+      terraformVars:
+        description: The directory to run this workflow in
+        default: ""
+        required: true
+        type: string
+      terraformParallelism:
+        description: Value for the -parallelism plan/apply flag
+        default: 10
+        required: true
+        type: number
+      terraformLogLevel:
+        description: Value for the TF_LOG environment value
+        default: ""
+        required: true
+        type: string
+      ociRetag:
+        description: Whether or not to retag OCI images with the release tag
+        default: false
+        required: true
+        type: boolean
+      ociPlatforms:
+        description: The platforms to build the OCI image for, empty means autodetect
+        default: ""
+        required: true
+        type: string
+      ociPushSecretSecret:
+        description: The secret name that holds the token to push OCI images to GHCR.io
+        default: "GITHUB_TOKEN"
+        required: true
+        type: string
+jobs:
+  terraform-apply:
+    name: Terraform Apply
+    if: inputs.terraformDirectory != ''
+    uses: ./.github/workflows/terraform-apply.yaml
+    secrets: inherit
+    with:
+      runsOn: ${{ inputs.runsOnOrder }}
+      terraformDirectory: ${{ inputs.terraformDirectory }}
+      terraformVars: ${{ inputs.terraformVars }}
+      terraformParallelism: ${{ inputs.terraformParallelism }}
+      terraformLogLevel: ${{ inputs.terraformLogLevel }}
+      kubeConfigSecret: ${{ inputs.kubeConfigSecret }}
+  image-retag:
+    name: OCI Image Re-tag
+    if: inputs.ociRetag
+    uses: ./.github/workflows/oci-retag.yaml
+    secrets: inherit
+    with:
+      runsOn: ${{ inputs.runsOnChaos }}
+      from: ghcr.io/${{ github.repository }}:sha-${{ github.sha }}
+      to: ghcr.io/${{ github.repository }}:${{ inputs.version }}
+      ociPlatforms: ${{ inputs.ociPlatforms }}
+      ociPushSecretSecret: ${{ inputs.ociPushSecretSecret }}
+  helm-deploy:
+    name: Helm Deploy
+    needs:
+      - terraform-apply
+      - image-retag
+    uses: ./.github/workflows/helm-deploy.yaml
+    secrets: inherit
+    with:
+      runsOn: ${{ inputs.runsOnOrder }}
+      version: ${{ inputs.version }}
+      helmReleaseName: ${{ inputs.helmReleaseName }}
+      helmReleaseValueName: ${{ inputs.helmReleaseValueName }}
+      helmDirectory: ${{ inputs.helmDirectory }}
+      helmAdditionalArguments: ${{ inputs.helmAdditionalArguments }}
+      helmUpdateAppVersion: ${{ inputs.helmUpdateAppVersion }}
+      kubeConfigSecret: ${{ inputs.kubeConfigSecret }}

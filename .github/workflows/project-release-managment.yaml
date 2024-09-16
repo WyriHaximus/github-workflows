@@ -1,0 +1,232 @@
+name: Release Management
+on:
+  workflow_call:
+    inputs:
+      milestone:
+        description: The milestone to tag
+        required: false
+        type: string
+      description:
+        description: Additional information to add above the changelog in the release
+        default: ""
+        required: false
+        type: string
+      type:
+        description: The type of project this is, release and deployment wise
+        default: "kubernetes"
+        required: false
+        type: string
+      applicationType:
+        description: The type of project this is, release and deployment wise
+        default: ""
+        required: false
+        type: string
+      branch:
+        description: The branch to tag the release on
+        default: ""
+        required: false
+        type: string
+      labels:
+        description: The labels to for the sections of the changelog
+        default: "Bug 🐞,Dependencies 📦,Feature 🏗,Enhancement ✨"
+        required: false
+        type: string
+      runsOnChaos:
+        description: Define on which runner to run workflows where order doesn't matter should run
+        default: "ubuntu-latest"
+        required: false
+        type: string
+      runsOnOrder:
+        description: Define on which runner to run workflows where order matters should run
+        default: "ubuntu-latest"
+        required: false
+        type: string
+      workingDirectory:
+        description: The directory to run this workflow in
+        default: ""
+        required: false
+        type: string
+      helmReleaseName:
+        description: The name of the helm release
+        default: ""
+        required: false
+        type: string
+      helmReleaseValueName:
+        description: The name of the value to use for releases
+        default: ""
+        required: false
+        type: string
+      helmDirectory:
+        description: The directory to run this workflow in
+        default: ""
+        required: false
+        type: string
+      helmAdditionalArguments:
+        description: The directory to run this workflow in
+        default: ""
+        required: false
+        type: string
+      helmUpdateAppVersion:
+        description: Update the helm charts appVersion with the passed version
+        default: false
+        required: false
+        type: boolean
+      kubeConfigSecret:
+        description: The secret name that holds the kubeconfig to connect with Kubernetes
+        required: false
+        type: string
+      terraformDirectory:
+        description: The directory to run this workflow in
+        default: ""
+        required: false
+        type: string
+      terraformVars:
+        description: The directory to run this workflow in
+        default: ""
+        required: false
+        type: string
+      terraformParallelism:
+        description: Value for the -parallelism plan/apply flag
+        default: 10
+        required: false
+        type: number
+      terraformLogLevel:
+        description: Value for the TF_LOG environment value
+        default: ""
+        required: false
+        type: string
+      ociPlatforms:
+        description: The platforms to build the OCI image for, empty means autodetect
+        default: ""
+        required: false
+        type: string
+      ociRetag:
+        description: Whether or not to retag OCI images with the release tag
+        default: false
+        required: false
+        type: boolean
+      ociPushSecretSecret:
+        description: The secret name that holds the token to push OCI images to GHCR.io
+        default: "GITHUB_TOKEN"
+        required: false
+        type: string
+      vitePressDirectory:
+        description: The directory that container VitePress
+        default: ""
+        required: false
+        type: string
+      cdnAwsAccessKeyIDSecret:
+        description: The secret name that holds the AWS access key ID
+        default: "CDN_HOSTED_S3_KEY"
+        required: false
+        type: string
+      cdnAwsSecretAccessKeySecret:
+        description: The secret name that holds the AWS access key secret
+        default: "CDN_HOSTED_S3_SECRET"
+        required: false
+        type: string
+      cdnAwsRegionSecret:
+        description: The secret name that holds the AWS region
+        default: "CDN_HOSTED_S3_REGION"
+        required: false
+        type: string
+      cdnAwsS3BucketSecret:
+        description: The secret name that holds the AWS S3 bucket name
+        default: "CDN_HOSTED_S3_BUCKET"
+        required: false
+        type: string
+      cdnAwsCloudFrontDistributionIDSecret:
+        description: The secret name that holds the AWS cloudfront distribution id
+        default: "CDN_HOSTED_DISTRIBUTION_ID"
+        required: false
+        type: string
+jobs:
+  required-labels:
+    name: Required Labels
+    if: inputs.disableRequiredLabels == false && github.event_name == 'pull_request'
+    uses: ./.github/workflows/required-labels.yaml
+    with:
+      runsOn: ${{ inputs.runsOnChaos }}
+      requiredLabels: ${{ inputs.labels }}
+  helm-diff:
+    name: Helm Diff
+    if: github.event_name == 'pull_request' && github.ref_type != 'labeled' && github.ref_type != 'unlabeled' && inputs.helmDirectory != ''
+    uses: ./.github/workflows/helm-diff.yaml
+    secrets: inherit
+    with:
+      runsOn: ${{ inputs.runsOnOrder }}
+      workingDirectory: ${{ inputs.workingDirectory }}
+      helmReleaseName: ${{ inputs.helmReleaseName }}
+      helmReleaseValueName: ${{ inputs.helmReleaseValueName }}
+      helmDirectory: ${{ inputs.helmDirectory }}
+      helmAdditionalArguments: ${{ inputs.helmAdditionalArguments }}
+      helmUpdateAppVersion: ${{ inputs.helmUpdateAppVersion }}
+      kubeConfigSecret: ${{ inputs.kubeConfigSecret }}
+  terraform-diff:
+    name: Terraform Diff
+    if: github.event_name == 'pull_request' && github.ref_type != 'labeled' && github.ref_type != 'unlabeled' && inputs.terraformDirectory != ''
+    uses: ./.github/workflows/terraform-diff.yaml
+    secrets: inherit
+    with:
+      runsOn: ${{ inputs.runsOnOrder }}
+      workingDirectory: ${{ inputs.workingDirectory }}
+      terraformDirectory: ${{ inputs.terraformDirectory }}
+      terraformVars: ${{ inputs.terraformVars }}
+      terraformParallelism: ${{ inputs.terraformParallelism }}
+      terraformLogLevel: ${{ inputs.terraformLogLevel }}
+      kubeConfigSecret: ${{ inputs.kubeConfigSecret }}
+  create-release:
+    name: Craft Release
+    if: github.event_name == 'milestone' && contains(fromJSON('["closed"]'), github.event.action)
+    uses: ./.github/workflows/craft-release.yaml
+    with:
+      runsOn: ${{ inputs.runsOnChaos }}
+      milestone: ${{ inputs.milestone }}
+      description: ${{ inputs.description }}workingDirectory
+      branch: ${{ inputs.branch }}
+      labels: ${{ inputs.labels }}
+      preReleaseScript: ${{ inputs.preReleaseScript }}
+      mustCreateCommit: false
+      mustUpdateAllSemverTags: false
+  deploy-release-kubernetes:
+    name: "Deploy Release: Kubernetes"
+    needs:
+      - create-release
+    if: inputs.type == 'kubernetes' && github.event_name == 'milestone' && contains(fromJSON('["closed"]'), github.event.action)
+    uses: ./.github/workflows/project-craft-release-kubernetes.yaml
+    secrets: inherit
+    with:
+      runsOnOrder: ${{ inputs.runsOnOrder }}
+      runsOnChaos: ${{ inputs.runsOnChaos }}
+      terraformDirectory: ${{ inputs.terraformDirectory }}
+      terraformVars: ${{ inputs.terraformVars }}
+      terraformParallelism: ${{ inputs.terraformParallelism }}
+      terraformLogLevel: ${{ inputs.terraformLogLevel }}
+      ociRetag: ${{ inputs.ociRetag }}
+      ociPlatforms: ${{ inputs.ociPlatforms }}
+      ociPushSecretSecret: ${{ inputs.ociPushSecretSecret }}
+      version: ${{ inputs.milestone }}
+      helmReleaseName: ${{ inputs.helmReleaseName }}
+      helmReleaseValueName: ${{ inputs.helmReleaseValueName }}
+      helmDirectory: ${{ inputs.helmDirectory }}
+      helmAdditionalArguments: ${{ inputs.helmAdditionalArguments }}
+      helmUpdateAppVersion: ${{ inputs.helmUpdateAppVersion }}
+      kubeConfigSecret: ${{ inputs.kubeConfigSecret }}
+  deploy-release-cdn:
+    name: "Deploy Release: CDN"
+    needs:
+      - create-release
+    if: inputs.type == 'cdn' && github.event_name == 'milestone' && contains(fromJSON('["closed"]'), github.event.action)
+    uses: ./.github/workflows/project-craft-release-cdn.yaml
+    secrets: inherit
+    with:
+      runsOn: ${{ inputs.runsOnOrder }}
+      milestone: ${{ inputs.milestone }}
+      workingDirectory: ${{ inputs.workingDirectory }}
+      vitePressDirectory: ${{ inputs.vitePressDirectory }}
+      applicationType: ${{ inputs.applicationType }}
+      cdnAwsAccessKeyIdSecret: ${{ inputs.cdnAwsAccessKeyIdSecret }}
+      cdnAwsSecretAccessKeySecret: ${{ inputs.cdnAwsSecretAccessKeySecret }}
+      cdnAwsRegionSecret: ${{ inputs.cdnAwsRegionSecret }}
+      cdnAwsS3BucketSecret: ${{ inputs.cdnAwsS3BucketSecret }}
+      cdnAwsCloudFrontDistributionIDSecret: ${{ inputs.cdnAwsCloudFrontDistributionIDSecret }}

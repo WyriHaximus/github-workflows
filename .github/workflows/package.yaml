@@ -63,7 +63,7 @@ jobs:
       env: ${{ inputs.env }}
   set-milestone:
     name: Set Milestone
-    if: inputs.disableSetMilestone == false
+    if: github.event.pull_request.milestone == null && inputs.disableSetMilestone == false
     uses: ./.github/workflows/package-set-milestone-on-pr.yaml
     with:
       initialTag: ${{ inputs.initialTag }}
