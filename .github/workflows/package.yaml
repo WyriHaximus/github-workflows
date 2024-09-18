@@ -74,9 +74,3 @@ jobs:
     uses: ./.github/workflows/markdown-check-links.yaml
     with:
       workingDirectory: ${{ inputs.workingDirectory }}
-  comment-composer-lock-diff:
-    name: Composer Diff
-    if: inputs.disableComposerLockDiff == false && github.event_name == 'pull_request'
-    uses: ./.github/workflows/composer-diff.yaml
-    with:
-      workingDirectory: ${{ inputs.workingDirectory }}

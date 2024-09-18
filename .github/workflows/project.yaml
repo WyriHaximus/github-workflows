@@ -116,11 +116,3 @@ jobs:
     with:
       runsOn: ${{ inputs.runsOnChaos }}
       workingDirectory: ${{ inputs.workingDirectory }}
-  comment-composer-lock-diff:
-    name: Composer Diff
-    if: inputs.disableComposerLockDiff == false && github.event_name == 'pull_request'
-    uses: ./.github/workflows/composer-diff.yaml
-    secrets: inherit
-    with:
-      runsOn: ${{ inputs.runsOnChaos }}
-      workingDirectory: ${{ inputs.workingDirectory }}
