@@ -2,6 +2,11 @@ name: Set Milestone
 on:
   workflow_call:
     inputs:
+      runsOn:
+        description: Define on which runner this workflow should run
+        default: "ubuntu-latest"
+        required: false
+        type: string
       initialTag:
         description: The tag to fallback to when no previous tag could be found.
         default: 1.0.0
@@ -17,7 +22,7 @@ env:
 jobs:
   supported-versions-matrix:
     name: Supported Versions Matrix
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runsOn }}
     outputs:
       highest: ${{ steps.supported-versions-matrix.outputs.highest }}
     steps:
@@ -26,25 +31,27 @@ jobs:
         uses: WyriHaximus/github-action-composer-php-versions-in-range@v1
         with:
           upcomingReleases: true
-  set-milestone:
+  figure-out-version:
+    name: Figure out what the version should be
     needs:
       - supported-versions-matrix
-    name: Set Milestone
     if: github.event.pull_request.milestone == null
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runsOn }}
     container:
       image: ghcr.io/wyrihaximusnet/php:${{ needs.supported-versions-matrix.outputs.highest }}-nts-alpine-dev-root
     outputs:
-      check: ${{ steps.generate-checks-strategy.outputs.check }}
+      version: ${{ steps.decidedversion.outputs.version }}
     steps:
+      - name: 'Setup jq'
+        uses: dcarbone/install-jq-action@v2
       - uses: actions/checkout@v4
       - run: git config --global --add safe.directory $GITHUB_WORKSPACE # Do this ourself because `actions/checkout@v4 doesn't succeed in doing this
       - run: git fetch --tags origin
-      - name: 'Get Previous tag'
+      - name: Get Previous tag
         id: previoustag
         uses: "WyriHaximus/github-action-get-previous-tag@v1"
-        with:
-          fallback: ${{ env.FALLBACK_TAG }}
+        env:
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
       - name: 'Get next versions'
         id: semvers
         if: steps.previoustag.outputs.tag != env.FALLBACK_TAG
@@ -77,15 +84,13 @@ jobs:
           MAJOR: ${{ steps.semvers.outputs.major }}
           MINOR: ${{ steps.semvers.outputs.minor }}
           PATCH: ${{ steps.semvers.outputs.patch }}
-      - name: 'Set Milestone through Chores.Dev'
-        uses: "chores-dev/set-milestone-action@main"
-        with:
-          milestone: ${{ steps.decidedversion.outputs.version }}
-      - name: 'Set Milestone'
-        uses: "WyriHaximus/github-action-set-milestone@master"
-        with:
-          issue_number: ${{ github.event.pull_request.number }}
-          milestone_number: ${{ steps.createmilestone.outputs.number }}
-        env:
-          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+  set-milestone:
+    name: Set Milestone
+    needs:
+      - figure-out-version
+    uses: ./.github/workflows/set-milestone-on-pr.yaml
+    secrets: inherit
+    with:
+      runsOn: ${{ inputs.runsOn }}
+      version: ${{ needs.figure-out-version.outputs.version }}
 

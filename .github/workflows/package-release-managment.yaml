@@ -21,11 +21,31 @@ on:
         default: "Bug 🐞,Dependencies 📦,Feature 🏗,Enhancement ✨,Deprecations 👋"
         required: false
         type: string
+      runsOnChaos:
+        description: Define on which runner to run workflows where order doesn't matter should run
+        default: "ubuntu-latest"
+        required: false
+        type: string
+      runsOnOrder:
+        description: Define on which runner to run workflows where order matters should run
+        default: "ubuntu-latest"
+        required: false
+        type: string
       preReleaseScript:
         description: Script that runs just before the release is created
         default: ""
         required: false
         type: string
+      initialTag:
+        description: The tag to fallback to when no previous tag could be found.
+        default: 1.0.0
+        required: false
+        type: string
+      disableSetMilestone:
+        description: Disable the setting of milestones
+        default: false
+        required: false
+        type: boolean
 jobs:
   required-labels:
     name: Required Labels
@@ -36,6 +56,14 @@ jobs:
     uses: ./.github/workflows/required-labels.yaml
     with:
       requiredLabels: ${{ inputs.labels }}
+  set-milestone:
+    name: Set Milestone
+    if: github.event.pull_request.milestone == null && inputs.disableSetMilestone == false
+    uses: ./.github/workflows/package-set-milestone-on-pr.yaml
+    with:
+      runsOn: ${{ inputs.runsOnChaos }}
+      initialTag: ${{ inputs.initialTag }}
+      dependencyUpdaters: ${{ inputs.dependencyUpdaters }}
   diff:
     name: Diff
     if: github.event_name == 'pull_request' && github.ref_type != 'labeled' && github.ref_type != 'unlabeled'

@@ -2,11 +2,6 @@ name: Package
 on:
   workflow_call:
     inputs:
-      initialTag:
-        description: The tag to fallback to when no previous tag could be found.
-        default: 1.0.0
-        required: false
-        type: string
       dependencyUpdaters:
         description: CSV list of bot AppId's that create PR's to updated dependencies like RenovateBot and DependaBot
         default: 49699333
@@ -22,11 +17,6 @@ on:
         default: ""
         required: false
         type: string
-      disableSetMilestone:
-        description: Disable the setting of milestones
-        default: false
-        required: false
-        type: boolean
       disableMarkdownLinkCheck:
         description: Disable the checking of links in markdown files
         default: false
@@ -61,13 +51,6 @@ jobs:
       workingDirectory: ${{ inputs.workingDirectory }}
       services: ${{ inputs.services }}
       env: ${{ inputs.env }}
-  set-milestone:
-    name: Set Milestone
-    if: github.event.pull_request.milestone == null && inputs.disableSetMilestone == false
-    uses: ./.github/workflows/package-set-milestone-on-pr.yaml
-    with:
-      initialTag: ${{ inputs.initialTag }}
-      dependencyUpdaters: ${{ inputs.dependencyUpdaters }}
   markdown-link-check:
     name: Check Markdown links
     if: inputs.disableMarkdownLinkCheck == false

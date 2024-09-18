@@ -15,39 +15,34 @@ on:
 env:
   FALLBACK_TAG: not_found
 jobs:
-  set-milestone:
-    name: Set Milestone
+  figure-out-version:
+    name: Figure out what the version should be
     runs-on: ${{ inputs.runsOn }}
-    if: github.event.pull_request.milestone == null
+    outputs:
+      version: ${{ steps.semvers.outputs.r_version }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            Makefile
       - run: git config --global --add safe.directory $GITHUB_WORKSPACE # Do this ourself because `actions/checkout@v4 doesn't succeed in doing this
       - run: git fetch --tags origin
-      - name: 'Get Previous tag'
+      - name: Get Previous tag
         id: previoustag
         uses: "WyriHaximus/github-action-get-previous-tag@v1"
         env:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-      - name: 'Get next minor version'
+      - name: Get next minor version
         id: semvers
-        uses: "WyriHaximus/github-action-next-release-version@v1"
+        uses: WyriHaximus/github-action-next-release-version@v1
         with:
           version: ${{ steps.previoustag.outputs.tag }}
-      - name: 'Create new milestone'
-        id: createmilestone
-        uses: "WyriHaximus/github-action-create-milestone@v1"
-        with:
-          title: ${{ steps.semvers.outputs.r_version }}
-        env:
-          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-      - name: 'Set Milestone through Chores.Dev'
-        uses: "chores-dev/set-milestone-action@main"
-        with:
-          milestone: ${{ steps.semvers.outputs.r_version }}
-      - name: 'Set Milestone'
-        uses: "WyriHaximus/github-action-set-milestone@master"
-        with:
-          issue_number: ${{ github.event.pull_request.number }}
-          milestone_number: ${{ steps.createmilestone.outputs.number }}
-        env:
-          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+  set-milestone:
+    name: Set Milestone
+    needs:
+      - figure-out-version
+    uses: ./.github/workflows/set-milestone-on-pr.yaml
+    secrets: inherit
+    with:
+      runsOn: ${{ inputs.runsOn }}
+      version: ${{ needs.figure-out-version.outputs.version }}

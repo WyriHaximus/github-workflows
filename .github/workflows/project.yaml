@@ -2,11 +2,6 @@ name: Package
 on:
   workflow_call:
     inputs:
-      initialTag:
-        description: The tag to fallback to when no previous tag could be found.
-        default: r1
-        required: false
-        type: string
       dependencyUpdaters:
         description: CSV list of bot AppId's that create PR's to updated dependencies like RenovateBot and DependaBot
         default: 49699333
@@ -22,11 +17,6 @@ on:
         default: ""
         required: false
         type: string
-      disableSetMilestone:
-        description: Disable the setting of milestones
-        default: false
-        required: false
-        type: boolean
       disableMarkdownLinkCheck:
         description: Disable the checking of links in markdown files
         default: false
@@ -101,14 +91,6 @@ jobs:
       tag: ghcr.io/${{ github.repository }}:sha-${{ github.sha }}
       ociPlatforms: ${{ inputs.ociPlatforms }}
       ociPushSecretSecret: ${{ inputs.ociPushSecretSecret }}
-  set-milestone:
-    name: Set Milestone
-    if: github.event.pull_request.milestone == null && inputs.disableSetMilestone == false && github.event_name == 'pull_request'
-    uses: ./.github/workflows/project-set-milestone-on-pr.yaml
-    secrets: inherit
-    with:
-      runsOn: ${{ inputs.runsOnChaos }}
-      initialTag: ${{ inputs.initialTag }}
   markdown-link-check:
     name: Check Markdown links
     if: inputs.disableMarkdownLinkCheck == false && github.event_name == 'pull_request'

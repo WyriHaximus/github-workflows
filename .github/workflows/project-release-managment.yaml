@@ -140,17 +140,38 @@ on:
         default: "CDN_HOSTED_DISTRIBUTION_ID"
         required: false
         type: string
+      initialTag:
+        description: The tag to fallback to when no previous tag could be found.
+        default: 1.0.0
+        required: false
+        type: string
+      disableSetMilestone:
+        description: Disable the setting of milestones
+        default: false
+        required: false
+        type: boolean
 jobs:
   required-labels:
     name: Required Labels
     if: inputs.disableRequiredLabels == false && github.event_name == 'pull_request'
     concurrency:
-      group: labels-${{ github.ref }}
+      group: required-labels-${{ github.ref }}
       cancel-in-progress: false
     uses: ./.github/workflows/required-labels.yaml
     with:
       runsOn: ${{ inputs.runsOnChaos }}
       requiredLabels: ${{ inputs.labels }}
+  set-milestone:
+    name: Set Milestone
+    if: github.event.pull_request.milestone == null && inputs.disableSetMilestone == false && github.event_name == 'pull_request'
+    concurrency:
+      group: set-milestone-${{ github.ref }}
+      cancel-in-progress: false
+    uses: ./.github/workflows/project-set-milestone-on-pr.yaml
+    secrets: inherit
+    with:
+      runsOn: ${{ inputs.runsOnChaos }}
+      initialTag: ${{ inputs.initialTag }}
   diff:
     name: Diff
     if: github.event_name == 'pull_request' && github.ref_type != 'labeled' && github.ref_type != 'unlabeled'
