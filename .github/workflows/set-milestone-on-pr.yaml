@@ -1,0 +1,63 @@
+name: Set Milestone
+on:
+  workflow_call:
+    inputs:
+      runsOn:
+        description: Define on which runner this workflow should run
+        default: "ubuntu-latest"
+        required: false
+        type: string
+      version:
+        description: The version to set
+        required: true
+        type: string
+env:
+  FALLBACK_TAG: not_found
+jobs:
+  set-milestone:
+    name: Set Milestone
+    runs-on: ${{ inputs.runsOn }}
+    steps:
+      - name: 'Setup jq'
+        uses: dcarbone/install-jq-action@v2
+      - name: Set Milestone through Chores.Dev
+        uses: chores-dev/set-milestone-action@main
+        with:
+          milestone: ${{ inputs.version }}
+      - name: Get Milestones
+        uses: WyriHaximus/github-action-get-milestones@master
+        id: milestones
+        env:
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+      - run: |
+          printf "number=%s" $(printenv MILESTONES | jq '.[]  | select(.title == "${{ inputs.version }}") | .number') >> $GITHUB_OUTPUT
+        id: querymilestone
+        shell: bash
+        env:
+          MILESTONES: ${{ steps.milestones.outputs.milestones }}
+      - name: Create Milestone
+        if: steps.querymilestone.outputs.number == ''
+        id: createmilestone
+        uses: WyriHaximus/github-action-create-milestone@v1
+        with:
+          title: ${{ inputs.version }}
+        env:
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+      - name: Select found or created Milestone
+        id: selectmilestone
+        run: |
+          if [ $(echo ${QUERY_NUMBER} | wc -c) -eq 1 ] ; then
+            printf "number=%s" "${CREATED_NUMBER}" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          printf "number=%s" "${QUERY_NUMBER}" >> $GITHUB_OUTPUT
+        env:
+          CREATED_NUMBER: ${{ steps.createmilestone.outputs.number }}
+          QUERY_NUMBER: ${{ steps.querymilestone.outputs.number }}
+      - name: Set Milestone
+        uses: WyriHaximus/github-action-set-milestone@master
+        with:
+          issue_number: ${{ github.event.pull_request.number }}
+          milestone_number: ${{ steps.selectmilestone.outputs.number }}
+        env:
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
