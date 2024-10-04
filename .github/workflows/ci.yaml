@@ -57,7 +57,7 @@ jobs:
       - id: package-name
         working-directory: ${{ inputs.workingDirectory }}
         run: |
-          printf "package-name=[\"%s\"]" $(docker run --rm -v "`pwd`:`pwd`" backplane/jq jq -r -c '.name' "$(pwd)/composer.json") >> $GITHUB_OUTPUT
+          printf "package-name=[\"%s\"]" $(docker run --rm -v "`pwd`:`pwd`" backplane/jq -r -c '.name' "$(pwd)/composer.json") >> $GITHUB_OUTPUT
   supported-versions-matrix:
     name: Supported Versions Matrix
     runs-on: ${{ inputs.runsOnChaos }}
