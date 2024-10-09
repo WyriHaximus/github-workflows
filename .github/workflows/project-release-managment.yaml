@@ -165,7 +165,7 @@ jobs:
     name: Set Milestone
     if: github.event.pull_request.milestone == null && inputs.disableSetMilestone == false && github.event_name == 'pull_request'
     concurrency:
-      group: set-milestone-${{ github.ref }}
+      group: milestone-${{ github.ref }}
       cancel-in-progress: false
     uses: ./.github/workflows/project-set-milestone-on-pr.yaml
     secrets: inherit
