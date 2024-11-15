@@ -18,6 +18,11 @@ on:
         default: ""
         required: true
         type: string
+      terraformSparseCheckout:
+        description: Additional files/patterns for the sparse checkout
+        default: ""
+        required: false
+        type: string
       terraformVars:
         description: The directory to run this workflow in
         default: ""
@@ -45,6 +50,12 @@ jobs:
       TF_LOG: ${{ inputs.terraformLogLevel }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            !${{ inputs.workingDirectory }}/*
+            /${{ inputs.workingDirectory }}${{ inputs.terraformDirectory }}*
+            ${{ inputs.terraformSparseCheckout }}
       - name: Put Kubernetes Configuration In Place
         run: |
           mkdir ~/.kube

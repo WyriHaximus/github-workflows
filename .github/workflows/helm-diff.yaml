@@ -28,6 +28,11 @@ on:
         default: ""
         required: true
         type: string
+      helmSparseCheckout:
+        description: Additional files/patterns for the sparse checkout
+        default: ""
+        required: false
+        type: string
       helmAdditionalArguments:
         description: The directory to run this workflow in
         default: ""
@@ -49,6 +54,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            !${{ inputs.workingDirectory }}/*
+            /${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}*
+            ${{ inputs.helmSparseCheckout }}
           fetch-depth: 0 # Required due to the way Git works, without it this action won't be able to find any or the correct tags
       - name: 'Get Previous tag'
         id: previousgittag
@@ -59,11 +69,11 @@ jobs:
       - name: Prep helm chart
         if: inputs.helmUpdateAppVersion
         run: |
-          mv ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}/Chart.yaml ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}/Chart.old.yaml &&
-          cat ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}/Chart.old.yaml | grep -v appVersion > ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}/Chart.yaml &&
-          rm ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}/Chart.old.yaml
-          echo -e "\r\nappVersion: ${{ steps.previousgittag.outputs.tag }}\r\n" >> ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}/Chart.yaml &&
-          cat ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}/Chart.yaml
+          mv ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}Chart.yaml ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}Chart.old.yaml &&
+          cat ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}Chart.old.yaml | grep -v appVersion > ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}Chart.yaml &&
+          rm ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}Chart.old.yaml
+          echo -e "\r\nappVersion: ${{ steps.previousgittag.outputs.tag }}\r\n" >> ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}Chart.yaml &&
+          cat ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}Chart.yaml
       - name: Diff
         uses: WyriHaximus/github-action-helm3@v4
         id: diff
@@ -71,7 +81,7 @@ jobs:
           exec: |
             helm repo add WyriHaximusNet https://helm.wyrihaximus.net/
             helm repo add MammatusPHP https://mammatusphp.github.io/helm-charts/
-            helm dependency build ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}/
+            helm dependency build ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}
             helm plugin install https://github.com/databus23/helm-diff
             delimiter="$(openssl rand -hex 8)"
             echo "diff<<${delimiter}" >> "${GITHUB_OUTPUT}"

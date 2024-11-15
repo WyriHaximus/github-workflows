@@ -27,6 +27,10 @@ jobs:
       highest: ${{ steps.supported-versions-matrix.outputs.highest }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            ${{ inputs.workingDirectory }}composer.json
+            ${{ inputs.workingDirectory }}composer.lock
       - id: supported-versions-matrix
         uses: WyriHaximus/github-action-composer-php-versions-in-range@v1
         with:

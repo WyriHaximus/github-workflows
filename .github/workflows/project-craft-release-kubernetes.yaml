@@ -31,6 +31,11 @@ on:
         default: ""
         required: true
         type: string
+      helmSparseCheckout:
+        description: Additional files/patterns for the sparse checkout
+        default: ""
+        required: false
+        type: string
       helmAdditionalArguments:
         description: The directory to run this workflow in
         default: ""
@@ -49,6 +54,11 @@ on:
         description: The directory to run this workflow in
         default: ""
         required: true
+        type: string
+      terraformSparseCheckout:
+        description: Additional files/patterns for the sparse checkout
+        default: ""
+        required: false
         type: string
       terraformVars:
         description: The directory to run this workflow in
@@ -89,6 +99,7 @@ jobs:
     with:
       runsOn: ${{ inputs.runsOnOrder }}
       terraformDirectory: ${{ inputs.terraformDirectory }}
+      terraformSparseCheckout: ${{ inputs.terraformSparseCheckout }}
       terraformVars: ${{ inputs.terraformVars }}
       terraformParallelism: ${{ inputs.terraformParallelism }}
       terraformLogLevel: ${{ inputs.terraformLogLevel }}
@@ -117,6 +128,7 @@ jobs:
       helmReleaseName: ${{ inputs.helmReleaseName }}
       helmReleaseValueName: ${{ inputs.helmReleaseValueName }}
       helmDirectory: ${{ inputs.helmDirectory }}
+      helmSparseCheckout: ${{ inputs.helmSparseCheckout }}
       helmAdditionalArguments: ${{ inputs.helmAdditionalArguments }}
       helmUpdateAppVersion: ${{ inputs.helmUpdateAppVersion }}
       kubeConfigSecret: ${{ inputs.kubeConfigSecret }}
