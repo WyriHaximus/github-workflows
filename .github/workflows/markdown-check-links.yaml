@@ -25,6 +25,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            !${{ inputs.workingDirectory }}/*
+            ${{ inputs.workingDirectory }}/**/*.md
       - name: Check Markdown links
         uses: umbrelladocs/action-linkspector@v1
         with:
