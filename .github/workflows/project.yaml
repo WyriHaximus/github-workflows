@@ -66,6 +66,11 @@ on:
         default: "GITHUB_TOKEN"
         required: false
         type: string
+      ociSparseCheckout:
+        description: Sparse checkout patterns in cone mode
+        default: ""
+        required: false
+        type: string
 jobs:
   ci:
     name: Continuous Integration
@@ -91,6 +96,7 @@ jobs:
       tag: ghcr.io/${{ github.repository }}:sha-${{ github.sha }}
       ociPlatforms: ${{ inputs.ociPlatforms }}
       ociPushSecretSecret: ${{ inputs.ociPushSecretSecret }}
+      ociSparseCheckout:  ${{ inputs.ociSparseCheckout }}
   markdown-link-check:
     name: Check Markdown links
     if: inputs.disableMarkdownLinkCheck == false && github.event_name == 'pull_request'

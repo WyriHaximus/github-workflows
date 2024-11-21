@@ -32,6 +32,11 @@ on:
         default: ""
         required: true
         type: string
+      helmSparseCheckout:
+        description: Additional files/patterns for the sparse checkout
+        default: ""
+        required: false
+        type: string
       helmAdditionalArguments:
         description: The directory to run this workflow in
         default: ""
@@ -52,21 +57,27 @@ jobs:
     runs-on: ${{ inputs.runsOn }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            !${{ inputs.workingDirectory }}/*
+            /${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}*
+            ${{ inputs.helmSparseCheckout }}
       - name: Prep helm chart
         if: inputs.helmUpdateAppVersion
         run: |
-          mv ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}/Chart.yaml ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}/Chart.old.yaml &&
-          cat ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}/Chart.old.yaml | grep -v appVersion > ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}/Chart.yaml &&
-          rm ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}/Chart.old.yaml
-          echo -e "\r\nappVersion: ${{ inputs.version }}\r\n" >> ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}/Chart.yaml &&
-          cat ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}/Chart.yaml
+          mv ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}Chart.yaml ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}Chart.old.yaml &&
+          cat ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}Chart.old.yaml | grep -v appVersion > ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}Chart.yaml &&
+          rm ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}Chart.old.yaml
+          echo -e "\r\nappVersion: ${{ inputs.version }}\r\n" >> ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}Chart.yaml &&
+          cat ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}Chart.yaml
       - name: Deploy
         uses: WyriHaximus/github-action-helm3@v4
         with:
           exec: |
             helm repo add WyriHaximusNet https://helm.wyrihaximus.net/
             helm repo add MammatusPHP https://mammatusphp.github.io/helm-charts/
-            helm dependency build ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}/
+            helm dependency build ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}
             helm upgrade --install --wait --atomic --timeout 60m6s ${{ inputs.helmReleaseName }} ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}  --set ${{ inputs.helmReleaseValueName }}=${{ inputs.version }} ${{ inputs.helmAdditionalArguments }}
           kubeconfig: ${{ secrets[inputs.kubeConfigSecret] }}
           overrule_existing_kubeconfig: "true"

@@ -150,6 +150,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           path: checked_out_package
+          sparse-checkout: |
+            ${{ inputs.workingDirectory }}composer.json
       - name: Set Up composer.json
         run: |
           echo "{\"repositories\": [{\"name\": \"${{ matrix.package-name }}\",\"type\": \"path\",\"url\": \"./checked_out_package\"}],\"minimum-stability\":\"dev\",\"prefer-stable\":true}" > composer.json
