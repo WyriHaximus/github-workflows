@@ -1,0 +1,85 @@
+name: Release Management
+on:
+  workflow_call:
+    inputs:
+      milestone:
+        description: The milestone to tag
+        required: false
+        type: string
+      description:
+        description: Additional information to add above the changelog in the release
+        default: ""
+        required: false
+        type: string
+      branch:
+        description: The branch to tag the release on
+        default: ""
+        required: false
+        type: string
+      labels:
+        description: The labels to for the sections of the changelog
+        default: "Bug 🐞,Dependencies 📦,Feature 🏗,Enhancement ✨,Deprecations 👋"
+        required: false
+        type: string
+      runsOnChaos:
+        description: Define on which runner to run workflows where order doesn't matter should run
+        default: "ubuntu-latest"
+        required: false
+        type: string
+      runsOnOrder:
+        description: Define on which runner to run workflows where order matters should run
+        default: "ubuntu-latest"
+        required: false
+        type: string
+      preReleaseScript:
+        description: Script that runs just before the release is created
+        default: ""
+        required: false
+        type: string
+      initialTag:
+        description: The tag to fallback to when no previous tag could be found.
+        default: 1.0.0
+        required: false
+        type: string
+      disableSetMilestone:
+        description: Disable the setting of milestones
+        default: false
+        required: false
+        type: boolean
+jobs:
+  required-labels:
+    name: Required Labels
+    if: inputs.disableRequiredLabels == false && github.event_name == 'pull_request'
+    uses: ./.github/workflows/required-labels.yaml
+    with:
+      requiredLabels: ${{ inputs.labels }}
+  set-milestone:
+    name: Set Milestone
+    if: github.event.pull_request.milestone == null && inputs.disableSetMilestone == false && github.event_name == 'pull_request'
+    uses: ./.github/workflows/package-set-milestone-on-pr.yaml
+    with:
+      runsOn: ${{ inputs.runsOnChaos }}
+      initialTag: ${{ inputs.initialTag }}
+      dependencyUpdaters: ${{ inputs.dependencyUpdaters }}
+  diff:
+    name: Diff
+    if: github.event_name == 'pull_request' && github.ref_type != 'labeled' && github.ref_type != 'unlabeled'
+    uses: ./.github/workflows/diff.yaml
+    secrets: inherit
+    with:
+      runsOnChaos: ${{ inputs.runsOnChaos }}
+      runsOnOrder: ${{ inputs.runsOnOrder }}
+      workingDirectory: ${{ inputs.workingDirectory }}
+  create-release:
+    name: Craft Release
+    if: github.event_name == 'milestone' && contains(fromJSON('["closed"]'), github.event.action)
+    uses: ./.github/workflows/craft-release.yaml
+    with:
+      milestone: ${{ inputs.milestone }}
+      description: ${{ inputs.description }}
+      branch: ${{ inputs.branch }}
+      labels: ${{ inputs.labels }}
+      preReleaseScript: ${{ inputs.preReleaseScript }}
+      mustCreateCommit: false
+      mustUpdateAllSemverTags: false
+

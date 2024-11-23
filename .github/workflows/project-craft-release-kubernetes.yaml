@@ -67,7 +67,7 @@ on:
         type: string
       terraformParallelism:
         description: Value for the -parallelism plan/apply flag
-        default: 10
+        default: 13
         required: true
         type: number
       terraformLogLevel:
@@ -80,11 +80,6 @@ on:
         default: false
         required: true
         type: boolean
-      ociPlatforms:
-        description: The platforms to build the OCI image for, empty means autodetect
-        default: ""
-        required: true
-        type: string
       ociPushSecretSecret:
         description: The secret name that holds the token to push OCI images to GHCR.io
         default: "GITHUB_TOKEN"
@@ -113,7 +108,6 @@ jobs:
       runsOn: ${{ inputs.runsOnChaos }}
       from: ghcr.io/${{ github.repository }}:sha-${{ github.sha }}
       to: ghcr.io/${{ github.repository }}:${{ inputs.version }}
-      ociPlatforms: ${{ inputs.ociPlatforms }}
       ociPushSecretSecret: ${{ inputs.ociPushSecretSecret }}
   helm-deploy:
     name: Helm Deploy

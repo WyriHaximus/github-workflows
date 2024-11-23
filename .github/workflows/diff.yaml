@@ -68,7 +68,7 @@ on:
         type: string
       terraformParallelism:
         description: Value for the -parallelism plan/apply flag
-        default: 10
+        default: 13
         required: false
         type: number
       terraformLogLevel:
