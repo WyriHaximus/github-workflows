@@ -51,9 +51,9 @@ For example in the case of `TerraForm` the full checkout step is:
    with:
      sparse-checkout-cone-mode: false
      sparse-checkout: |
-       !${{ inputs.workingDirectory }}/*
-       /${{ inputs.workingDirectory }}${{ inputs.terraformDirectory }}*
-       ${{ inputs.terraformSparseCheckout }}
+       !{{ "${{ inputs.workingDirectory }}" }}/*
+       /{{ "${{ inputs.workingDirectory }}" }}{{ "${{ inputs.terraformDirectory }}" }}*
+       {{ "${{ inputs.terraformSparseCheckout }}" }}
 ```
 
 ### Versioning
@@ -65,8 +65,8 @@ version, `r1`, `r2`, `r13`, `r66` etc etc.
 ### OCI images
 
 All images are pushing to GitHub's container registry at `ghcr.io` with the full repository name as image name taken
-from `${{ github.repository }}`. On each build image image tag will be `sha-COMMIT_SHA` where `COMMIT_SHA` is
-taken from `${{ github.sha }}`.
+from `{{ "${{ github.repository }}" }}`. On each build image image tag will be `sha-COMMIT_SHA` where `COMMIT_SHA` is
+taken from `{{ "${{ github.sha }}" }}`.
 
 Release images are tagged with the passed milestone title as the image tag.
 
@@ -187,7 +187,7 @@ jobs:
     name: Generate JSON for Helm
     runs-on: chaos
     outputs:
-      helm-json: ${{ steps.helm-json.outputs.helm-json }}
+      helm-json: {{ "${{ steps.helm-json.outputs.helm-json }}" }}
     steps:
       - run: printf "helm-json=%s" $(echo "{\"LOGLEVEL\":\"DEBUG\"}") >> $GITHUB_OUTPUT
   release-management:
@@ -197,7 +197,7 @@ jobs:
     secrets: inherit
     uses: WyriHaximus/github-workflows/.github/workflows/project-release-management.yaml@main
     with:
-      helmAdditionalArguments: --set-json='application=${{ needs.helm-json.outputs.helm-json }}'
+      helmAdditionalArguments: --set-json='application={{ "${{ needs.helm-json.outputs.helm-json }}" }}'
 ```
 
 Because these workflows provide diff comments on PR's for Helm and others we need to specify `helmReleaseValueName` so
@@ -266,11 +266,9 @@ jobs:
 
 | Input | Type | Description | Default |
 |-------|------|-------------|---------|
-| dependencyUpdaters | string | CSV list of bot AppId&#039;s that create PR&#039;s to updated dependencies like RenovateBot and DependaBot | 49699333 |
-| env | string | Any additional environment variables | {} |
-| jsonPattern | string | The pattern to match which JSON files to check | \.json$ |
-| services | string | Any additional services to use | {} |
-| workingDirectory | string | The directory to run this workflow in |  |
+{% for name, input in package.ci %}
+| {{ name }} | {{ input.type }} | {{ input.description }} | {{ input.default }} |
+{% endfor %}
 
 #### Release Management
 
@@ -299,23 +297,17 @@ jobs:
     name: Create Release
     uses: WyriHaximus/github-workflows/.github/workflows/package-release-management.yaml@main
     with:
-      milestone: ${{ github.event.milestone.title }}
-      description: ${{ github.event.milestone.title }}
+      milestone: {{ "${{ github.event.milestone.title }}" }}
+      description: {{ "${{ github.event.milestone.title }}" }}
 ```
 
 ##### Inputs
 
 | Input | Type | Description | Default |
 |-------|------|-------------|---------|
-| branch | string | The branch to tag the release on |  |
-| description | string | Additional information to add above the changelog in the release |  |
-| disableSetMilestone | boolean | Disable the setting of milestones |  |
-| initialTag | string | The tag to fallback to when no previous tag could be found. | 1.0.0 |
-| labels | string | The labels to for the sections of the changelog | Bug 🐞,Dependencies 📦,Feature 🏗,Enhancement ✨,Deprecations 👋 |
-| milestone | string | The milestone to tag |  |
-| preReleaseScript | string | Script that runs just before the release is created |  |
-| runsOnChaos | string | Define on which runner to run workflows where order doesn&#039;t matter should run | ubuntu-latest |
-| runsOnOrder | string | Define on which runner to run workflows where order matters should run | ubuntu-latest |
+{% for name, input in package.releaseManagement %}
+| {{ name }} | {{ input.type }} | {{ input.description }} | {{ input.default }} |
+{% endfor %}
 
 ### Projects
 
@@ -350,22 +342,9 @@ jobs:
 
 | Input | Type | Description | Default |
 |-------|------|-------------|---------|
-| dependencyUpdaters | string | CSV list of bot AppId&#039;s that create PR&#039;s to updated dependencies like RenovateBot and DependaBot | 49699333 |
-| disableComposerLockDiff | boolean | Disable the diffing of composer lock files |  |
-| disableMarkdownLinkCheck | boolean | Disable the checking of links in markdown files |  |
-| disableRequiredLabels | boolean | Disable failing PR&#039;s when certain labels are missing |  |
-| dockerBuildExtraArguments | string | Extra arguments to pass to the docker build command |  |
-| dockerBuildTarget | string | Value for the --target flag |  |
-| dockerfile | string | The Dockerfile to build |  |
-| env | string | Any additional environment variables | {} |
-| jsonPattern | string | The pattern to match which JSON files to check | \.json$ |
-| ociPlatforms | string | The platforms to build the OCI image for, empty means autodetect |  |
-| ociPushSecretSecret | string | The secret name that holds the token to push OCI images to GHCR.io | GITHUB_TOKEN |
-| ociSparseCheckout | string | Sparse checkout patterns in cone mode |  |
-| runsOnChaos | string | Define on which runner to run workflows where order doesn&#039;t matter should run | ubuntu-latest |
-| runsOnOrder | string | Define on which runner to run workflows where order matters should run | ubuntu-latest |
-| services | string | Any additional services to use | {} |
-| workingDirectory | string | The directory to run this workflow in |  |
+{% for name, input in project.ci %}
+| {{ name }} | {{ input.type }} | {{ input.description }} | {{ input.default }} |
+{% endfor %}
 
 #### Release Management
 
@@ -393,8 +372,8 @@ jobs:
     secrets: inherit
     uses: WyriHaximus/github-workflows/.github/workflows/project-release-management.yaml@main
     with:
-      milestone: ${{ github.event.milestone.title }}
-      description: ${{ github.event.milestone.description }}
+      milestone: {{ "${{ github.event.milestone.title }}" }}
+      description: {{ "${{ github.event.milestone.description }}" }}
       runsOnChaos: chaos
       runsOnOrder: queue
 ```
@@ -403,36 +382,9 @@ jobs:
 
 | Input | Type | Description | Default |
 |-------|------|-------------|---------|
-| applicationType | string | The type of project this is, release and deployment wise |  |
-| branch | string | The branch to tag the release on |  |
-| cdnAwsAccessKeyIDSecret | string | The secret name that holds the AWS access key ID | CDN_HOSTED_S3_KEY |
-| cdnAwsCloudFrontDistributionIDSecret | string | The secret name that holds the AWS cloudfront distribution id | CDN_HOSTED_DISTRIBUTION_ID |
-| cdnAwsRegionSecret | string | The secret name that holds the AWS region | CDN_HOSTED_S3_REGION |
-| cdnAwsS3BucketSecret | string | The secret name that holds the AWS S3 bucket name | CDN_HOSTED_S3_BUCKET |
-| cdnAwsSecretAccessKeySecret | string | The secret name that holds the AWS access key secret | CDN_HOSTED_S3_SECRET |
-| description | string | Additional information to add above the changelog in the release |  |
-| disableSetMilestone | boolean | Disable the setting of milestones |  |
-| helmAdditionalArguments | string | The directory to run this workflow in |  |
-| helmDirectory | string | The directory to run this workflow in |  |
-| helmReleaseName | string | The name of the helm release |  |
-| helmReleaseValueName | string | The name of the value to use for releases |  |
-| helmSparseCheckout | string | Additional files/patterns for the sparse checkout |  |
-| helmUpdateAppVersion | boolean | Update the helm charts appVersion with the passed version |  |
-| initialTag | string | The tag to fallback to when no previous tag could be found. | 1.0.0 |
-| kubeConfigSecret | string | The secret name that holds the kubeconfig to connect with Kubernetes |  |
-| labels | string | The labels to for the sections of the changelog | Bug 🐞,Dependencies 📦,Feature 🏗,Enhancement ✨ |
-| milestone | string | The milestone to tag |  |
-| ociPushSecretSecret | string | The secret name that holds the token to push OCI images to GHCR.io | GITHUB_TOKEN |
-| runsOnChaos | string | Define on which runner to run workflows where order doesn&#039;t matter should run | ubuntu-latest |
-| runsOnOrder | string | Define on which runner to run workflows where order matters should run | ubuntu-latest |
-| terraformDirectory | string | The directory to run this workflow in |  |
-| terraformLogLevel | string | Value for the TF_LOG environment value |  |
-| terraformParallelism | number | Value for the -parallelism plan/apply flag | 13 |
-| terraformSparseCheckout | string | Additional files/patterns for the sparse checkout |  |
-| terraformVars | string | The directory to run this workflow in |  |
-| type | string | The type of project this is, release and deployment wise | kubernetes |
-| vitePressDirectory | string | The directory that container VitePress |  |
-| workingDirectory | string | The directory to run this workflow in |  |
+{% for name, input in project.releaseManagement %}
+| {{ name }} | {{ input.type }} | {{ input.description }} | {{ input.default }} |
+{% endfor %}
 
 ## TODO
 

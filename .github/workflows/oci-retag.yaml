@@ -16,11 +16,6 @@ on:
         description: The target tag to retag to
         required: true
         type: string
-      ociPlatforms:
-        description: The platforms to build the OCI image for, empty means autodetect
-        default: ""
-        required: false
-        type: string
       ociPushSecretSecret:
         description: The secret name that holds the token to push OCI images to GHCR.io
         default: "GITHUB_TOKEN"
@@ -62,7 +57,6 @@ jobs:
           printf "FROM %s" $(echo "${{ inputs.from }}" | tr '[:upper:]' '[:lower:]') >> Dockerfile.tag
           cat Dockerfile.tag
       - name: Detect Platform Flag
-        if: inputs.ociPlatforms == ''
         id: platform
         run: |
           printf "platform=%s" $(docker manifest inspect $(echo "${{ inputs.from }}" | tr '[:upper:]' '[:lower:]') | docker run --rm -i backplane/jq '([.manifests[].platform | select(.os != "unknown")]?) | .[] | (.os + "/" + .architecture)' | docker run --rm -i backplane/jq -s '. | join(",")') >> $GITHUB_OUTPUT
@@ -72,4 +66,4 @@ jobs:
           timeout_minutes: 120
           retry_wait_seconds: 10
           max_attempts: 13
-          command: docker build --platform=${{ inputs.ociPlatforms != '' && inputs.ociPlatforms || steps.platform.outputs.platform }} --output=type=registry --no-cache -f Dockerfile.tag -t $(echo "${{ inputs.to }}" | tr '[:upper:]' '[:lower:]') .
+          command: docker build --platform=${{ steps.platform.outputs.platform }} --output=type=registry --no-cache -f Dockerfile.tag -t $(echo "${{ inputs.to }}" | tr '[:upper:]' '[:lower:]') .

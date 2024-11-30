@@ -17,21 +17,6 @@ on:
         default: ""
         required: false
         type: string
-      disableMarkdownLinkCheck:
-        description: Disable the checking of links in markdown files
-        default: false
-        required: false
-        type: boolean
-      disableComposerLockDiff:
-        description: Disable the diffing of composer lock files
-        default: false
-        required: false
-        type: boolean
-      disableRequiredLabels:
-        description: Disable failing PR's when certain labels are missing
-        default: false
-        required: false
-        type: boolean
       services:
         description: Any additional services to use
         default: "{}"

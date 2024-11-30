@@ -24,7 +24,7 @@ jobs:
     runs-on: ${{ inputs.runsOn }}
     steps:
       - name: Comment composer.lock diff
-        uses: WyriHaximus/github-action-composer.lock-diff@v2
+        uses: WyriHaximus/github-action-composer.lock-diff@sparse-checkout
         with:
           workingDirectory: ${{ inputs.workingDirectory }}
         env:

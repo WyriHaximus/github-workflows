@@ -105,6 +105,11 @@ on:
         default: ""
         required: false
         type: string
+      ociRetag:
+        description: Whether or not to retag OCI images with the release tag
+        default: false
+        required: false
+        type: boolean
       ociPushSecretSecret:
         description: The secret name that holds the token to push OCI images to GHCR.io
         default: "GITHUB_TOKEN"

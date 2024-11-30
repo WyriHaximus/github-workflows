@@ -1,0 +1,6 @@
+{
+    "require": {
+        "wyrihaximus/simple-twig": "^2.1",
+        "symfony/yaml": "^6.4"
+    }
+}
