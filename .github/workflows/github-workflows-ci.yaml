@@ -26,7 +26,7 @@ jobs:
         run: |
           make generate
       - name: Check that the files are the exact same
-        uses: LouisBrunner/diff-action@v2.0.0
+        uses: LouisBrunner/diff-action@v2.1.0
         with:
           old: README.current.md
           new: README.md
@@ -35,3 +35,5 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           notify_check: true
           notify_issue: true
+          sticky_comment: true
+          title: README
