@@ -26,7 +26,7 @@ jobs:
         run: |
           make generate
       - name: Check that the files are the exact same
-        uses: LouisBrunner/diff-action@v2.1.0
+        uses: LouisBrunner/diff-action@v2.2.0
         with:
           old: README.current.md
           new: README.md
