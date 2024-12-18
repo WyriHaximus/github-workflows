@@ -58,8 +58,9 @@ jobs:
           cat Dockerfile.tag
       - name: Detect Platform Flag
         id: platform
-        run: |
-          printf "platform=%s" $(docker manifest inspect $(echo "${{ inputs.from }}" | tr '[:upper:]' '[:lower:]') | docker run --rm -i backplane/jq '([.manifests[].platform | select(.os != "unknown")]?) | .[] | (.os + "/" + .architecture)' | docker run --rm -i backplane/jq -s '. | join(",")') >> $GITHUB_OUTPUT
+        uses: wyrihaximus/github-action-oci-image-supported-platforms@main
+        with:
+          image: ${{ inputs.from }}
       - name: Pull, retag, and push image
         uses: nick-invision/retry@v3
         with:
