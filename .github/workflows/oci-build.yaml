@@ -78,7 +78,8 @@ jobs:
       - name: Detect Platform Flag
         if: inputs.ociPlatforms == ''
         id: platform
-        run: |
-          printf "platform=%s" $(docker manifest inspect $(cat ${{ inputs.dockerfile }} | grep FROM | tail -n 1 | docker run -i --rm ghcr.io/wyrihaximusnet/php:8.3-nts-alpine-slim php -r 'echo explode(" ", trim(fgets(STDIN)))[1];') | docker run --rm -i backplane/jq '([.manifests[].platform | select(.os != "unknown")]?) | .[] | (.os + "/" + .architecture)' | docker run --rm -i backplane/jq -s '. | join(",")') >> $GITHUB_OUTPUT
+        uses: wyrihaximus/github-action-oci-image-supported-platforms@main
+        with:
+          dockerfile: ${{ inputs.dockerfile }}
       - name: Build, and push image
-        run: docker build --platform=${{ inputs.ociPlatforms != '' && inputs.ociPlatforms || steps.platform.outputs.platform }} --output=type=registry -f ${{ inputs.dockerfile }} -t $(echo "${{ inputs.tag }}" | tr '[:upper:]' '[:lower:]') . ${{ inputs.dockerBuildTarget != '' && format('--target={0}', inputs.dockerBuildTarget) || ''}} ${{ inputs.dockerBuildExtraArguments }}
+        run: docker build --platform=${{ inputs.ociPlatforms != '' && inputs.ociPlatforms || steps.platform.outputs.platform_csv }} --output=type=registry -f ${{ inputs.dockerfile }} -t $(echo "${{ inputs.tag }}" | tr '[:upper:]' '[:lower:]') . ${{ inputs.dockerBuildTarget != '' && format('--target={0}', inputs.dockerBuildTarget) || ''}} ${{ inputs.dockerBuildExtraArguments }}
