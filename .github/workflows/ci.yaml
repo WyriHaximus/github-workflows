@@ -167,7 +167,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php: ${{ fromJson(needs.supported-versions-matrix.outputs.version) }}
+        php: ${{ fromJson(inputs.isProject == false && needs.supported-versions-matrix.outputs.version || format('["{0}"]', needs.supported-versions-matrix.outputs.lowest)) }}
         php-to-thread-or-not-to-thread: ${{ fromJson(needs.supported-threading-matrix.outputs.version) }}
         composer: ${{ fromJson(inputs.isProject == false && '["lowest", "locked", "highest"]' || '["locked"]') }}
         check: ${{ fromJson(needs.supported-checks-matrix.outputs.check) }}
