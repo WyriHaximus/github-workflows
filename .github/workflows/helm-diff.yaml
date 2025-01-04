@@ -85,7 +85,7 @@ jobs:
             helm plugin install https://github.com/databus23/helm-diff
             delimiter="$(openssl rand -hex 8)"
             echo "diff<<${delimiter}" >> "${GITHUB_OUTPUT}"
-            echo "$(helm diff upgrade ${{ inputs.helmReleaseName }} ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }} --set ${{ inputs.helmReleaseValueName }}=${{ steps.previousgittag.outputs.tag }} ${{ inputs.helmAdditionalArguments }})" >> "${GITHUB_OUTPUT}"
+            echo "$(helm diff upgrade ${{ inputs.helmReleaseName }} --allow-unreleased ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }} --set ${{ inputs.helmReleaseValueName }}=${{ steps.previousgittag.outputs.tag }} ${{ inputs.helmAdditionalArguments }})" >> "${GITHUB_OUTPUT}"
             echo "${delimiter}" >> "${GITHUB_OUTPUT}"
           kubeconfig: ${{ secrets[inputs.kubeConfigSecret] }}
           overrule_existing_kubeconfig: "true"
