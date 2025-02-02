@@ -69,7 +69,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ inputs.milestone }}-dist
-          path: ${{ inputs.workingDirectory }}${{ inputs.vitePressDirectory }}/.vitepress/dist/
+          path: ${{ inputs.workingDirectory }}${{ inputs.vitePressDirectory }}/.${{ inputs.applicationType }}/dist/
   cdn-hosted-deploy-aws:
     name: Deploy assets to CDN and invalidate caches
     needs:
