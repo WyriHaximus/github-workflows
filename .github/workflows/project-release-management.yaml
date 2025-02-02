@@ -155,6 +155,11 @@ on:
         default: false
         required: false
         type: boolean
+      disableComposerLockDiff:
+        description: Disable the diffing of composer lock files
+        default: false
+        required: false
+        type: boolean
 jobs:
   required-labels:
     name: Required Labels
@@ -192,6 +197,7 @@ jobs:
       helmSparseCheckout: ${{ inputs.helmSparseCheckout }}
       helmAdditionalArguments: ${{ inputs.helmAdditionalArguments }}
       helmUpdateAppVersion: ${{ inputs.helmUpdateAppVersion }}
+      disableComposerLockDiff: ${{ inputs.disableComposerLockDiff }}
   create-release:
     name: Craft Release
     if: github.event_name == 'milestone' && contains(fromJSON('["closed"]'), github.event.action)

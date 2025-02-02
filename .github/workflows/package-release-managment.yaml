@@ -46,6 +46,11 @@ on:
         default: false
         required: false
         type: boolean
+      disableComposerLockDiff:
+        description: Disable the diffing of composer lock files
+        default: false
+        required: false
+        type: boolean
 jobs:
   required-labels:
     name: Required Labels
@@ -70,6 +75,7 @@ jobs:
       runsOnChaos: ${{ inputs.runsOnChaos }}
       runsOnOrder: ${{ inputs.runsOnOrder }}
       workingDirectory: ${{ inputs.workingDirectory }}
+      disableComposerLockDiff: ${{ inputs.disableComposerLockDiff }}
   create-release:
     name: Craft Release
     if: github.event_name == 'milestone' && contains(fromJSON('["closed"]'), github.event.action)

@@ -17,6 +17,11 @@ on:
         default: ""
         required: false
         type: string
+      disableComposerLockDiff:
+        description: Disable the diffing of composer lock files
+        default: false
+        required: false
+        type: boolean
       helmReleaseName:
         description: The name of the helm release
         default: ""
