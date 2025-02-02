@@ -147,7 +147,7 @@ on:
         type: string
       initialTag:
         description: The tag to fallback to when no previous tag could be found.
-        default: 1.0.0
+        default: r1
         required: false
         type: string
       disableSetMilestone:
