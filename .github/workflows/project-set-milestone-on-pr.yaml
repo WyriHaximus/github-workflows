@@ -12,8 +12,6 @@ on:
         default: r1
         required: false
         type: string
-env:
-  FALLBACK_TAG: not_found
 jobs:
   figure-out-version:
     name: Figure out what the version should be
@@ -30,6 +28,8 @@ jobs:
       - name: Get Previous tag
         id: previoustag
         uses: "WyriHaximus/github-action-get-previous-tag@v1"
+        with:
+          fallback: ${{ inputs.initialTag }}
         env:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
       - name: Get next minor version
