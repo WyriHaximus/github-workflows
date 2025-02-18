@@ -207,7 +207,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ${{ fromJson(contains(needs.supported-versions-matrix.outputs.extensions, 'pcntl') == false && '["ubuntu-latest", "windows-latest", "macos-latest"]' || '["ubuntu-latest", "macos-latest"]') }}
+        os: ${{ fromJson((contains(needs.supported-versions-matrix.outputs.extensions, 'pcntl') == false || contains(needs.supported-versions-matrix.outputs.extensions, 'parallel') == false) && '["ubuntu-latest", "windows-latest", "macos-latest"]' || '["ubuntu-latest", "macos-latest"]') }}
         php: ${{ fromJson(needs.supported-versions-matrix.outputs.version) }}
         php-to-thread-or-not-to-thread: ${{ fromJson(needs.supported-threading-matrix.outputs.version) }}
         composer: [lowest, locked, highest]
