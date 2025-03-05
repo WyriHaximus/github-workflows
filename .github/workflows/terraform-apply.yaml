@@ -80,7 +80,7 @@ jobs:
       - name: Terraform Validate
         id: validate
         run: terraform -chdir=${{ inputs.terraformDirectory }} validate -no-color
-      - name: Plan
-        id: plan
+      - name: Apply
+        id: apply
         run: terraform -chdir=${{ inputs.terraformDirectory }} apply -auto-approve -no-color -parallelism=${{ inputs.terraformParallelism }}
         env: ${{ secrets }}
