@@ -27,7 +27,7 @@ on:
 jobs:
   conductor:
     name: Private Packagist Conductor
-    if: inputs.disableConductor == false && github.event_name == 'repository_dispatch' && github.event.type == 'dependency_update'
+    if: inputs.disableConductor == false && github.event_name == 'repository_dispatch' && github.event.event_type == 'dependency_update'
     uses: ./.github/workflows/conductor.yaml
     with:
       runsOn: ${{ inputs.runsOnChaos }}
