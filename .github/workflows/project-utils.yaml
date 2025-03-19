@@ -1,0 +1,33 @@
+name: Utils
+
+on:
+  workflow_call:
+    inputs:
+      runsOnChaos:
+        description: Define on which runner to run workflows where order doesn't matter should run
+        default: "ubuntu-latest"
+        required: false
+        type: string
+      runsOnOrder:
+        description: Define on which runner to run workflows where order matters should run
+        default: "ubuntu-latest"
+        required: false
+        type: string
+      workingDirectory:
+        description: The directory to run this workflow in
+        default: ""
+        required: false
+        type: string
+      disableConductor:
+        description: Disable the execution of Conductor on `repository_dispatch` with `dependency_update` as event type
+        default: false
+        required: false
+        type: boolean
+
+jobs:
+  conductor:
+    name: Required Labels
+    if: inputs.disableConductor == false && github.event_name == 'repository_dispatch' && github.event.type == 'dependency_update'
+    uses: ./.github/workflows/conductor.yaml
+    with:
+      runsOn: ${{ inputs.runsOnChaos }}

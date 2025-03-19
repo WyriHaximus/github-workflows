@@ -13,10 +13,12 @@ $renderedReadme = render($template, [
     'package' => [
         'ci' => loadInputs(dirname(__DIR__) . '/.github/workflows/package.yaml'),
         'releaseManagement' => loadInputs(dirname(__DIR__) . '/.github/workflows/package-release-managment.yaml'),
+        'utils' => loadInputs(dirname(__DIR__) . '/.github/workflows/package-utils.yaml'),
     ],
     'project' => [
         'ci' => loadInputs(dirname(__DIR__) . '/.github/workflows/project.yaml'),
         'releaseManagement' => loadInputs(dirname(__DIR__) . '/.github/workflows/project-release-managment.yaml'),
+        'utils' => loadInputs(dirname(__DIR__) . '/.github/workflows/project-utils.yaml'),
     ],
 ]);
 

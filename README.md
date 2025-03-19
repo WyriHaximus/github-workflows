@@ -309,6 +309,7 @@ jobs:
 |-------|------|-------------|---------|
 | branch | string | The branch to tag the release on |  |
 | description | string | Additional information to add above the changelog in the release |  |
+| disableComposerLockDiff | boolean | Disable the diffing of composer lock files |  |
 | disableSetMilestone | boolean | Disable the setting of milestones |  |
 | initialTag | string | The tag to fallback to when no previous tag could be found. | 1.0.0 |
 | labels | string | The labels to for the sections of the changelog | Bug 🐞,Dependencies 📦,Feature 🏗,Enhancement ✨,Deprecations 👋 |
@@ -453,6 +454,8 @@ jobs:
 - [ ] Cronjob/Scheduled workflows for things like Docker image clean up
 - [X] Sparse checkout all the things
 - [ ] Fix typo in release management entry point filenames, and have all users point at the currect one
+- [ ] Add documentation once Utils entry point is more stable
+- [ ] Add GHCR.io image clean up to project utils entry point
 
 ## License
 
