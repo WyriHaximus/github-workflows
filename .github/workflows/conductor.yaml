@@ -1,0 +1,37 @@
+name: Private Packagist Conductor
+
+on:
+  workflow_call:
+    inputs:
+      runsOn:
+        description: Define on which runner this workflow should run
+        default: "ubuntu-latest"
+        required: false
+        type: string
+      workingDirectory:
+        description: The directory to run this workflow in
+        default: ""
+        required: false
+        type: string
+
+jobs:
+  conductor:
+    name: Private Packagist Conductor
+    runs-on: ${{ inputs.runsOn }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            ${{ inputs.workingDirectory }}composer.json
+            ${{ inputs.workingDirectory }}composer.lock
+      - name: Get desired PHP version
+        id: supported-versions-matrix
+        uses: WyriHaximus/github-action-composer-php-versions-in-range@v1
+      - name: Install PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "${{ steps.supported-versions-matrix.outputs.lowest }}"
+          coverage: "none"
+          extensions: ${{ join(fromJson(steps.supported-versions-matrix.outputs.extensions), ',') }}
+      - name: "Running Conductor"
+        uses: packagist/conductor-github-action@v1
