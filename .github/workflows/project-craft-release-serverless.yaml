@@ -1,0 +1,63 @@
+name: Deploy assets to serverless
+on:
+  workflow_call:
+    inputs:
+      milestone:
+        description: The tag to deploy
+        required: true
+        type: string
+      workingDirectory:
+        description: The directory to run this workflow in
+        default: ""
+        required: false
+        type: string
+      runsOn:
+        description: Define on which runner to run workflows where order doesn't matter should run
+        default: "ubuntu-latest"
+        required: true
+        type: string
+      serverlessSparseCheckout:
+        description: Additional files/patterns for the sparse checkout
+        default: ""
+        required: false
+        type: string
+      awsAccessKeyIDSecret:
+        description: The secret name that holds the AWS access key ID
+        default: "SERVERLESS_KEY"
+        required: true
+        type: string
+      awsSecretAccessKeySecret:
+        description: The secret name that holds the AWS access key secret
+        default: "SERVERLESS_SECRET"
+        required: true
+        type: string
+      awsRegionSecret:
+        description: The secret name that holds the AWS region
+        default: "SERVERLESS_REGION"
+        required: true
+        type: string
+jobs:
+  serverless-hosted-deploy-aws:
+    name: Deploy assets to serverless and invalidate caches
+    runs-on: ${{ inputs.runsOn }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            ${{ inputs.workingDirectory }}composer.json
+            ${{ inputs.workingDirectory }}composer.lock
+            ${{ inputs.workingDirectory }}serverless.yml
+            ${{ inputs.serverlessSparseCheckout }}
+      - name: Install Dependencies
+        uses: ramsey/composer-install@v3
+        with:
+          working-directory: ${{ inputs.workingDirectory }}
+          composer-options: "--prefer-dist --optimize-autoloader --no-dev"
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets[inputs.awsAccessKeyIdSecret] }}
+          aws-secret-access-key: ${{ secrets[inputs.awsSecretAccessKeySecret] }}
+          aws-region: ${{ secrets[inputs.awsRegionSecret] }}
+      - name: Deploy
+        run: serverless deploy
