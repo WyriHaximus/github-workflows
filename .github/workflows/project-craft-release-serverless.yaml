@@ -1,0 +1,75 @@
+name: Deploy assets to serverless
+on:
+  workflow_call:
+    inputs:
+      milestone:
+        description: The tag to deploy
+        required: true
+        type: string
+      workingDirectory:
+        description: The directory to run this workflow in
+        default: ""
+        required: false
+        type: string
+      runsOn:
+        description: Define on which runner to run workflows where order doesn't matter should run
+        default: "ubuntu-latest"
+        required: true
+        type: string
+      serverlessSparseCheckout:
+        description: Additional files/patterns for the sparse checkout
+        default: ""
+        required: false
+        type: string
+      awsAccessKeyIDSecret:
+        description: The secret name that holds the AWS access key ID
+        default: "SERVERLESS_KEY"
+        required: true
+        type: string
+      awsSecretAccessKeySecret:
+        description: The secret name that holds the AWS access key secret
+        default: "SERVERLESS_SECRET"
+        required: true
+        type: string
+      awsRegionSecret:
+        description: The secret name that holds the AWS region
+        default: "SERVERLESS_REGION"
+        required: true
+        type: string
+jobs:
+  serverless-deploy-aws:
+    name: Deploy serverless to AWS
+    runs-on: ${{ inputs.runsOn }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            !${{ inputs.workingDirectory }}/*
+            /${{ inputs.workingDirectory }}composer.json
+            /${{ inputs.workingDirectory }}composer.lock
+            /${{ inputs.workingDirectory }}serverless.yml
+            ${{ inputs.serverlessSparseCheckout }}
+      - name: Get desired PHP version
+        id: supported-versions-matrix
+        uses: WyriHaximus/github-action-composer-php-versions-in-range@v1
+      - name: Install PHP
+        uses: shivammathur/setup-php@verbose
+        env:
+          runner: self-hosted
+        with:
+          php-version: "${{ steps.supported-versions-matrix.outputs.lowest }}"
+          coverage: "none"
+          extensions: ${{ join(fromJson(steps.supported-versions-matrix.outputs.extensions), ',') }}
+      - name: Install Dependencies
+        uses: ramsey/composer-install@v3
+        with:
+          working-directory: ${{ inputs.workingDirectory }}
+          composer-options: "--prefer-dist --optimize-autoloader --no-dev --no-scripts"
+      - name: Deploy
+        run: serverless deploy --verbose
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets[inputs.awsAccessKeyIDSecret] }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets[inputs.awsSecretAccessKeySecret] }}
+          AWS_REGION: ${{ secrets[inputs.awsRegionSecret] }}

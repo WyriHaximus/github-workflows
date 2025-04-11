@@ -120,17 +120,17 @@ on:
         default: ""
         required: false
         type: string
-      cdnAwsAccessKeyIDSecret:
+      awsAccessKeyIDSecret:
         description: The secret name that holds the AWS access key ID
         default: "CDN_HOSTED_S3_KEY"
         required: false
         type: string
-      cdnAwsSecretAccessKeySecret:
+      awsSecretAccessKeySecret:
         description: The secret name that holds the AWS access key secret
         default: "CDN_HOSTED_S3_SECRET"
         required: false
         type: string
-      cdnAwsRegionSecret:
+      awsRegionSecret:
         description: The secret name that holds the AWS region
         default: "CDN_HOSTED_S3_REGION"
         required: false
@@ -160,6 +160,21 @@ on:
         default: false
         required: false
         type: boolean
+      preReleaseScript:
+        description: Script that runs just before the release is created
+        default: ""
+        required: false
+        type: string
+      mustCreateCommit:
+        description: Create commit with release message as commit body
+        default: false
+        required: false
+        type: boolean
+      serverlessSparseCheckout:
+        description: Additional files/patterns for the sparse checkout
+        default: ""
+        required: false
+        type: string
 jobs:
   required-labels:
     name: Required Labels
@@ -198,6 +213,9 @@ jobs:
       helmAdditionalArguments: ${{ inputs.helmAdditionalArguments }}
       helmUpdateAppVersion: ${{ inputs.helmUpdateAppVersion }}
       disableComposerLockDiff: ${{ inputs.disableComposerLockDiff }}
+      awsAccessKeyIDSecret: ${{ inputs.awsAccessKeyIDSecret }}
+      awsSecretAccessKeySecret: ${{ inputs.awsSecretAccessKeySecret }}
+      awsRegionSecret : ${{ inputs.awsRegionSecret  }}
   create-release:
     name: Craft Release
     if: github.event_name == 'milestone' && contains(fromJSON('["closed"]'), github.event.action)
@@ -209,7 +227,7 @@ jobs:
       branch: ${{ inputs.branch }}
       labels: ${{ inputs.labels }}
       preReleaseScript: ${{ inputs.preReleaseScript }}
-      mustCreateCommit: false
+      mustCreateCommit: ${{ inputs.mustCreateCommit }}
       mustUpdateAllSemverTags: false
   deploy-release-kubernetes:
     name: "Deploy Release: Kubernetes"
@@ -249,8 +267,23 @@ jobs:
       workingDirectory: ${{ inputs.workingDirectory }}
       vitePressDirectory: ${{ inputs.vitePressDirectory }}
       applicationType: ${{ inputs.applicationType }}
-      cdnAwsAccessKeyIdSecret: ${{ inputs.cdnAwsAccessKeyIdSecret }}
-      cdnAwsSecretAccessKeySecret: ${{ inputs.cdnAwsSecretAccessKeySecret }}
-      cdnAwsRegionSecret: ${{ inputs.cdnAwsRegionSecret }}
+      awsAccessKeyIDSecret: ${{ inputs.awsAccessKeyIDSecret }}
+      awsSecretAccessKeySecret: ${{ inputs.awsSecretAccessKeySecret }}
+      awsRegionSecret: ${{ inputs.awsRegionSecret }}
       cdnAwsS3BucketSecret: ${{ inputs.cdnAwsS3BucketSecret }}
       cdnAwsCloudFrontDistributionIDSecret: ${{ inputs.cdnAwsCloudFrontDistributionIDSecret }}
+  deploy-release-serverless:
+    name: "Deploy Release: Serverless"
+    needs:
+      - create-release
+    if: inputs.type == 'serverless' && github.event_name == 'milestone' && contains(fromJSON('["closed"]'), github.event.action)
+    uses: ./.github/workflows/project-craft-release-serverless.yaml
+    secrets: inherit
+    with:
+      runsOn: ${{ inputs.runsOnOrder }}
+      milestone: ${{ inputs.milestone }}
+      workingDirectory: ${{ inputs.workingDirectory }}
+      serverlessSparseCheckout: ${{ inputs.serverlessSparseCheckout }}
+      awsAccessKeyIDSecret: ${{ inputs.awsAccessKeyIDSecret }}
+      awsSecretAccessKeySecret: ${{ inputs.awsSecretAccessKeySecret }}
+      awsRegionSecret : ${{ inputs.awsRegionSecret  }}

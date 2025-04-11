@@ -309,7 +309,6 @@ jobs:
 |-------|------|-------------|---------|
 | branch | string | The branch to tag the release on |  |
 | description | string | Additional information to add above the changelog in the release |  |
-| disableComposerLockDiff | boolean | Disable the diffing of composer lock files |  |
 | disableSetMilestone | boolean | Disable the setting of milestones |  |
 | initialTag | string | The tag to fallback to when no previous tag could be found. | 1.0.0 |
 | labels | string | The labels to for the sections of the changelog | Bug 🐞,Dependencies 📦,Feature 🏗,Enhancement ✨,Deprecations 👋 |
@@ -405,13 +404,14 @@ jobs:
 | Input | Type | Description | Default |
 |-------|------|-------------|---------|
 | applicationType | string | The type of project this is, release and deployment wise |  |
+| awsAccessKeyIDSecret | string | The secret name that holds the AWS access key ID | CDN_HOSTED_S3_KEY |
+| awsRegionSecret | string | The secret name that holds the AWS region | CDN_HOSTED_S3_REGION |
+| awsSecretAccessKeySecret | string | The secret name that holds the AWS access key secret | CDN_HOSTED_S3_SECRET |
 | branch | string | The branch to tag the release on |  |
-| cdnAwsAccessKeyIDSecret | string | The secret name that holds the AWS access key ID | CDN_HOSTED_S3_KEY |
 | cdnAwsCloudFrontDistributionIDSecret | string | The secret name that holds the AWS cloudfront distribution id | CDN_HOSTED_DISTRIBUTION_ID |
-| cdnAwsRegionSecret | string | The secret name that holds the AWS region | CDN_HOSTED_S3_REGION |
 | cdnAwsS3BucketSecret | string | The secret name that holds the AWS S3 bucket name | CDN_HOSTED_S3_BUCKET |
-| cdnAwsSecretAccessKeySecret | string | The secret name that holds the AWS access key secret | CDN_HOSTED_S3_SECRET |
 | description | string | Additional information to add above the changelog in the release |  |
+| disableComposerLockDiff | boolean | Disable the diffing of composer lock files |  |
 | disableSetMilestone | boolean | Disable the setting of milestones |  |
 | helmAdditionalArguments | string | The directory to run this workflow in |  |
 | helmDirectory | string | The directory to run this workflow in |  |
@@ -419,13 +419,17 @@ jobs:
 | helmReleaseValueName | string | The name of the value to use for releases |  |
 | helmSparseCheckout | string | Additional files/patterns for the sparse checkout |  |
 | helmUpdateAppVersion | boolean | Update the helm charts appVersion with the passed version |  |
-| initialTag | string | The tag to fallback to when no previous tag could be found. | 1.0.0 |
+| initialTag | string | The tag to fallback to when no previous tag could be found. | r1 |
 | kubeConfigSecret | string | The secret name that holds the kubeconfig to connect with Kubernetes |  |
 | labels | string | The labels to for the sections of the changelog | Bug 🐞,Dependencies 📦,Feature 🏗,Enhancement ✨ |
 | milestone | string | The milestone to tag |  |
+| mustCreateCommit | boolean | Create commit with release message as commit body |  |
 | ociPushSecretSecret | string | The secret name that holds the token to push OCI images to GHCR.io | GITHUB_TOKEN |
+| ociRetag | boolean | Whether or not to retag OCI images with the release tag |  |
+| preReleaseScript | string | Script that runs just before the release is created |  |
 | runsOnChaos | string | Define on which runner to run workflows where order doesn&#039;t matter should run | ubuntu-latest |
 | runsOnOrder | string | Define on which runner to run workflows where order matters should run | ubuntu-latest |
+| serverlessSparseCheckout | string | Additional files/patterns for the sparse checkout |  |
 | terraformDirectory | string | The directory to run this workflow in |  |
 | terraformLogLevel | string | Value for the TF_LOG environment value |  |
 | terraformParallelism | number | Value for the -parallelism plan/apply flag | 13 |

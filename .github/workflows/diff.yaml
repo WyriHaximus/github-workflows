@@ -81,6 +81,26 @@ on:
         default: ""
         required: false
         type: string
+      serverlessSparseCheckout:
+        description: Additional files/patterns for the sparse checkout
+        default: ""
+        required: false
+        type: string
+      awsAccessKeyIDSecret:
+        description: The secret name that holds the AWS access key ID
+        default: "SERVERLESS_KEY"
+        required: true
+        type: string
+      awsSecretAccessKeySecret:
+        description: The secret name that holds the AWS access key secret
+        default: "SERVERLESS_SECRET"
+        required: true
+        type: string
+      awsRegionSecret :
+        description: The secret name that holds the AWS region
+        default: "SERVERLESS_REGION"
+        required: true
+        type: string
 jobs:
   helm-diff:
     name: Helm Diff
@@ -111,6 +131,18 @@ jobs:
       terraformParallelism: ${{ inputs.terraformParallelism }}
       terraformLogLevel: ${{ inputs.terraformLogLevel }}
       kubeConfigSecret: ${{ inputs.kubeConfigSecret }}
+#  serverless-diff:
+#    name: Serverless Diff
+##    if: inputs.terraformDirectory != ''
+#    uses: ./.github/workflows/serverless-diff.yaml
+#    secrets: inherit
+#    with:
+#      runsOn: ${{ inputs.runsOnOrder }}
+#      workingDirectory: ${{ inputs.workingDirectory }}
+#      serverlessSparseCheckout: ${{ inputs.serverlessSparseCheckout }}
+#      awsAccessKeyIDSecret: ${{ inputs.awsAccessKeyIDSecret }}
+#      awsSecretAccessKeySecret: ${{ inputs.awsSecretAccessKeySecret }}
+#      awsRegionSecret : ${{ inputs.awsRegionSecret  }}
   comment-composer-lock-diff:
     name: Composer Diff
     if: inputs.disableComposerLockDiff == false

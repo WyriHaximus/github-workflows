@@ -26,19 +26,19 @@ on:
         default: "ubuntu-latest"
         required: true
         type: string
-      cdnAwsAccessKeyIDSecret:
+      awsAccessKeyIDSecret:
         description: The secret name that holds the AWS access key ID
-        default: "CDN_HOSTED_S3_KEY"
+        default: "AWS_KEY"
         required: true
         type: string
-      cdnAwsSecretAccessKeySecret:
+      awsSecretAccessKeySecret:
         description: The secret name that holds the AWS access key secret
-        default: "CDN_HOSTED_S3_SECRET"
+        default: "AWS_SECRET"
         required: true
         type: string
-      cdnAwsRegionSecret:
+      awsRegionSecret:
         description: The secret name that holds the AWS region
-        default: "CDN_HOSTED_S3_REGION"
+        default: "AWS_REGION"
         required: true
         type: string
       cdnAwsS3BucketSecret:
@@ -82,9 +82,9 @@ jobs:
           path: ~/${{ inputs.milestone }}-dist
       - uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets[inputs.cdnAwsAccessKeyIdSecret] }}
-          aws-secret-access-key: ${{ secrets[inputs.cdnAwsSecretAccessKeySecret] }}
-          aws-region: ${{ secrets[inputs.cdnAwsRegionSecret] }}
+          aws-access-key-id: ${{ secrets[inputs.awsAccessKeyIDSecret] }}
+          aws-secret-access-key: ${{ secrets[inputs.awsSecretAccessKeySecret] }}
+          aws-region: ${{ secrets[inputs.awsRegionSecret] }}
       - name: Deploy Non-HTML
         run: aws s3 cp ~/${{ inputs.milestone }}-dist s3://${{ secrets[inputs.cdnAwsS3BucketSecret] }} --recursive --acl=public-read --include="*" --exclude "*.html" --cache-control max-age=31536000,public
       - name: Deploy HTML
