@@ -121,6 +121,8 @@ jobs:
       - id: supported-checks-matrix
         name: Generate check
         run: |
+          cat Makefile
+          make bare-install
           printf "Checks found: %s\r\n" $(make task-list-ci)
           printf "check=%s" $(make task-list-ci) >> $GITHUB_OUTPUT
       - uses: actions/github-script@v7
