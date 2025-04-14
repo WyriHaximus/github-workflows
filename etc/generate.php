@@ -12,12 +12,12 @@ $template = file_get_contents(__DIR__ . '/README.md.twig');
 $renderedReadme = render($template, [
     'package' => [
         'ci' => loadInputs(dirname(__DIR__) . '/.github/workflows/package.yaml'),
-        'releaseManagement' => loadInputs(dirname(__DIR__) . '/.github/workflows/package-release-managment.yaml'),
+        'releaseManagement' => loadInputs(dirname(__DIR__) . '/.github/workflows/package-release-management.yaml'),
         'utils' => loadInputs(dirname(__DIR__) . '/.github/workflows/package-utils.yaml'),
     ],
     'project' => [
         'ci' => loadInputs(dirname(__DIR__) . '/.github/workflows/project.yaml'),
-        'releaseManagement' => loadInputs(dirname(__DIR__) . '/.github/workflows/project-release-managment.yaml'),
+        'releaseManagement' => loadInputs(dirname(__DIR__) . '/.github/workflows/project-release-management.yaml'),
         'utils' => loadInputs(dirname(__DIR__) . '/.github/workflows/project-utils.yaml'),
     ],
 ]);

@@ -115,7 +115,7 @@ on:
         default: ""
         required: false
         type: string
-      cdnAwsAccessKeyIDSecret:
+      cdnawsAccessKeyIDSecret:
         description: The secret name that holds the AWS access key ID
         default: "CDN_HOSTED_S3_KEY"
         required: false
@@ -238,7 +238,7 @@ jobs:
       workingDirectory: ${{ inputs.workingDirectory }}
       vitePressDirectory: ${{ inputs.vitePressDirectory }}
       applicationType: ${{ inputs.applicationType }}
-      cdnAwsAccessKeyIdSecret: ${{ inputs.cdnAwsAccessKeyIdSecret }}
+      cdnawsAccessKeyIDSecret: ${{ inputs.cdnawsAccessKeyIDSecret }}
       cdnAwsSecretAccessKeySecret: ${{ inputs.cdnAwsSecretAccessKeySecret }}
       cdnAwsRegionSecret: ${{ inputs.cdnAwsRegionSecret }}
       cdnAwsS3BucketSecret: ${{ inputs.cdnAwsS3BucketSecret }}
