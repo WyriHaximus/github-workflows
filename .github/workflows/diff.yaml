@@ -89,17 +89,17 @@ on:
       awsAccessKeyIDSecret:
         description: The secret name that holds the AWS access key ID
         default: "SERVERLESS_KEY"
-        required: true
+        required: false
         type: string
       awsSecretAccessKeySecret:
         description: The secret name that holds the AWS access key secret
         default: "SERVERLESS_SECRET"
-        required: true
+        required: false
         type: string
       awsRegionSecret :
         description: The secret name that holds the AWS region
         default: "SERVERLESS_REGION"
-        required: true
+        required: false
         type: string
 jobs:
   helm-diff:
