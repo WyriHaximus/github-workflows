@@ -270,6 +270,7 @@ jobs:
 | env | string | Any additional environment variables | {} |
 | jsonPattern | string | The pattern to match which JSON files to check | \.json$ |
 | services | string | Any additional services to use | {} |
+| supportedChecksCommand | string | The make command to invoke listing the different tasks to run across all versions, will also act as a prefix for All, Direct on OS, Lowest, Locked, and Highest task lists. | task-list-ci |
 | workingDirectory | string | The directory to run this workflow in |  |
 
 #### Release Management

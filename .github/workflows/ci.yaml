@@ -37,6 +37,11 @@ on:
         default: false
         required: false
         type: boolean
+      supportedChecksCommand:
+        description: The make command to invoke listing the different tasks to run across all versions, will also act as a prefix for All, Direct on OS, Lowest, Locked, and Highest task lists.
+        default: "task-list-ci"
+        required: false
+        type: string
 
 #defaults:
 #  run:
@@ -84,6 +89,7 @@ jobs:
       - supported-versions-matrix
     outputs:
       version: ${{ steps.supported-threading-matrix.outputs.result }}
+      primary: ${{ steps.primary.outputs.result }}
     steps:
       - id: supported-threading-matrix
         uses: actions/github-script@v7
@@ -102,6 +108,19 @@ jobs:
               return ['nts'];
             }
             return ['nts', 'zts'];
+      - id: primary
+        uses: actions/github-script@v7
+        env:
+          PHP_EXTENSIONS: ${{ needs.supported-versions-matrix.outputs.extensions }}
+        with:
+          script: |
+            const phpExtensions = JSON.parse(process.env.PHP_EXTENSIONS);
+            for(var i = 0; i <= phpExtensions.length; i++) {
+                if (phpExtensions[i] == 'parallel') { 
+                  return 'zts';
+                }
+            } 
+            return 'nts';
   supported-checks-matrix:
     name: Supported Checks Matrix
     runs-on: ${{ inputs.runsOnChaos }}
@@ -110,7 +129,11 @@ jobs:
       - supported-versions-matrix
     outputs:
       check: ${{ steps.supported-checks-matrix.outputs.check }}
-      run-tests: ${{ steps.run-tests.outputs.result }}
+      all: ${{ steps.supported-checks-matrix.outputs.all }}
+      dos: ${{ steps.supported-checks-matrix.outputs.dos }}
+      low: ${{ steps.supported-checks-matrix.outputs.low }}
+      locked: ${{ steps.supported-checks-matrix.outputs.locked }}
+      high: ${{ steps.supported-checks-matrix.outputs.high }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -121,19 +144,150 @@ jobs:
       - id: supported-checks-matrix
         name: Generate check
         run: |
-          printf "Checks found: %s\r\n" $(make task-list-ci)
-          printf "check=%s" $(make task-list-ci) >> $GITHUB_OUTPUT
+          printf "Checks found: %s\r\n" $(make ${{ inputs.supportedChecksCommand }} || echo "[]")
+          printf "check=%s\n" $(make ${{ inputs.supportedChecksCommand }} || echo "[]") >> $GITHUB_OUTPUT
+          printf "All Checks found: %s\r\n" $(make ${{ inputs.supportedChecksCommand }}-all || echo "[]")
+          printf "all=%s\n" $(make ${{ inputs.supportedChecksCommand }}-all || echo "[]") >> $GITHUB_OUTPUT
+          printf "Directly on OS Checks found: %s\r\n" $(make ${{ inputs.supportedChecksCommand }}-dos || echo "[]")
+          printf "dos=%s\n" $(make ${{ inputs.supportedChecksCommand }}-dos || echo "[]") >> $GITHUB_OUTPUT
+          printf "Low Checks found: %s\r\n" $(make ${{ inputs.supportedChecksCommand }}-low || echo "[]")
+          printf "low=%s\n" $(make ${{ inputs.supportedChecksCommand }}-low || echo "[]") >> $GITHUB_OUTPUT
+          printf "Locked Checks found: %s\r\n" $(make ${{ inputs.supportedChecksCommand }}-locked || echo "[]")
+          printf "locked=%s\n" $(make ${{ inputs.supportedChecksCommand }}-locked || echo "[]") >> $GITHUB_OUTPUT
+          printf "High Checks found: %s\r\n" $(make ${{ inputs.supportedChecksCommand }}-high || echo "[]")
+          printf "high=%s\n" $(make ${{ inputs.supportedChecksCommand }}-high || echo "[]") >> $GITHUB_OUTPUT
+        working-directory: ${{ inputs.workingDirectory }}
+  compile-matrix:
+    name: Compile the matrix
+    runs-on: ubuntu-latest
+    needs:
+      - supported-checks-matrix
+      - supported-versions-matrix
+      - supported-threading-matrix
+    outputs:
+      qa: ${{ steps.compile-qa-matrix.outputs.result }}
+      directly-on-os: ${{ steps.compile-directly-on-os-matrix.outputs.result }}
+    steps:
       - uses: actions/github-script@v7
-        id: run-tests
+        name: Compile the QA matrix
+        id: compile-qa-matrix
         env:
-          CHECKS: ${{ steps.supported-checks-matrix.outputs.check }}
+          PHP_LOWEST: "${{ needs.supported-versions-matrix.outputs.lowest }}"
+          PHP_VERSIONS: ${{ needs.supported-versions-matrix.outputs.version }}
+          PHP_TO_THREAD_OR_NOT_TO_THREAD: ${{ needs.supported-threading-matrix.outputs.version }}
+          THREAD_PRIMARY: ${{ needs.supported-threading-matrix.outputs.primary }}
+          COMPOSER: '["lowest", "locked", "highest"]'
+          CHECKS: ${{ needs.supported-checks-matrix.outputs.check }}
+          CHECKS_ALL: ${{ needs.supported-checks-matrix.outputs.all }}
+          CHECKS_LOW: ${{ needs.supported-checks-matrix.outputs.low }}
+          CHECKS_LOCKED: ${{ needs.supported-checks-matrix.outputs.locked }}
+          CHECKS_HIGH: ${{ needs.supported-checks-matrix.outputs.high }}
         with:
           script: |
+            let matrix = [];
+            const phpLowest = JSON.parse(process.env.PHP_LOWEST);
+            const phpVersions = JSON.parse(process.env.PHP_VERSIONS);
+            const phpToThreadOrNotToThread = JSON.parse(process.env.PHP_TO_THREAD_OR_NOT_TO_THREAD);
+            const threadPrimary = JSON.parse(process.env.THREAD_PRIMARY);
+            const composer = JSON.parse(process.env.COMPOSER);
             const checks = JSON.parse(process.env.CHECKS);
-            console.log(checks);
-            console.log(checks.includes("unit-testing"));
-            console.log(checks.includes("unit-testing") ? "yes" : "no");
-            return checks.includes("unit-testing") ? "yes" : "no";
+            const checksAll = JSON.parse(process.env.CHECKS_ALL);
+            const checksLow = JSON.parse(process.env.CHECKS_LOW);
+            const checksLocked = JSON.parse(process.env.CHECKS_LOCKED);
+            const checksHigh = JSON.parse(process.env.CHECKS_HIGH);
+            for (const checkLow in checksLow) {
+                matrix.push({
+                  php: phpLowest,
+                  "php-to-thread-or-not-to-thread": threadPrimary,
+                  composer: 'lowest',
+                  check: checksLow[checkLow],
+                });   
+            }
+            for (const checkLocked in checksLocked) {
+                matrix.push({
+                  php: phpLowest,
+                  "php-to-thread-or-not-to-thread": threadPrimary,
+                  composer: 'locked',
+                  check: checksLocked[checkLocked],
+                });   
+            }
+            for (const checkHigh in checksHigh) {
+                matrix.push({
+                  php: phpLowest,
+                  "php-to-thread-or-not-to-thread": threadPrimary,
+                  composer: 'highest',
+                  check: checksHigh[checkHigh],
+                });   
+            }
+            for (const ztsOrNts in phpToThreadOrNotToThread) {
+              for (const composerAction in composer) {
+                for (const phpVersion in phpVersions) {
+                  for (const checkAll in checksAll) {
+                    matrix.push({
+                      php: phpVersions[phpVersion],
+                      "php-to-thread-or-not-to-thread": phpToThreadOrNotToThread[ztsOrNts],
+                      composer: composer[composerAction],
+                      check: checksAll[checkAll],
+                    });
+                  }
+                  for (const check in checks) {
+                    matrix.push({
+                      php: phpVersions[phpVersion],
+                      "php-to-thread-or-not-to-thread": phpToThreadOrNotToThread[ztsOrNts],
+                      composer: composer[composerAction],
+                      check: checks[check],
+                    });
+                  }
+                }
+              }
+            }
+            console.log(JSON.stringify(matrix, null, 4));
+            return matrix;
+      - uses: actions/github-script@v7
+        name: Compile the Direction on OS matrix
+        id: compile-directly-on-os-matrix
+        env:
+          OS: ${{ (contains(needs.supported-versions-matrix.outputs.extensions, 'pcntl') == false || contains(needs.supported-versions-matrix.outputs.extensions, 'parallel') == false) && '["ubuntu-latest", "windows-latest", "macos-latest"]' || '["ubuntu-latest", "macos-latest"]' }}
+          PHP_VERSIONS: ${{ needs.supported-versions-matrix.outputs.version }}
+          THREAD_PRIMARY: ${{ needs.supported-threading-matrix.outputs.primary }}
+          COMPOSER: '["lowest", "locked", "highest"]'
+          CHECKS: ${{ needs.supported-checks-matrix.outputs.check }}
+          CHECKS_DOS: ${{ needs.supported-checks-matrix.outputs.dos }}
+        with:
+          script: |
+            let matrix = [];
+            const oses = JSON.parse(process.env.OS);
+            const phpVersions = JSON.parse(process.env.PHP_VERSIONS);
+            const threadPrimary = JSON.parse(process.env.THREAD_PRIMARY);
+            const composer = JSON.parse(process.env.COMPOSER);
+            const checks = JSON.parse(process.env.CHECKS_DOS === "[]" ? '["unit-testing-raw"]' : process.env.CHECKS);
+            const checksDos = JSON.parse(process.env.CHECKS_DOS);
+            for (const os in oses) {
+              for (const composerAction in composer) {
+                for (const phpVersion in phpVersions) {
+                  for (const checkDos in checksDos) {
+                    matrix.push({
+                      os: oses[os],
+                      php: phpVersions[phpVersion],
+                      "php-to-thread-or-not-to-thread": threadPrimary,
+                      composer: composer[composerAction],
+                      check: checksDos[checkDos],
+                    });
+                  }
+                  for (const check in checks) {
+                    matrix.push({
+                      os: oses[os],
+                      php: phpVersions[phpVersion],
+                      "php-to-thread-or-not-to-thread": threadPrimary,
+                      composer: composer[composerAction],
+                      check: checks[check],
+                    });
+                  }
+                }
+              }
+            }
+            console.log(JSON.stringify(matrix, null, 4));
+            return matrix;
   can-require:
     name: Test we can require "${{ matrix.package-name }}" on PHP ${{ matrix.php }} (${{ matrix.php-to-thread-or-not-to-thread }})
     if: ${{ inputs.isProject == false }}
@@ -171,14 +325,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php: ${{ fromJson(inputs.isProject == false && needs.supported-versions-matrix.outputs.version || format('["{0}"]', needs.supported-versions-matrix.outputs.lowest)) }}
-        php-to-thread-or-not-to-thread: ${{ fromJson(needs.supported-threading-matrix.outputs.version) }}
-        composer: ${{ fromJson(inputs.isProject == false && '["lowest", "locked", "highest"]' || '["locked"]') }}
-        check: ${{ fromJson(needs.supported-checks-matrix.outputs.check) }}
+        include: ${{ fromJson(needs.compile-matrix.outputs.qa) }}
     needs:
-      - supported-checks-matrix
-      - supported-versions-matrix
-      - supported-threading-matrix
+      - compile-matrix
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/wyrihaximusnet/php:${{ matrix.php }}-${{ matrix.php-to-thread-or-not-to-thread }}-alpine-dev-root
@@ -206,21 +355,18 @@ jobs:
         env:
           COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
           COVERALLS_RUN_LOCALLY: ${{ secrets.COVERALLS_RUN_LOCALLY }}
-  tests-directly-on-os:
-    name: Run tests on PHP ${{ matrix.php }} (${{ matrix.php-to-thread-or-not-to-thread }}) with ${{ matrix.composer }} dependency preference (${{ matrix.os }})
+  directly-on-os:
+    name: Run ${{ matrix.check }} on PHP ${{ matrix.php }} (${{ matrix.php-to-thread-or-not-to-thread }}) with ${{ matrix.composer }} dependency preference (${{ matrix.os }})
     strategy:
       fail-fast: false
       matrix:
-        os: ${{ fromJson((contains(needs.supported-versions-matrix.outputs.extensions, 'pcntl') == false || contains(needs.supported-versions-matrix.outputs.extensions, 'parallel') == false) && '["ubuntu-latest", "windows-latest", "macos-latest"]' || '["ubuntu-latest", "macos-latest"]') }}
-        php: ${{ fromJson(needs.supported-versions-matrix.outputs.version) }}
-        php-to-thread-or-not-to-thread: ${{ fromJson(needs.supported-threading-matrix.outputs.version) }}
-        composer: [lowest, locked, highest]
+        include: ${{ fromJson(needs.compile-matrix.outputs.directly-on-os) }}
     needs:
       - supported-checks-matrix
       - supported-versions-matrix
-      - supported-threading-matrix
+      - compile-matrix
     runs-on: ${{ matrix.os }}
-    if: ${{ needs.supported-checks-matrix.outputs.run-tests == '"yes"' && inputs.isProject == false }}
+    if: ${{ inputs.isProject == false }}
     env: ${{ fromJson(inputs.env) }}
     services: ${{ fromJson(inputs.services) }}
     steps:
@@ -238,15 +384,8 @@ jobs:
         with:
           dependency-versions: ${{ matrix.composer }}
           working-directory: ${{ inputs.workingDirectory }}
-      - run: make unit-testing-raw || true
+      - run: make ${{ matrix.check }}
         working-directory: ${{ inputs.workingDirectory }}
-        if: needs.supported-versions-matrix.outputs.upcoming == matrix.php
-        env:
-          COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
-          COVERALLS_RUN_LOCALLY: ${{ secrets.COVERALLS_RUN_LOCALLY }}
-      - run: make unit-testing-raw
-        working-directory: ${{ inputs.workingDirectory }}
-        if: needs.supported-versions-matrix.outputs.upcoming != matrix.php
         env:
           COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
           COVERALLS_RUN_LOCALLY: ${{ secrets.COVERALLS_RUN_LOCALLY }}
@@ -255,7 +394,7 @@ jobs:
     needs:
       - can-require
       - qa
-      - tests-directly-on-os
+      - directly-on-os
     runs-on: ${{ inputs.runsOnChaos }}
     steps:
       - run: echo "✔️"

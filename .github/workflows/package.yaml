@@ -27,6 +27,11 @@ on:
         default: "{}"
         required: false
         type: string
+      supportedChecksCommand:
+        description: The make command to invoke listing the different tasks to run across all versions, will also act as a prefix for All, Direct on OS, Lowest, Locked, and Highest task lists.
+        default: "task-list-ci"
+        required: false
+        type: string
 jobs:
   ci:
     name: Continuous Integration
@@ -36,6 +41,7 @@ jobs:
       workingDirectory: ${{ inputs.workingDirectory }}
       services: ${{ inputs.services }}
       env: ${{ inputs.env }}
+      supportedChecksCommand: ${{ inputs.supportedChecksCommand }}
   markdown-link-check:
     name: Check Markdown links
     if: inputs.disableMarkdownLinkCheck == false
