@@ -182,6 +182,7 @@ jobs:
           CHECKS_LOW: ${{ needs.supported-checks-matrix.outputs.low }}
           CHECKS_LOCKED: ${{ needs.supported-checks-matrix.outputs.locked }}
           CHECKS_HIGH: ${{ needs.supported-checks-matrix.outputs.high }}
+          IS_PROJECT: ${{ toJson(inputs.isProject) }}
         with:
           script: |
             let matrix = [];
@@ -193,50 +194,61 @@ jobs:
             const checks = JSON.parse(process.env.CHECKS);
             const checksAll = JSON.parse(process.env.CHECKS_ALL);
             const checksLow = JSON.parse(process.env.CHECKS_LOW);
-            const checksLocked = JSON.parse(process.env.CHECKS_LOCKED);
+            const checksLocked = JSON.parse(process.env.CHECKS_LOCKED === "[]" ? process.env.CHECKS : process.env.CHECKS_LOCKED);
             const checksHigh = JSON.parse(process.env.CHECKS_HIGH);
-            for (const checkLow in checksLow) {
-                matrix.push({
-                  php: phpLowest,
-                  "php-to-thread-or-not-to-thread": threadPrimary,
-                  composer: 'lowest',
-                  check: checksLow[checkLow],
-                });   
-            }
-            for (const checkLocked in checksLocked) {
-                matrix.push({
-                  php: phpLowest,
-                  "php-to-thread-or-not-to-thread": threadPrimary,
-                  composer: 'locked',
-                  check: checksLocked[checkLocked],
-                });   
-            }
-            for (const checkHigh in checksHigh) {
-                matrix.push({
-                  php: phpLowest,
-                  "php-to-thread-or-not-to-thread": threadPrimary,
-                  composer: 'highest',
-                  check: checksHigh[checkHigh],
-                });   
-            }
-            for (const ztsOrNts in phpToThreadOrNotToThread) {
-              for (const composerAction in composer) {
-                for (const phpVersion in phpVersions) {
-                  for (const checkAll in checksAll) {
-                    matrix.push({
-                      php: phpVersions[phpVersion],
-                      "php-to-thread-or-not-to-thread": phpToThreadOrNotToThread[ztsOrNts],
-                      composer: composer[composerAction],
-                      check: checksAll[checkAll],
-                    });
-                  }
-                  for (const check in checks) {
-                    matrix.push({
-                      php: phpVersions[phpVersion],
-                      "php-to-thread-or-not-to-thread": phpToThreadOrNotToThread[ztsOrNts],
-                      composer: composer[composerAction],
-                      check: checks[check],
-                    });
+            if (JSON.parse(process.env.IS_PROJECT) == true) {
+              for (const checkLocked in checksLocked) {
+                  matrix.push({
+                    php: phpLowest,
+                    "php-to-thread-or-not-to-thread": threadPrimary,
+                    composer: 'locked',
+                    check: checksLocked[checkLocked],
+                  });   
+              }  
+            } else {
+              for (const checkLow in checksLow) {
+                  matrix.push({
+                    php: phpLowest,
+                    "php-to-thread-or-not-to-thread": threadPrimary,
+                    composer: 'lowest',
+                    check: checksLow[checkLow],
+                  });   
+              }
+              for (const checkLocked in checksLocked) {
+                  matrix.push({
+                    php: phpLowest,
+                    "php-to-thread-or-not-to-thread": threadPrimary,
+                    composer: 'locked',
+                    check: checksLocked[checkLocked],
+                  });   
+              }
+              for (const checkHigh in checksHigh) {
+                  matrix.push({
+                    php: phpLowest,
+                    "php-to-thread-or-not-to-thread": threadPrimary,
+                    composer: 'highest',
+                    check: checksHigh[checkHigh],
+                  });   
+              }
+              for (const ztsOrNts in phpToThreadOrNotToThread) {
+                for (const composerAction in composer) {
+                  for (const phpVersion in phpVersions) {
+                    for (const checkAll in checksAll) {
+                      matrix.push({
+                        php: phpVersions[phpVersion],
+                        "php-to-thread-or-not-to-thread": phpToThreadOrNotToThread[ztsOrNts],
+                        composer: composer[composerAction],
+                        check: checksAll[checkAll],
+                      });
+                    }
+                    for (const check in checks) {
+                      matrix.push({
+                        php: phpVersions[phpVersion],
+                        "php-to-thread-or-not-to-thread": phpToThreadOrNotToThread[ztsOrNts],
+                        composer: composer[composerAction],
+                        check: checks[check],
+                      });
+                    }
                   }
                 }
               }
