@@ -259,7 +259,7 @@ jobs:
         name: Compile the Direction on OS matrix
         id: compile-directly-on-os-matrix
         env:
-          OS: ${{ (contains(needs.supported-versions-matrix.outputs.extensions, 'pcntl') == false || contains(needs.supported-versions-matrix.outputs.extensions, 'parallel') == false) && '["ubuntu-latest", "windows-latest", "macos-latest"]' || '["ubuntu-latest", "macos-latest"]' }}
+          OS: ${{ (contains(needs.supported-versions-matrix.outputs.extensions, 'pcntl') == false && contains(needs.supported-versions-matrix.outputs.extensions, 'parallel') == false) && '["ubuntu-latest", "windows-latest", "macos-latest"]' || '["ubuntu-latest", "macos-latest"]' }}
           PHP_VERSIONS: ${{ needs.supported-versions-matrix.outputs.version }}
           THREAD_PRIMARY: ${{ needs.supported-threading-matrix.outputs.primary }}
           COMPOSER: '["lowest", "locked", "highest"]'
