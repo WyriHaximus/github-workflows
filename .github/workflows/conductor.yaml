@@ -29,6 +29,8 @@ jobs:
         uses: WyriHaximus/github-action-composer-php-versions-in-range@v1
       - name: Install PHP
         uses: shivammathur/setup-php@v2
+        env:
+          fail-fast: true
         with:
           php-version: "${{ steps.supported-versions-matrix.outputs.lowest }}"
           coverage: "none"

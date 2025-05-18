@@ -385,6 +385,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: shivammathur/setup-php@v2
         env:
+          fail-fast: true
           phpts: ${{ matrix.php-to-thread-or-not-to-thread }}
         with:
           php-version: ${{ matrix.php }}

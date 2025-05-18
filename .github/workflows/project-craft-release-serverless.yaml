@@ -57,6 +57,7 @@ jobs:
       - name: Install PHP
         uses: shivammathur/setup-php@verbose
         env:
+          fail-fast: true
           runner: self-hosted
         with:
           php-version: "${{ steps.supported-versions-matrix.outputs.lowest }}"
