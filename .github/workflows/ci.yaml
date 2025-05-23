@@ -84,43 +84,13 @@ jobs:
           workingDirectory: ${{ inputs.workingDirectory }}
   supported-threading-matrix:
     name: Supported Threading Matrix
-    runs-on: ${{ inputs.runsOnChaos }}
     needs:
       - supported-versions-matrix
-    outputs:
-      version: ${{ steps.supported-threading-matrix.outputs.result }}
-      primary: ${{ steps.primary.outputs.result }}
-    steps:
-      - id: supported-threading-matrix
-        uses: actions/github-script@v7
-        env:
-          PHP_EXTENSIONS: ${{ needs.supported-versions-matrix.outputs.extensions }}
-          IS_PROJECT: ${{ toJson(inputs.isProject) }}
-        with:
-          script: |
-            const phpExtensions = JSON.parse(process.env.PHP_EXTENSIONS);
-            for(var i = 0; i <= phpExtensions.length; i++) {
-                if (phpExtensions[i] == 'parallel') { 
-                  return ['zts'];
-                }
-            }
-            if (JSON.parse(process.env.IS_PROJECT) == true) { 
-              return ['nts'];
-            }
-            return ['nts', 'zts'];
-      - id: primary
-        uses: actions/github-script@v7
-        env:
-          PHP_EXTENSIONS: ${{ needs.supported-versions-matrix.outputs.extensions }}
-        with:
-          script: |
-            const phpExtensions = JSON.parse(process.env.PHP_EXTENSIONS);
-            for(var i = 0; i <= phpExtensions.length; i++) {
-                if (phpExtensions[i] == 'parallel') { 
-                  return 'zts';
-                }
-            } 
-            return 'nts';
+    uses: ./.github/workflows/supported-threading-matrix.yaml
+    with:
+      extensions: ${{ needs.supported-versions-matrix.outputs.extensions }}
+      runsOn: ${{ inputs.runsOnChaos }}
+      isProject: ${{ inputs.isProject }}
   supported-checks-matrix:
     name: Supported Checks Matrix
     runs-on: ${{ inputs.runsOnChaos }}
