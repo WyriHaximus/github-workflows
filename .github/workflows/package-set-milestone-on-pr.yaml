@@ -24,7 +24,8 @@ jobs:
     name: Supported Versions Matrix
     runs-on: ${{ inputs.runsOn }}
     outputs:
-      highest: ${{ steps.supported-versions-matrix.outputs.highest }}
+      extensions: ${{ steps.supported-versions-matrix.outputs.extensions }}
+      lowest: ${{ steps.supported-versions-matrix.outputs.lowest }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -35,14 +36,24 @@ jobs:
         uses: WyriHaximus/github-action-composer-php-versions-in-range@v1
         with:
           upcomingReleases: true
+  supported-threading-matrix:
+    name: Supported Threading Matrix
+    needs:
+      - supported-versions-matrix
+    uses: ./.github/workflows/supported-threading-matrix.yaml
+    with:
+      extensions: ${{ needs.supported-versions-matrix.outputs.extensions }}
+      runsOn: ${{ inputs.runsOn }}
+      isProject: false
   figure-out-version:
     name: Figure out what the version should be
     needs:
+      - supported-threading-matrix
       - supported-versions-matrix
     if: github.event.pull_request.milestone == null
     runs-on: ${{ inputs.runsOn }}
     container:
-      image: ghcr.io/wyrihaximusnet/php:${{ needs.supported-versions-matrix.outputs.highest }}-nts-alpine-dev-root
+      image: ghcr.io/wyrihaximusnet/php:${{ needs.supported-versions-matrix.outputs.lowest }}-${{ needs.supported-threading-matrix.outputs.primary }}-alpine-dev-root
     outputs:
       version: ${{ steps.decidedversion.outputs.version }}
     steps:

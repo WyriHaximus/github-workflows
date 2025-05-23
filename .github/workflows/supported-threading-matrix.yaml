@@ -1,0 +1,69 @@
+name: Supported Threading Matrix
+on:
+  workflow_call:
+    outputs:
+      version:
+        description: JSON Array with allow possible versions that would work with the given list of extensions, returns only one if `isProject` is set to true
+        value: ${{ jobs.supported-threading-matrix.outputs.version }}
+      primary:
+        description: Return the primary anticipated run time for this package/project
+        value: ${{ jobs.supported-threading-matrix.outputs.primary }}
+    inputs:
+      extensions:
+        description: Any additional environment variables
+        default: "[]"
+        required: false
+        type: string
+      runsOn:
+        description: Define on which runner to run workflows where order doesn't matter should run
+        default: "ubuntu-latest"
+        required: false
+        type: string
+      isProject:
+        description: Whether or not this is a project, defaulting to package
+        default: false
+        required: false
+        type: boolean
+
+#defaults:
+#  run:
+#    working-directory: ${{ inputs.workingDirectory }}
+
+jobs:
+  supported-threading-matrix:
+    name: Supported Threading Matrix
+    runs-on: ${{ inputs.runsOn }}
+    outputs:
+      version: ${{ steps.supported-threading-matrix.outputs.result }}
+      primary: ${{ steps.primary.outputs.result }}
+    steps:
+      - id: supported-threading-matrix
+        uses: actions/github-script@v7
+        env:
+          PHP_EXTENSIONS: ${{ inputs.extensions }}
+          IS_PROJECT: ${{ toJson(inputs.isProject) }}
+        with:
+          script: |
+            const phpExtensions = JSON.parse(process.env.PHP_EXTENSIONS);
+            for(var i = 0; i <= phpExtensions.length; i++) {
+                if (phpExtensions[i] == 'parallel') { 
+                  return ['zts'];
+                }
+            }
+            if (JSON.parse(process.env.IS_PROJECT) == true) { 
+              return ['nts'];
+            }
+            return ['nts', 'zts'];
+      - id: primary
+        uses: actions/github-script@v7
+        env:
+          PHP_EXTENSIONS: ${{ inputs.extensions }}
+        with:
+          script: |
+            const phpExtensions = JSON.parse(process.env.PHP_EXTENSIONS);
+            for(var i = 0; i <= phpExtensions.length; i++) {
+                if (phpExtensions[i] == 'parallel') { 
+                  return 'zts';
+                }
+            } 
+            return 'nts';
