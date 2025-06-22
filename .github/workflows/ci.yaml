@@ -325,15 +325,8 @@ jobs:
           working-directory: ${{ inputs.workingDirectory }}
       - run: git config --global --add safe.directory $GITHUB_WORKSPACE # Do this ourselves because `actions/checkout@v4 doesn't succeed in doing this
         working-directory: ${{ inputs.workingDirectory }}
-      - run: make ${{ matrix.check }} || true
-        working-directory: ${{ inputs.workingDirectory }}
-        if: needs.supported-versions-matrix.outputs.upcoming == matrix.php || (matrix.php-to-thread-or-not-to-thread == 'zts' && matrix.check == 'psalm')
-        env:
-          COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
-          COVERALLS_RUN_LOCALLY: ${{ secrets.COVERALLS_RUN_LOCALLY }}
       - run: make ${{ matrix.check }}
         working-directory: ${{ inputs.workingDirectory }}
-        if: needs.supported-versions-matrix.outputs.upcoming == matrix.php || (matrix.php-to-thread-or-not-to-thread == 'zts' && matrix.check == 'psalm') == false
         env:
           COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
           COVERALLS_RUN_LOCALLY: ${{ secrets.COVERALLS_RUN_LOCALLY }}
