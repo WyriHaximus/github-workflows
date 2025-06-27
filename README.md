@@ -269,6 +269,7 @@ jobs:
 | dependencyUpdaters | string | CSV list of bot AppId&#039;s that create PR&#039;s to updated dependencies like RenovateBot and DependaBot | 49699333 |
 | env | string | Any additional environment variables | {} |
 | jsonPattern | string | The pattern to match which JSON files to check | \.json$ |
+| markdownLinkCheckSparseCheckout | string | Additional files/patterns for the sparse checkout |  |
 | services | string | Any additional services to use | {} |
 | supportedChecksCommand | string | The make command to invoke listing the different tasks to run across all versions, will also act as a prefix for All, Direct on OS, Lowest, Locked, and Highest task lists. | task-list-ci |
 | workingDirectory | string | The directory to run this workflow in |  |
@@ -360,6 +361,7 @@ jobs:
 | dockerfile | string | The Dockerfile to build |  |
 | env | string | Any additional environment variables | {} |
 | jsonPattern | string | The pattern to match which JSON files to check | \.json$ |
+| markdownLinkCheckSparseCheckout | string | Additional files/patterns for the sparse checkout |  |
 | ociPlatforms | string | The platforms to build the OCI image for, empty means autodetect |  |
 | ociPushSecretSecret | string | The secret name that holds the token to push OCI images to GHCR.io | GITHUB_TOKEN |
 | ociSparseCheckout | string | Sparse checkout patterns in cone mode |  |

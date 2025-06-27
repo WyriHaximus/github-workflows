@@ -32,6 +32,11 @@ on:
         default: "task-list-ci"
         required: false
         type: string
+      markdownLinkCheckSparseCheckout:
+        description: Additional files/patterns for the sparse checkout
+        default: ""
+        required: false
+        type: string
 jobs:
   ci:
     name: Continuous Integration
@@ -48,3 +53,4 @@ jobs:
     uses: ./.github/workflows/markdown-check-links.yaml
     with:
       workingDirectory: ${{ inputs.workingDirectory }}
+      markdownLinkCheckSparseCheckout: ${{ inputs.markdownLinkCheckSparseCheckout }}

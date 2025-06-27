@@ -81,6 +81,11 @@ on:
         default: ""
         required: false
         type: string
+      markdownLinkCheckSparseCheckout:
+        description: Additional files/patterns for the sparse checkout
+        default: ""
+        required: false
+        type: string
 jobs:
   ci:
     name: Continuous Integration
@@ -116,3 +121,4 @@ jobs:
     with:
       runsOn: ${{ inputs.runsOnChaos }}
       workingDirectory: ${{ inputs.workingDirectory }}
+      markdownLinkCheckSparseCheckout: ${{ inputs.markdownLinkCheckSparseCheckout }}

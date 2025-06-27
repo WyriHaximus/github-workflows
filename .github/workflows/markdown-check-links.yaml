@@ -13,6 +13,11 @@ on:
         default: ""
         required: false
         type: string
+      markdownLinkCheckSparseCheckout:
+        description: Additional files/patterns for the sparse checkout
+        default: ""
+        required: false
+        type: string
 
 #defaults:
 #  run:
@@ -30,9 +35,6 @@ jobs:
           sparse-checkout: |
             !${{ inputs.workingDirectory }}/*
             ${{ inputs.workingDirectory }}/**/*.md
+            ${{ inputs.markdownLinkCheckSparseCheckout }}
       - name: Check Markdown links
-        uses: umbrelladocs/action-linkspector@v1
-        with:
-          reporter: github-pr-review
-          fail_on_error: true
-#          config_file: etc/ci/markdown-link-checker.json
+        uses: becheran/mlc@v0.22.0
