@@ -433,6 +433,7 @@ jobs:
 | runsOnChaos | string | Define on which runner to run workflows where order doesn&#039;t matter should run | ubuntu-latest |
 | runsOnOrder | string | Define on which runner to run workflows where order matters should run | ubuntu-latest |
 | serverlessSparseCheckout | string | Additional files/patterns for the sparse checkout |  |
+| staticFilesPath | string | The path to the static files to be synced to S3 | public |
 | terraformDirectory | string | The directory to run this workflow in |  |
 | terraformLogLevel | string | Value for the TF_LOG environment value |  |
 | terraformParallelism | number | Value for the -parallelism plan/apply flag | 13 |

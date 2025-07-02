@@ -175,6 +175,11 @@ on:
         default: ""
         required: false
         type: string
+      staticFilesPath:
+        description: The path to the static files to be synced to S3
+        default: "public"
+        required: true
+        type: string
 jobs:
   required-labels:
     name: Required Labels
@@ -287,3 +292,19 @@ jobs:
       awsAccessKeyIDSecret: ${{ inputs.awsAccessKeyIDSecret }}
       awsSecretAccessKeySecret: ${{ inputs.awsSecretAccessKeySecret }}
       awsRegionSecret : ${{ inputs.awsRegionSecret  }}
+  deploy-release-static:
+    name: "Deploy Release: Static"
+    needs:
+      - create-release
+    if: inputs.type == 'static' && github.event_name == 'milestone' && contains(fromJSON('["closed"]'), github.event.action)
+    uses: ./.github/workflows/project-craft-release-static.yaml
+    secrets: inherit
+    with:
+      runsOn: ${{ inputs.runsOnOrder }}
+      staticFilesPath: ${{ inputs.staticFilesPath }}
+      workingDirectory: ${{ inputs.workingDirectory }}
+      awsAccessKeyIDSecret: ${{ inputs.awsAccessKeyIDSecret }}
+      awsSecretAccessKeySecret: ${{ inputs.awsSecretAccessKeySecret }}
+      awsRegionSecret: ${{ inputs.awsRegionSecret }}
+      cdnAwsS3BucketSecret: ${{ inputs.cdnAwsS3BucketSecret }}
+      cdnAwsCloudFrontDistributionIDSecret: ${{ inputs.cdnAwsCloudFrontDistributionIDSecret }}
