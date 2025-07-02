@@ -178,7 +178,7 @@ on:
       staticFilesPath:
         description: The path to the static files to be synced to S3
         default: "public"
-        required: true
+        required: false
         type: string
 jobs:
   required-labels:
