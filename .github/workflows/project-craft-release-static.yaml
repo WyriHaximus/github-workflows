@@ -1,0 +1,67 @@
+name: Deploy assets to CDN
+on:
+  workflow_call:
+    inputs:
+      staticFilesPath:
+        description: The path to the static files to be synced to S3
+        default: "public"
+        required: true
+        type: string
+      workingDirectory:
+        description: The directory to run this workflow in
+        default: ""
+        required: false
+        type: string
+      runsOn:
+        description: Define on which runner to run workflows where order doesn't matter should run
+        default: "ubuntu-latest"
+        required: true
+        type: string
+      awsAccessKeyIDSecret:
+        description: The secret name that holds the AWS access key ID
+        default: "AWS_KEY"
+        required: true
+        type: string
+      awsSecretAccessKeySecret:
+        description: The secret name that holds the AWS access key secret
+        default: "AWS_SECRET"
+        required: true
+        type: string
+      awsRegionSecret:
+        description: The secret name that holds the AWS region
+        default: "AWS_REGION"
+        required: true
+        type: string
+      cdnAwsS3BucketSecret:
+        description: The secret name that holds the AWS S3 bucket name
+        default: "CDN_HOSTED_S3_BUCKET"
+        required: true
+        type: string
+      cdnAwsCloudFrontDistributionIDSecret:
+        description: The secret name that holds the AWS cloudfront distribution id
+        default: "CDN_HOSTED_DISTRIBUTION_ID"
+        required: true
+        type: string
+jobs:
+  static-cdn-hosted-deploy-aws:
+    name: Deploy static assets to CDN and invalidate caches
+    runs-on: ${{ inputs.runsOn }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            !${{ inputs.workingDirectory }}/*
+            /${{ inputs.workingDirectory }}${{ inputs.staticFilesPath }}*
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets[inputs.awsAccessKeyIDSecret] }}
+          aws-secret-access-key: ${{ secrets[inputs.awsSecretAccessKeySecret] }}
+          aws-region: ${{ secrets[inputs.awsRegionSecret] }}
+      - name: Deploy Non-HTML
+        run: aws s3 cp ${{ inputs.workingDirectory }}${{ inputs.staticFilesPath }} s3://${{ secrets[inputs.cdnAwsS3BucketSecret] }} --recursive --acl=public-read --include="*" --exclude "*.html" --cache-control max-age=31536000,public
+      - name: Deploy HTML
+        run: aws s3 cp ${{ inputs.workingDirectory }}${{ inputs.staticFilesPath }} s3://${{ secrets[inputs.cdnAwsS3BucketSecret] }} --recursive --acl=public-read --exclude="*" --include "*.html" --cache-control max-age=3200,no-cache,no-store,must-revalidate
+      - name: Invalidate Cloudfront
+        run: aws cloudfront create-invalidation --distribution-id=${{ secrets[inputs.cdnAwsCloudFrontDistributionIDSecret] }} --paths '/*'
