@@ -330,7 +330,7 @@ jobs:
         env:
           COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
           COVERALLS_RUN_LOCALLY: ${{ secrets.COVERALLS_RUN_LOCALLY }}
-          OTEL_PHP_FIBERS_ENABLED: "true"
+          OTEL_PHP_FIBERS_ENABLED: ${{ matrix.php-to-thread-or-not-to-thread == 'zts' && 'false' || 'true' }}
   directly-on-os:
     name: Run ${{ matrix.check }} on PHP ${{ matrix.php }} (${{ matrix.php-to-thread-or-not-to-thread }}) with ${{ matrix.composer }} dependency preference (${{ matrix.os }})
     strategy:
