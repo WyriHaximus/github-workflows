@@ -72,7 +72,7 @@ jobs:
       - name: 'Get next versions'
         id: semvers
         if: steps.previoustag.outputs.tag != env.FALLBACK_TAG
-        uses: "WyriHaximus/github-action-next-semvers@v1"
+        uses: "WyriHaximus/github-action-next-semvers@18aa9ed4152808ab99b88d71f5481e41f8d89930" # v1.2.1
         with:
           version: ${{ steps.previoustag.outputs.tag }}
       - name: 'Decide which version fits this PR'
