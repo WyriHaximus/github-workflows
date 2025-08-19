@@ -347,7 +347,7 @@ jobs:
     services: ${{ fromJson(inputs.services) }}
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
-      - uses: shivammathur/setup-php@v2
+      - uses: shivammathur/setup-php@20529878ed81ef8e78ddf08b480401e6101a850f # 2.35.3
         env:
           fail-fast: true
           phpts: ${{ matrix.php-to-thread-or-not-to-thread }}
