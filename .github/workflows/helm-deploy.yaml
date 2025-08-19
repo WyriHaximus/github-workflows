@@ -72,7 +72,7 @@ jobs:
           echo -e "\r\nappVersion: ${{ inputs.version }}\r\n" >> ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}Chart.yaml &&
           cat ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}Chart.yaml
       - name: Deploy
-        uses: WyriHaximus/github-action-helm3@v4
+        uses: WyriHaximus/github-action-helm3@e3894d973c282349e3d41d3347767f2b2545b583 # v4.0.2
         with:
           exec: |
             helm repo add WyriHaximusNet https://helm.wyrihaximus.net/
