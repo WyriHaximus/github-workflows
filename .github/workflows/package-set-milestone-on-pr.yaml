@@ -58,7 +58,7 @@ jobs:
       version: ${{ steps.decidedversion.outputs.version }}
     steps:
       - name: 'Setup jq'
-        uses: dcarbone/install-jq-action@v3
+        uses: dcarbone/install-jq-action@b7ef57d46ece78760b4019dbc4080a1ba2a40b45 # v3.2.0
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
       - run: git config --global --add safe.directory $GITHUB_WORKSPACE # Do this ourself because `actions/checkout@v4 doesn't succeed in doing this
       - run: git fetch --tags origin

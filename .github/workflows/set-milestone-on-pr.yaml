@@ -19,7 +19,7 @@ jobs:
     runs-on: ${{ inputs.runsOn }}
     steps:
       - name: 'Setup jq'
-        uses: dcarbone/install-jq-action@v3
+        uses: dcarbone/install-jq-action@b7ef57d46ece78760b4019dbc4080a1ba2a40b45 # v3.2.0
       - name: Set Milestone through Chores.Dev
         uses: chores-dev/set-milestone-action@main
         with:
