@@ -63,7 +63,7 @@ jobs:
       - name: 'Get Previous tag'
         id: previousgittag
         continue-on-error: true
-        uses: "WyriHaximus/github-action-get-previous-tag@v1"
+        uses: "WyriHaximus/github-action-get-previous-tag@04e8485ecb6487243907e330d522ff60f02283ce" # v1.4.0
         env:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
       - name: Prep helm chart
