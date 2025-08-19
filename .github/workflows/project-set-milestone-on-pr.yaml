@@ -34,7 +34,7 @@ jobs:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
       - name: Get next minor version
         id: semvers
-        uses: WyriHaximus/github-action-next-release-version@v1
+        uses: WyriHaximus/github-action-next-release-version@1f653afbb4e00a7531c41f4a863443fda2a6a60e # v1.1.0
         with:
           version: ${{ steps.previoustag.outputs.tag }}
   set-milestone:
