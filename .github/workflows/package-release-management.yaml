@@ -49,7 +49,7 @@ on:
 jobs:
   required-labels:
     name: Required Labels
-    if: inputs.disableRequiredLabels == false && github.event_name == 'pull_request'
+    if: inputs.disableRequiredLabels == false && github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'labeled' || github.event.action == 'unlabeled')
     uses: ./.github/workflows/required-labels.yaml
     with:
       requiredLabels: ${{ inputs.labels }}
