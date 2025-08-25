@@ -198,7 +198,7 @@ jobs:
       initialTag: ${{ inputs.initialTag }}
   diff:
     name: Diff
-    if: github.event_name == 'pull_request' && github.ref_type != 'labeled' && github.ref_type != 'unlabeled'
+    if: github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'synchronize' || github.event.action == 'reopened')
     uses: ./.github/workflows/diff.yaml
     secrets: inherit
     with:
