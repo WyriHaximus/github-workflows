@@ -116,6 +116,6 @@ jobs:
           branches: release/${{ inputs.milestone }}
       - name: Updated related tags
         if: inputs.mustUpdateAllSemverTags
-        uses: haya14busa/action-update-semver@22a3666f9309f0d72ab0ea6c49b7a8019c1eab38 # v1.3.0
+        uses: haya14busa/action-update-semver@7d2c558640ea49e798d46539536190aff8c18715 # v1.5.1
         with:
           tag: ${{ inputs.milestone }}
