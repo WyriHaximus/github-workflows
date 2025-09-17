@@ -1,0 +1,36 @@
+name: Renovate
+description: 'Wrapper action around Renovate'
+branding:
+  icon: 'grid'
+  color: 'orange'
+inputs:
+  renovateAppToken:
+    description: Define on which runner this workflow should run
+    required: true
+  logLevel:
+    description: Define on which runner this workflow should run
+    default: info
+    required: false
+runs:
+  using: "composite"
+  steps:
+    - name: Self-hosted Renovate
+      uses: renovatebot/github-action@7876d7a812254599d262d62b6b2c2706018258a2 # v43.0.10
+      with:
+        token: ${{ inputs.renovateAppToken }}
+      env:
+        RENOVATE_ALLOW_PLUGINS: true
+        RENOVATE_ALLOW_SCRIPTS: true
+        RENOVATE_ALLOWED_COMMANDS: "[\"git add\"]"
+        RENOVATE_AUTODISCOVER: true
+        RENOVATE_BINARY_SOURCE: docker
+        RENOVATE_POST_UPGRADE_TASKS: "{\"commands\": [\"git add\"], \"fileFilters\": [\"**/**\"], \"executionMode\": \"update\"}"
+        RENOVATE_DOCKER_CLI_OPTIONS: "-t -e=COMPOSER_IGNORE_PLATFORM_REQS=1"
+        RENOVATE_DRY_RUN: "null"
+        RENOVATE_IGNORE_PLUGINS: false
+        RENOVATE_IGNORE_SCRIPTS: false
+        RENOVATE_ONBOARDING_CONFIG: "{\"$schema\":\"https://docs.renovatebot.com/renovate-schema.json\",\"extends\":[\"github>WyriHaximus/renovate-config:php-package\"]}"
+        RENOVATE_ONBOARDING_CONFIG_FILE_NAME: ".github/renovate.json"
+        RENOVATE_ONBOARDING_REBASE_CHECKBOX: "true"
+        LOG_LEVEL: ${{ inputs.logLevel }}
+        LOG_FORMAT: ${{ inputs.logLevel == 'debug' && 'json' || '' }}
