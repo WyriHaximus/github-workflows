@@ -325,6 +325,8 @@ jobs:
           working-directory: ${{ inputs.workingDirectory }}
       - run: git config --global --add safe.directory $GITHUB_WORKSPACE # Do this ourselves because `actions/checkout@v4 doesn't succeed in doing this
         working-directory: ${{ inputs.workingDirectory }}
+      - run: make on-install-or-update || true
+        working-directory: ${{ inputs.workingDirectory }}
       - run: make ${{ matrix.check }}
         working-directory: ${{ inputs.workingDirectory }}
         env:
