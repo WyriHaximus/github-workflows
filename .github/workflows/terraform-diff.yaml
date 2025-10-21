@@ -1,5 +1,5 @@
 name: TerraForm Diff
-
+env: ${{ vars }}
 on:
   workflow_call:
     inputs:
