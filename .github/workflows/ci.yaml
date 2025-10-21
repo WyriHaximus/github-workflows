@@ -129,7 +129,7 @@ jobs:
         working-directory: ${{ inputs.workingDirectory }}
   compile-matrix:
     name: Compile the matrix
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runsOnChaos }}
     needs:
       - supported-checks-matrix
       - supported-versions-matrix
@@ -310,19 +310,48 @@ jobs:
         include: ${{ fromJson(needs.compile-matrix.outputs.qa) }}
     needs:
       - compile-matrix
-    runs-on: ubuntu-latest
+      - supported-versions-matrix
+    runs-on: ${{ inputs.runsOnChaos }}
     container:
       image: ghcr.io/wyrihaximusnet/php:${{ matrix.php }}-${{ matrix.php-to-thread-or-not-to-thread }}-alpine-dev-root
+#      volumes:
+#        - /tmp/node20:/__e/node20
+#        - /tmp/node24:/__e/node24
     env: ${{ fromJson(inputs.env) }}
     services: ${{ fromJson(inputs.services) }}
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
-        with:
-          fetch-depth: 0 # Required due to the way Git works, without it this action won't be able to find any or the correct tags
+#      - run: | ## Workaround from https://github.com/actions/runner/issues/801#issuecomment-2976165281
+#          sed -i "/^ID=/s/alpine/NotpineForGHA/" /etc/os-release
+#          mkdir /__e/node20/bin/
+#          mkdir /__e/node24/bin/
+#          ln -s /usr/bin/node /__e/node20/bin/
+#          ln -s /usr/bin/npm /__e/node20/bin/
+#          ln -s /usr/bin/node /__e/node24/bin/
+#          ln -s /usr/bin/npm /__e/node24/bin/
+#          ls -lasth /__e/node20/bin/
+#          ls -lasth /__e/node24/bin/
+#      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+#        with:
+#          fetch-depth: 0 # Required due to the way Git works, without it this action won't be able to find any or the correct tags
+      - uses: myci-actions/checkout@10
+#      - uses: shivammathur/setup-php@ec406be512d7077f68eed36e63f4d91bc006edc4 # 2.35.4
+#        env:
+#          fail-fast: true
+#          phpts: ${{ matrix.php-to-thread-or-not-to-thread }}
+#        with:
+#          php-version: ${{ matrix.php }}
+#          coverage: pcov
+#          tools: pecl
+#          extensions: ${{ join(fromJson(needs.supported-versions-matrix.outputs.extensions), ',') }}
+#          ini-file: development
       - uses: ramsey/composer-install@3cf229dc2919194e9e36783941438d17239e8520 # 3.1.1
         with:
           dependency-versions: ${{ matrix.composer }}
-          working-directory: ${{ inputs.workingDirectory }}
+          working-direct ory: ${{ inputs.workingDirectory }}
+      - run: make install
+        working-directory: ${{ inputs.workingDirectory }}
+        env:
+          OTEL_PHP_FIBERS_ENABLED: ${{ matrix.php-to-thread-or-not-to-thread == 'zts' && 'false' || 'true' }}
       - run: git config --global --add safe.directory $GITHUB_WORKSPACE # Do this ourselves because `actions/checkout@v4 doesn't succeed in doing this
         working-directory: ${{ inputs.workingDirectory }}
       - run: make ${{ matrix.check }}
