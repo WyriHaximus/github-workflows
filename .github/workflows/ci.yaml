@@ -32,6 +32,11 @@ on:
         default: "ubuntu-latest"
         required: false
         type: string
+      runsOnQASteps:
+        description: Define on which runner to run workflows where QA ssteps should run
+        default: "ubuntu-latest"
+        required: false
+        type: string
       isProject:
         description: Whether or not this is a project, defaulting to package
         default: false
@@ -310,7 +315,8 @@ jobs:
         include: ${{ fromJson(needs.compile-matrix.outputs.qa) }}
     needs:
       - compile-matrix
-    runs-on: ubuntu-latest
+      - supported-versions-matrix
+    runs-on: ${{ inputs.runsOnQASteps }}
     container:
       image: ghcr.io/wyrihaximusnet/php:${{ matrix.php }}-${{ matrix.php-to-thread-or-not-to-thread }}-alpine-dev-root
     env: ${{ fromJson(inputs.env) }}
