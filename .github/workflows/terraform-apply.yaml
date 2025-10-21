@@ -1,5 +1,5 @@
 name: TerraForm Apply
-
+env: ${{ vars }}
 on:
   workflow_call:
     inputs:
