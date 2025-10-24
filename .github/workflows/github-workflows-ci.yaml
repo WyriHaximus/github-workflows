@@ -16,7 +16,7 @@ jobs:
     name: Ensure README is up to date
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/wyrihaximusnet/php:8.4-nts-alpine-dev-root
+      image: ghcr.io/wyrihaximusnet/php:8.5-nts-alpine-dev-root
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
       - name: Move current README
