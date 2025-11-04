@@ -129,7 +129,7 @@ jobs:
         working-directory: ${{ inputs.workingDirectory }}
   compile-matrix:
     name: Compile the matrix
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runsOnChaos }}
     needs:
       - supported-checks-matrix
       - supported-versions-matrix
