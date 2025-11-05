@@ -78,7 +78,7 @@ jobs:
             ${{ inputs.workingDirectory }}composer.json
             ${{ inputs.workingDirectory }}composer.lock
       - id: supported-versions-matrix
-        uses: WyriHaximus/github-action-composer-php-versions-in-range@ea3d54bf7909d5607c4f32bda9cd8d64e420ec99 # v1.14.0
+        uses: WyriHaximus/github-action-composer-php-versions-in-range@d037519ac6672bf126b1335dcff5f1fd0062658e # v1.15.0
         with:
           upcomingReleases: true
           workingDirectory: ${{ inputs.workingDirectory }}
