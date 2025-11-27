@@ -101,8 +101,6 @@ jobs:
       kubeConfigSecret: ${{ inputs.kubeConfigSecret }}
   image-retag:
     name: OCI Image Re-tag
-    needs:
-      - terraform-apply
     if: inputs.ociRetag
     uses: ./.github/workflows/oci-retag.yaml
     secrets: inherit
