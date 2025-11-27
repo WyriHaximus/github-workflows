@@ -51,20 +51,30 @@ jobs:
           echo "Status:    ${{ steps.buildx.outputs.status }}"
           echo "Flags:     ${{ steps.buildx.outputs.flags }}"
           echo "Platforms: ${{ steps.buildx.outputs.platforms }}"
+      - name: Lowercase image name
+        id: lowercase
+        run: |
+          echo "from=$(echo "${{ inputs.from }}" | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
+          echo "to=$(echo "${{ inputs.to }}" | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
       - name: Prepare Dockerfile
         run: |
-          echo "${{ inputs.from }}" | tr '[:upper:]' '[:lower:]'
-          printf "FROM %s" $(echo "${{ inputs.from }}" | tr '[:upper:]' '[:lower:]') >> Dockerfile.tag
+          echo "${{ steps.lowercase.outputs.from }}"
+          echo "FROM ${{ steps.lowercase.outputs.from }}" >> Dockerfile.tag
           cat Dockerfile.tag
+      - name: Wait for OCI build from CI workflow to complete
+        uses: int128/wait-for-docker-image-action@v1
+        with:
+          tags: ${{ steps.lowercase.outputs.from }}
+          timeout-seconds: 10800
       - name: Detect Platform Flag
         id: platform
         uses: wyrihaximus/github-action-oci-image-supported-platforms@main
         with:
-          image: ${{ inputs.from }}
+          image: ${{ steps.lowercase.outputs.from }}
       - name: Pull, retag, and push image
         uses: nick-invision/retry@ce71cc2ab81d554ebbe88c79ab5975992d79ba08 # v3.0.2
         with:
           timeout_minutes: 120
           retry_wait_seconds: 10
           max_attempts: 13
-          command: docker build --platform=${{ steps.platform.outputs.platform_csv }} --output=type=registry --no-cache -f Dockerfile.tag -t $(echo "${{ inputs.to }}" | tr '[:upper:]' '[:lower:]') .
+          command: docker build --platform=${{ steps.platform.outputs.platform_csv }} --output=type=registry --no-cache -f Dockerfile.tag -t "${{ steps.lowercase.outputs.to }}" .

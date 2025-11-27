@@ -82,4 +82,4 @@ jobs:
         with:
           dockerfile: ${{ inputs.dockerfile }}
       - name: Build, and push image
-        run: docker build --platform=${{ inputs.ociPlatforms != '' && inputs.ociPlatforms || steps.platform.outputs.platform_csv }} --output=type=registry -f ${{ inputs.dockerfile }} -t $(echo "${{ inputs.tag }}" | tr '[:upper:]' '[:lower:]') . ${{ inputs.dockerBuildTarget != '' && format('--target={0}', inputs.dockerBuildTarget) || ''}} ${{ inputs.dockerBuildExtraArguments }}
+        run: docker build --label org.opencontainers.image.revision=${{ github.sha }} --platform=${{ inputs.ociPlatforms != '' && inputs.ociPlatforms || steps.platform.outputs.platform_csv }} --output=type=registry -f ${{ inputs.dockerfile }} -t $(echo "${{ inputs.tag }}" | tr '[:upper:]' '[:lower:]') . ${{ inputs.dockerBuildTarget != '' && format('--target={0}', inputs.dockerBuildTarget) || ''}} ${{ inputs.dockerBuildExtraArguments }}
