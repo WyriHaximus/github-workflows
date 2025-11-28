@@ -18,7 +18,7 @@ jobs:
     container:
       image: ghcr.io/wyrihaximusnet/php:8.5-nts-alpine-dev-root
     steps:
-      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
       - name: Move current README
         run: |
           mv README.md README.current.md
