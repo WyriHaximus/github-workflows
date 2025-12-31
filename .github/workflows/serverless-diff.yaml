@@ -49,7 +49,7 @@ jobs:
             ${{ inputs.serverlessSparseCheckout }}
       - name: Get desired PHP version
         id: supported-versions-matrix
-        uses: WyriHaximus/github-action-composer-php-versions-in-range@d037519ac6672bf126b1335dcff5f1fd0062658e # v1.15.0
+        uses: WyriHaximus/github-action-composer-php-versions-in-range@1eff3298ad218e34b77fbda04efdcb4a38bb1a6a # v1.16.0
       - name: Install PHP
         uses: shivammathur/setup-php@verbose
         env:
