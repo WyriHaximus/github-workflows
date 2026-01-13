@@ -62,7 +62,7 @@ jobs:
           echo "FROM ${{ steps.lowercase.outputs.from }}" >> Dockerfile.tag
           cat Dockerfile.tag
       - name: Wait for OCI build from CI workflow to complete
-        uses: int128/wait-for-docker-image-action@8f1779f08e4a5d82b60fc6d6313bca6564a71b34 # v1.9.0
+        uses: int128/wait-for-docker-image-action@4e92d5ccf97d0d64eef0300bb900ef08f78acdc1 # v1.13.0
         with:
           tags: ${{ steps.lowercase.outputs.from }}
           timeout-seconds: 10800
