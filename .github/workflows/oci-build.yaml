@@ -78,7 +78,7 @@ jobs:
       - name: Detect Platform Flag
         if: inputs.ociPlatforms == ''
         id: platform
-        uses: wyrihaximus/github-action-oci-image-supported-platforms@main
+        uses: wyrihaximus/github-action-oci-image-supported-platforms@v1.0.0
         with:
           dockerfile: ${{ inputs.dockerfile }}
       - name: Build, and push image

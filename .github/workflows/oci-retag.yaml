@@ -68,7 +68,7 @@ jobs:
           timeout-seconds: 10800
       - name: Detect Platform Flag
         id: platform
-        uses: wyrihaximus/github-action-oci-image-supported-platforms@main
+        uses: wyrihaximus/github-action-oci-image-supported-platforms@v1.0.0
         with:
           image: ${{ steps.lowercase.outputs.from }}
       - name: Pull, retag, and push image
