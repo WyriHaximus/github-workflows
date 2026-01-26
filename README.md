@@ -366,6 +366,7 @@ jobs:
 | ociPushSecretSecret | string | The secret name that holds the token to push OCI images to GHCR.io | GITHUB_TOKEN |
 | ociSparseCheckout | string | Sparse checkout patterns in cone mode |  |
 | runsOnChaos | string | Define on which runner to run workflows where order doesn&#039;t matter should run | ubuntu-latest |
+| runsOnChaosUnicorn | string | Define on which runner to run workflows where order doesn&#039;t matter should run | ubuntu-slim |
 | runsOnOrder | string | Define on which runner to run workflows where order matters should run | ubuntu-latest |
 | services | string | Any additional services to use | {} |
 | workingDirectory | string | The directory to run this workflow in |  |
@@ -431,6 +432,7 @@ jobs:
 | ociRetag | boolean | Whether or not to retag OCI images with the release tag |  |
 | preReleaseScript | string | Script that runs just before the release is created |  |
 | runsOnChaos | string | Define on which runner to run workflows where order doesn&#039;t matter should run | ubuntu-latest |
+| runsOnChaosUnicorn | string | Define on which runner to run workflows where order doesn&#039;t matter should run | ubuntu-slim |
 | runsOnOrder | string | Define on which runner to run workflows where order matters should run | ubuntu-latest |
 | serverlessSparseCheckout | string | Additional files/patterns for the sparse checkout |  |
 | staticFilesPath | string | The path to the static files to be synced to S3 | public |
