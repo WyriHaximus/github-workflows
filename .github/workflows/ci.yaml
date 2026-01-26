@@ -27,6 +27,11 @@ on:
         default: "ubuntu-latest"
         required: false
         type: string
+      runsOnChaosUnicorn:
+        description: Define on which runner to run workflows where order doesn't matter should run
+        default: "ubuntu-slim"
+        required: false
+        type: string
       runsOnOrder:
         description: Define on which runner to run workflows where order matters should run
         default: "ubuntu-latest"
@@ -50,7 +55,7 @@ on:
 jobs:
   package-name:
     name: Package Name
-    runs-on: ${{ inputs.runsOnChaos }}
+    runs-on: ${{ inputs.runsOnChaosUnicorn }}
     outputs:
       package-name: ${{ steps.package-name.outputs.package-name }}
     steps:
@@ -65,7 +70,7 @@ jobs:
           printf "package-name=[\"%s\"]" $(docker run --rm -v "`pwd`:`pwd`" backplane/jq -r -c '.name' "$(pwd)/composer.json") >> $GITHUB_OUTPUT
   supported-versions-matrix:
     name: Supported Versions Matrix
-    runs-on: ${{ inputs.runsOnChaos }}
+    runs-on: ${{ inputs.runsOnChaosUnicorn }}
     outputs:
       lowest: ${{ steps.supported-versions-matrix.outputs.lowest }}
       version: ${{ steps.supported-versions-matrix.outputs.version }}
@@ -89,11 +94,11 @@ jobs:
     uses: ./.github/workflows/supported-threading-matrix.yaml
     with:
       extensions: ${{ needs.supported-versions-matrix.outputs.extensions }}
-      runsOn: ${{ inputs.runsOnChaos }}
+      runsOn: ${{ inputs.runsOnChaosUnicorn }}
       isProject: ${{ inputs.isProject }}
   supported-checks-matrix:
     name: Supported Checks Matrix
-    runs-on: ${{ inputs.runsOnChaos }}
+    runs-on: ${{ inputs.runsOnChaosUnicorn }}
     needs:
       - supported-threading-matrix
       - supported-versions-matrix
@@ -129,7 +134,7 @@ jobs:
         working-directory: ${{ inputs.workingDirectory }}
   compile-matrix:
     name: Compile the matrix
-    runs-on: ${{ inputs.runsOnChaos }}
+    runs-on: ${{ inputs.runsOnChaosUnicorn }}
     needs:
       - supported-checks-matrix
       - supported-versions-matrix
@@ -372,6 +377,6 @@ jobs:
       - can-require
       - qa
       - directly-on-os
-    runs-on: ${{ inputs.runsOnChaos }}
+    runs-on: ${{ inputs.runsOnChaosUnicorn }}
     steps:
       - run: echo "✔️"
