@@ -36,6 +36,11 @@ on:
         default: "ubuntu-latest"
         required: false
         type: string
+      runsOnChaosUnicorn:
+        description: Define on which runner to run workflows where order doesn't matter should run
+        default: "ubuntu-slim"
+        required: false
+        type: string
       runsOnOrder:
         description: Define on which runner to run workflows where order matters should run
         default: "ubuntu-latest"
@@ -186,7 +191,7 @@ jobs:
     if: inputs.disableRequiredLabels == false && github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'labeled' || github.event.action == 'unlabeled')
     uses: ./.github/workflows/required-labels.yaml
     with:
-      runsOn: ${{ inputs.runsOnChaos }}
+      runsOn: ${{ inputs.runsOnChaosUnicorn }}
       requiredLabels: ${{ inputs.labels }}
   set-milestone:
     name: Set Milestone
@@ -194,7 +199,7 @@ jobs:
     uses: ./.github/workflows/project-set-milestone-on-pr.yaml
     secrets: inherit
     with:
-      runsOn: ${{ inputs.runsOnChaos }}
+      runsOn: ${{ inputs.runsOnChaosUnicorn }}
       initialTag: ${{ inputs.initialTag }}
   diff:
     name: Diff
@@ -203,6 +208,7 @@ jobs:
     secrets: inherit
     with:
       runsOnChaos: ${{ inputs.runsOnChaos }}
+      runsOnChaosUnicorn: ${{ inputs.runsOnChaosUnicorn }}
       runsOnOrder: ${{ inputs.runsOnOrder }}
       workingDirectory: ${{ inputs.workingDirectory }}
       terraformDirectory: ${{ inputs.terraformDirectory }}
@@ -226,7 +232,7 @@ jobs:
     if: github.event_name == 'milestone' && contains(fromJSON('["closed"]'), github.event.action)
     uses: ./.github/workflows/craft-release.yaml
     with:
-      runsOn: ${{ inputs.runsOnChaos }}
+      runsOn: ${{ inputs.runsOnChaosUnicorn }}
       milestone: ${{ inputs.milestone }}
       description: ${{ inputs.description }}workingDirectory
       branch: ${{ inputs.branch }}
