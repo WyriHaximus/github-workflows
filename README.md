@@ -459,11 +459,11 @@ jobs:
 - [X] Terraform vars from secrets
 - [X] Check links in Markdown files for non 200 status codes
 - [ ] Make CI's test directly on OS runs-on array configurable
-- [ ] Cronjob/Scheduled workflows for things like Docker image clean up
+- [X] Cronjob/Scheduled workflows for things like Docker image clean up
 - [X] Sparse checkout all the things
 - [ ] Fix typo in release management entry point filenames, and have all users point at the currect one
 - [ ] Add documentation once Utils entry point is more stable
-- [ ] Add GHCR.io image clean up to project utils entry point
+- [X] Add GHCR.io image clean up to project utils entry point
 
 ## License
 
