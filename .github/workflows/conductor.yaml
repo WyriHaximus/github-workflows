@@ -28,7 +28,7 @@ jobs:
         id: supported-versions-matrix
         uses: WyriHaximus/github-action-composer-php-versions-in-range@c066c91df855ca2563dc4ec46ac6674e0752ae65 # v2.0.0
       - name: Install PHP
-        uses: shivammathur/setup-php@44454db4f0199b8b9685a5d763dc37cbf79108e1 # 2.36.0
+        uses: shivammathur/setup-php@accd6127cb78bee3e8082180cb391013d204ef9f # 2.37.0
         env:
           fail-fast: true
         with:
