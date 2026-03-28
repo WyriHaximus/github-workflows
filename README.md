@@ -367,6 +367,7 @@ jobs:
 | ociSparseCheckout | string | Sparse checkout patterns in cone mode |  |
 | runsOnChaos | string | Define on which runner to run workflows where order doesn&#039;t matter should run | ubuntu-latest |
 | runsOnOrder | string | Define on which runner to run workflows where order matters should run | ubuntu-latest |
+| runsOnQASteps | string | Define on which runner to run workflows where QA ssteps should run | ubuntu-latest |
 | services | string | Any additional services to use | {} |
 | workingDirectory | string | The directory to run this workflow in |  |
 

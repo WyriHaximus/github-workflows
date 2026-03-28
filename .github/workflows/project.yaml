@@ -52,6 +52,11 @@ on:
         default: "ubuntu-latest"
         required: false
         type: string
+      runsOnQASteps:
+        description: Define on which runner to run workflows where QA ssteps should run
+        default: "ubuntu-latest"
+        required: false
+        type: string
       dockerfile:
         description: The Dockerfile to build
         default: ""
@@ -98,6 +103,7 @@ jobs:
       isProject: true
       runsOnChaos: ${{ inputs.runsOnChaos }}
       runsOnOrder: ${{ inputs.runsOnOrder }}
+      runsOnQASteps: ${{ inputs.runsOnQASteps }}
   oci-build:
     name: OCI Image Build
     if: inputs.dockerfile != ''
