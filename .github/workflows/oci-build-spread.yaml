@@ -1,0 +1,96 @@
+name: OCI Image Build
+
+on:
+  workflow_call:
+    inputs:
+      runsOn:
+        description: Define on which runner this workflow should run
+        default: "ubuntu-latest"
+        required: false
+        type: string
+      dockerfile:
+        description: The Dockerfile to build
+        required: true
+        type: string
+      dockerBuildTarget:
+        description: Value for the --target flag
+        default: ""
+        required: false
+        type: string
+      dockerBuildExtraArguments:
+        description: Extra arguments to pass to the docker build command
+        required: false
+        type: string
+      tag:
+        description: The tag for the image we're building
+        required: true
+        type: string
+      ociPlatforms:
+        description: The platforms to build the OCI image for, empty means autodetect
+        default: ""
+        required: false
+        type: string
+      ociPushSecretSecret:
+        description: The secret name that holds the token to push OCI images to GHCR.io
+        default: "GITHUB_TOKEN"
+        required: false
+        type: string
+      ociSparseCheckout:
+        description: Sparse checkout patterns in cone mode
+        default: ""
+        required: false
+        type: string
+jobs:
+  supported-platform-matrix:
+    name: Supported Platform Matrix
+    runs-on: ${{ inputs.runsOn }}
+    outputs:
+      platform: ${{ steps.supported-platform-matrix.outputs.platform }}
+    steps:
+      - id: supported-platform-matrix
+        name: Generate Arch
+        uses: wyrihaximus/github-action-oci-image-supported-platforms@v1.0.0
+        with:
+          dockerfile: ${{ inputs.dockerfile }}
+  oci-build:
+    name: OCI Image Build (${{ matrix.platform }})
+    runs-on: ${{ inputs.runsOn }}${{ contains(matrix.platform, 'arm') && '-arm64' || '-amd64' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: ${{ fromJson(needs.supported-platform-matrix.outputs.platform) }}
+    needs:
+      - supported-platform-matrix
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            ${{ inputs.ociSparseCheckout }}
+      - uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2 # v4.0.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets[inputs.ociPushSecretSecret] }}
+      - name: Set up QEMU
+        if: inputs.runsOn == 'ubuntu-latest'
+        uses: docker/setup-qemu-action@ce360397dd3f832beb865e1373c09c0e9f86d70a # v4.0.0
+      - name: Set up QEMU
+        if: inputs.runsOn != 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y qemu-user-static
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
+        with:
+          platforms: ${{ inputs.ociPlatforms != '' && inputs.ociPlatforms || steps.platform.outputs.platform_csv }}
+      - name: Inspect builder
+        run: |
+          echo "Name:      ${{ steps.buildx.outputs.name }}"
+          echo "Endpoint:  ${{ steps.buildx.outputs.endpoint }}"
+          echo "Status:    ${{ steps.buildx.outputs.status }}"
+          echo "Flags:     ${{ steps.buildx.outputs.flags }}"
+          echo "Platforms: ${{ steps.buildx.outputs.platforms }}"
+      - name: Build, and push image
+        run: docker build --label org.opencontainers.image.revision=${{ github.sha }} --platform=${{ matrix.platform }} --output=type=registry -f ${{ inputs.dockerfile }} -t $(echo "${{ inputs.tag }}" | tr '[:upper:]' '[:lower:]') . ${{ inputs.dockerBuildTarget != '' && format('--target={0}', inputs.dockerBuildTarget) || ''}} ${{ inputs.dockerBuildExtraArguments }}

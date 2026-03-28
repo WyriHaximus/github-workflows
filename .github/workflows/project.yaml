@@ -76,6 +76,11 @@ on:
         default: ""
         required: false
         type: string
+      ociSpreadBuild:
+        description: Spread the build OCI images over different runners
+        default: false
+        required: false
+        type: string
       ociPushSecretSecret:
         description: The secret name that holds the token to push OCI images to GHCR.io
         default: "GITHUB_TOKEN"
@@ -104,12 +109,28 @@ jobs:
       runsOnChaos: ${{ inputs.runsOnChaos }}
       runsOnOrder: ${{ inputs.runsOnOrder }}
       runsOnQASteps: ${{ inputs.runsOnQASteps }}
-  oci-build:
+  oci-build-single:
     name: OCI Image Build
-    if: inputs.dockerfile != ''
+    if: inputs.dockerfile != '' && !inputs.ociSpreadBuild
     needs:
       - ci
-    uses: ./.github/workflows/oci-build.yaml
+    uses: ./.github/workflows/oci-build-single.yaml
+    secrets: inherit
+    with:
+      runsOn: ${{ inputs.runsOnChaos }}
+      dockerfile: ${{ inputs.dockerfile }}
+      dockerBuildTarget: ${{ inputs.dockerBuildTarget }}
+      dockerBuildExtraArguments: ${{ inputs.dockerBuildExtraArguments }}
+      tag: ghcr.io/${{ github.repository }}:sha-${{ github.sha }}
+      ociPlatforms: ${{ inputs.ociPlatforms }}
+      ociPushSecretSecret: ${{ inputs.ociPushSecretSecret }}
+      ociSparseCheckout:  ${{ inputs.ociSparseCheckout }}
+  oci-build-spread:
+    name: OCI Image Build
+    if: inputs.dockerfile != '' && inputs.ociSpreadBuild
+    needs:
+      - ci
+    uses: ./.github/workflows/oci-build-spread.yaml
     secrets: inherit
     with:
       runsOn: ${{ inputs.runsOnChaos }}
