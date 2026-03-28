@@ -40,6 +40,11 @@ on:
         default: ""
         required: false
         type: string
+      ociRegistry:
+        description: The secret name that holds the token to push OCI images to ghcr.io
+        default: "ghcr.io"
+        required: false
+        type: string
 jobs:
   oci-build:
     name: OCI Image Build
@@ -52,7 +57,7 @@ jobs:
             ${{ inputs.ociSparseCheckout }}
       - uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2 # v4.0.0
         with:
-          registry: ghcr.io
+          registry: ${{ inputs.ociRegistry }}
           username: ${{ github.actor }}
           password: ${{ secrets[inputs.ociPushSecretSecret] }}
       - name: Detect Platform Flag
@@ -82,4 +87,4 @@ jobs:
           echo "Flags:     ${{ steps.buildx.outputs.flags }}"
           echo "Platforms: ${{ steps.buildx.outputs.platforms }}"
       - name: Build, and push image
-        run: docker build --label org.opencontainers.image.revision=${{ github.sha }} --platform=${{ inputs.ociPlatforms != '' && inputs.ociPlatforms || steps.platform.outputs.platform_csv }} --output=type=registry -f ${{ inputs.dockerfile }} -t $(echo "${{ inputs.tag }}" | tr '[:upper:]' '[:lower:]') . ${{ inputs.dockerBuildTarget != '' && format('--target={0}', inputs.dockerBuildTarget) || ''}} ${{ inputs.dockerBuildExtraArguments }}
+        run: docker build --label org.opencontainers.image.revision=${{ github.sha }} --platform=${{ inputs.ociPlatforms != '' && inputs.ociPlatforms || steps.platform.outputs.platform_csv }} --output=type=registry -f ${{ inputs.dockerfile }} -t ${{ inputs.ociRegistry }}/${{ inputs.tag }} . ${{ inputs.dockerBuildTarget != '' && format('--target={0}', inputs.dockerBuildTarget) || ''}} ${{ inputs.dockerBuildExtraArguments }}

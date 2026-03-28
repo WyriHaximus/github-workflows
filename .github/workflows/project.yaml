@@ -76,6 +76,11 @@ on:
         default: ""
         required: false
         type: string
+      ociSpreadBuild:
+        description: Spread the build OCI images over different runners
+        default: false
+        required: false
+        type: string
       ociPushSecretSecret:
         description: The secret name that holds the token to push OCI images to GHCR.io
         default: "GITHUB_TOKEN"
@@ -84,6 +89,16 @@ on:
       ociSparseCheckout:
         description: Sparse checkout patterns in cone mode
         default: ""
+        required: false
+        type: string
+      ociRegistry:
+        description: The secret name that holds the token to push OCI images to GHCR.io
+        default: "ghcr.io"
+        required: false
+        type: string
+      ociPlatformRunnerSuffixMap:
+        description: Map that maps the platform to the runner suffix
+        default: "{\"linux/arm64\": \"-arm64\", \"linux/amd64\": \"-amd64\"}"
         required: false
         type: string
       markdownLinkCheckSparseCheckout:
@@ -104,19 +119,46 @@ jobs:
       runsOnChaos: ${{ inputs.runsOnChaos }}
       runsOnOrder: ${{ inputs.runsOnOrder }}
       runsOnQASteps: ${{ inputs.runsOnQASteps }}
-  oci-build:
-    name: OCI Image Build
-    if: inputs.dockerfile != ''
+  oci-tag:
+    name: OCI Tag
     needs:
       - ci
-    uses: ./.github/workflows/oci-build.yaml
+    runs-on: ${{ inputs.runsOnChaos }}
+    outputs:
+      tag: ${{ steps.lower-case-tag.outputs.tag }}
+    steps:
+      - name: Tag
+        id: lower-case-tag
+        run: printf "tag=%s\n" $(echo "${{ github.repository }}:sha-${{ github.sha }}" | tr '[:upper:]' '[:lower:]') >> $GITHUB_OUTPUT
+  oci-build-single:
+    name: OCI Image Build
+    if: inputs.dockerfile != '' && !inputs.ociSpreadBuild
+    needs:
+      - oci-tag
+    uses: ./.github/workflows/oci-build-single.yaml
     secrets: inherit
     with:
       runsOn: ${{ inputs.runsOnChaos }}
       dockerfile: ${{ inputs.dockerfile }}
       dockerBuildTarget: ${{ inputs.dockerBuildTarget }}
       dockerBuildExtraArguments: ${{ inputs.dockerBuildExtraArguments }}
-      tag: ghcr.io/${{ github.repository }}:sha-${{ github.sha }}
+      tag: ${{ needs.oci-tag.outputs.tag }}
+      ociPlatforms: ${{ inputs.ociPlatforms }}
+      ociPushSecretSecret: ${{ inputs.ociPushSecretSecret }}
+      ociSparseCheckout:  ${{ inputs.ociSparseCheckout }}
+  oci-build-spread:
+    name: OCI Image Build
+    if: inputs.dockerfile != '' && inputs.ociSpreadBuild
+    needs:
+      - oci-tag
+    uses: ./.github/workflows/oci-build-spread.yaml
+    secrets: inherit
+    with:
+      runsOn: ${{ inputs.runsOnChaos }}
+      dockerfile: ${{ inputs.dockerfile }}
+      dockerBuildTarget: ${{ inputs.dockerBuildTarget }}
+      dockerBuildExtraArguments: ${{ inputs.dockerBuildExtraArguments }}
+      tag: ${{ needs.oci-tag.outputs.tag }}
       ociPlatforms: ${{ inputs.ociPlatforms }}
       ociPushSecretSecret: ${{ inputs.ociPushSecretSecret }}
       ociSparseCheckout:  ${{ inputs.ociSparseCheckout }}
