@@ -362,9 +362,12 @@ jobs:
 | env | string | Any additional environment variables | {} |
 | jsonPattern | string | The pattern to match which JSON files to check | \.json$ |
 | markdownLinkCheckSparseCheckout | string | Additional files/patterns for the sparse checkout |  |
+| ociPlatformRunnerSuffixMap | string | Map that maps the platform to the runner suffix | {&quot;linux/arm64&quot;: &quot;-arm64&quot;, &quot;linux/amd64&quot;: &quot;-amd64&quot;} |
 | ociPlatforms | string | The platforms to build the OCI image for, empty means autodetect |  |
 | ociPushSecretSecret | string | The secret name that holds the token to push OCI images to GHCR.io | GITHUB_TOKEN |
+| ociRegistry | string | The secret name that holds the token to push OCI images to GHCR.io | ghcr.io |
 | ociSparseCheckout | string | Sparse checkout patterns in cone mode |  |
+| ociSpreadBuild | string | Spread the build OCI images over different runners |  |
 | runsOnChaos | string | Define on which runner to run workflows where order doesn&#039;t matter should run | ubuntu-latest |
 | runsOnOrder | string | Define on which runner to run workflows where order matters should run | ubuntu-latest |
 | runsOnQASteps | string | Define on which runner to run workflows where QA ssteps should run | ubuntu-latest |
