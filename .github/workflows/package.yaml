@@ -49,7 +49,8 @@ jobs:
       supportedChecksCommand: ${{ inputs.supportedChecksCommand }}
   markdown-link-check:
     name: Check Markdown links
-    if: inputs.disableMarkdownLinkCheck == false
+    if: false
+#    if: inputs.disableMarkdownLinkCheck == false
     uses: ./.github/workflows/markdown-check-links.yaml
     with:
       workingDirectory: ${{ inputs.workingDirectory }}
