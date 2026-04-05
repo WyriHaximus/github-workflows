@@ -7,6 +7,11 @@ on:
         default: "ubuntu-latest"
         required: false
         type: string
+      runsOnChaosUnicorn:
+        description: Define on which runner to run workflows where order doesn't matter should run
+        default: "ubuntu-slim"
+        required: false
+        type: string
       runsOnOrder:
         description: Define on which runner to run workflows where order matters should run
         default: "ubuntu-latest"
@@ -149,5 +154,5 @@ jobs:
     uses: ./.github/workflows/composer-diff.yaml
     secrets: inherit
     with:
-      runsOn: ${{ inputs.runsOnChaos }}
+      runsOn: ${{ inputs.runsOnChaosUnicorn }}
       workingDirectory: ${{ inputs.workingDirectory }}

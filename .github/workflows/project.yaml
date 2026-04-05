@@ -47,6 +47,11 @@ on:
         default: "ubuntu-latest"
         required: false
         type: string
+      runsOnChaosUnicorn:
+        description: Define on which runner to run workflows where order doesn't matter should run
+        default: "ubuntu-slim"
+        required: false
+        type: string
       runsOnOrder:
         description: Define on which runner to run workflows where order matters should run
         default: "ubuntu-latest"
@@ -117,6 +122,7 @@ jobs:
       env: ${{ inputs.env }}
       isProject: true
       runsOnChaos: ${{ inputs.runsOnChaos }}
+      runsOnChaosUnicorn: ${{ inputs.runsOnChaosUnicorn }}
       runsOnOrder: ${{ inputs.runsOnOrder }}
       runsOnQASteps: ${{ inputs.runsOnQASteps }}
   oci-tag:
@@ -168,6 +174,6 @@ jobs:
 #    if: inputs.disableMarkdownLinkCheck == false && github.event_name == 'pull_request'
     uses: ./.github/workflows/markdown-check-links.yaml
     with:
-      runsOn: ${{ inputs.runsOnChaos }}
+      runsOn: ${{ inputs.runsOnChaosUnicorn }}
       workingDirectory: ${{ inputs.workingDirectory }}
       markdownLinkCheckSparseCheckout: ${{ inputs.markdownLinkCheckSparseCheckout }}
