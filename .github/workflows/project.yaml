@@ -164,8 +164,7 @@ jobs:
       ociSparseCheckout:  ${{ inputs.ociSparseCheckout }}
   markdown-link-check:
     name: Check Markdown links
-    if: false
-#    if: inputs.disableMarkdownLinkCheck == false && github.event_name == 'pull_request'
+    if: inputs.disableMarkdownLinkCheck == false && github.event_name == 'pull_request'
     uses: ./.github/workflows/markdown-check-links.yaml
     with:
       runsOn: ${{ inputs.runsOnChaos }}

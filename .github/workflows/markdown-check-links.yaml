@@ -5,7 +5,7 @@ on:
     inputs:
       runsOn:
         description: Define on which runner this workflow should run
-        default: "ubuntu-latest"
+        default: "ubuntu-24.04-arm"
         required: false
         type: string
       workingDirectory:
@@ -37,7 +37,8 @@ jobs:
             ${{ inputs.workingDirectory }}/**/*.md
             ${{ inputs.markdownLinkCheckSparseCheckout }}
       - name: Check Markdown links
-        uses: umbrelladocs/action-linkspector@37c85bcde51b30bf929936502bac6bfb7e8f0a4d # v1.4.1
+#        uses: umbrelladocs/action-linkspector@37c85bcde51b30bf929936502bac6bfb7e8f0a4d # v1.4.1
+        uses: umbrelladocs/action-linkspector@arm64-runner-support
         with:
           reporter: github-pr-review
           fail_on_error: true
