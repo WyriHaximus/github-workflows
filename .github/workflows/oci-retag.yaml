@@ -37,7 +37,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets[inputs.ociPushSecretSecret] }}
       - name: Wait for OCI build from CI workflow to complete
-        uses: int128/wait-for-docker-image-action@51e41cd42742b59740d0537cf2cc5a46c3aafc4f # v1.18.0
+        uses: int128/wait-for-docker-image-action@d4dd92d5c221d7063a85aa176d1d21854be18ec8 # v1.20.0
         with:
           tags: ${{ steps.lowercase.outputs.from }}
           timeout-seconds: 10800
