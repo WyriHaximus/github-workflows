@@ -2,6 +2,10 @@ name: Deploy assets to CDN
 on:
   workflow_call:
     inputs:
+      milestone:
+        description: The tag to deploy
+        required: true
+        type: string
       staticFilesPath:
         description: The path to the static files to be synced to S3
         default: "public"
@@ -48,8 +52,8 @@ on:
         required: true
         type: string
 jobs:
-  static-cdn-hosted-deploy-aws:
-    name: Deploy static assets to CDN and invalidate caches
+  build-assets:
+    name: Zip up static assets for upload
     runs-on: ${{ inputs.runsOn }}
     env:
       awsEndpointUrlSecret: ${{ secrets[inputs.awsEndpointUrlSecret] }}
@@ -61,36 +65,23 @@ jobs:
           sparse-checkout: |
             !${{ inputs.workingDirectory }}/*
             /${{ inputs.workingDirectory }}${{ inputs.staticFilesPath }}*
-      - name: Set up AWS CLI credentials
-        uses: aws-actions/configure-aws-credentials@d979d5b3a71173a29b74b5b88418bfda9437d885 # v6.1.1
-        if: env.awsEndpointUrlSecret == ''
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          aws-access-key-id: ${{ secrets[inputs.awsAccessKeyIDSecret] }}
-          aws-secret-access-key: ${{ secrets[inputs.awsSecretAccessKeySecret] }}
-          aws-region: ${{ secrets[inputs.awsRegionSecret] }}
-      - name: Set up AWS CLI credentials
-        if: ${{ env.awsEndpointUrlSecret != '' }}
-        run: |
-          aws configure set default.region ${{ secrets[inputs.awsRegionSecret] }}
-          aws configure set aws_access_key_id ${{ secrets[inputs.awsAccessKeyIDSecret] }}
-          aws configure set aws_secret_access_key ${{ secrets[inputs.awsSecretAccessKeySecret] }}
-      - name: Deploy Non-HTML
-        if: env.awsEndpointUrlSecret == ''
-        run: aws s3 cp ${{ inputs.workingDirectory }}${{ inputs.staticFilesPath }} s3://${{ secrets[inputs.cdnAwsS3BucketSecret] }} --recursive --acl=public-read --include="*" --exclude "*.html" --cache-control max-age=31536000,public
-      - name: Deploy Non-HTML
-        if: env.awsEndpointUrlSecret != ''
-        run: aws s3 cp ${{ inputs.workingDirectory }}${{ inputs.staticFilesPath }} s3://${{ secrets[inputs.cdnAwsS3BucketSecret] }} --recursive --acl=public-read --include="*" --exclude "*.html" --cache-control max-age=31536000,public --endpoint-url ${{ secrets[inputs.awsEndpointUrlSecret] }}
-      - name: Deploy HTML
-        if: env.awsEndpointUrlSecret == ''
-        run: aws s3 cp ${{ inputs.workingDirectory }}${{ inputs.staticFilesPath }} s3://${{ secrets[inputs.cdnAwsS3BucketSecret] }} --recursive --acl=public-read --exclude="*" --include "*.html" --cache-control max-age=3200,no-cache,no-store,must-revalidate
-      - name: Deploy HTML
-        if: env.awsEndpointUrlSecret != ''
-        run: aws s3 cp ${{ inputs.workingDirectory }}${{ inputs.staticFilesPath }} s3://${{ secrets[inputs.cdnAwsS3BucketSecret] }} --recursive --acl=public-read --exclude="*" --include "*.html" --cache-control max-age=3200,no-cache,no-store,must-revalidate --endpoint-url ${{ secrets[inputs.awsEndpointUrlSecret] }}
-      - name: Invalidate Cloudfront
-        run: aws cloudfront create-invalidation --distribution-id=${{ secrets[inputs.cdnAwsCloudFrontDistributionIDSecret] }} --paths '/*'
-      - name: Clean up AWS CLI credentials
-        if: ${{ env.awsEndpointUrlSecret != '' || failure() }}
-        run: |
-          aws configure set default.region "eu-west1"
-          aws configure set aws_access_key_id "id"
-          aws configure set aws_secret_access_key "key"
+          name: ${{ inputs.milestone }}-dist
+          path: ${{ inputs.workingDirectory }}${{ inputs.staticFilesPath }}
+  cdn-hosted-deploy:
+    name: Deploy assets to CDN and invalidate caches
+    needs:
+      - build-assets
+    uses: ./.github/workflows/s3-upload.yaml
+    secrets: inherit
+    with:
+      runsOn: ${{ inputs.runsOn }}
+      distBall: ${{ inputs.milestone }}-dist
+      workingDirectory: ${{ inputs.workingDirectory }}
+      awsAccessKeyIDSecret: ${{ inputs.awsAccessKeyIDSecret }}
+      awsSecretAccessKeySecret: ${{ inputs.awsSecretAccessKeySecret }}
+      awsRegionSecret: ${{ inputs.awsRegionSecret }}
+      awsEndpointUrlSecret: ${{ inputs.awsEndpointUrlSecret }}
+      cdnAwsS3BucketSecret: ${{ inputs.cdnAwsS3BucketSecret }}
+      cdnAwsCloudFrontDistributionIDSecret: ${{ inputs.cdnAwsCloudFrontDistributionIDSecret }}
