@@ -412,6 +412,7 @@ jobs:
 |-------|------|-------------|---------|
 | applicationType | string | The type of project this is, release and deployment wise |  |
 | awsAccessKeyIDSecret | string | The secret name that holds the AWS access key ID | CDN_HOSTED_S3_KEY |
+| awsEndpointUrlSecret | string | The secret name that holds the AWS endpoint URL | CDN_HOSTED_S3_ENDPOINT |
 | awsRegionSecret | string | The secret name that holds the AWS region | CDN_HOSTED_S3_REGION |
 | awsSecretAccessKeySecret | string | The secret name that holds the AWS access key secret | CDN_HOSTED_S3_SECRET |
 | branch | string | The branch to tag the release on |  |

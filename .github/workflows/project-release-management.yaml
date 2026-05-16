@@ -135,6 +135,11 @@ on:
         default: "CDN_HOSTED_S3_REGION"
         required: false
         type: string
+      awsEndpointUrlSecret:
+        description: The secret name that holds the AWS endpoint URL
+        default: "CDN_HOSTED_S3_ENDPOINT"
+        required: false
+        type: string
       cdnAwsS3BucketSecret:
         description: The secret name that holds the AWS S3 bucket name
         default: "CDN_HOSTED_S3_BUCKET"
@@ -306,5 +311,6 @@ jobs:
       awsAccessKeyIDSecret: ${{ inputs.awsAccessKeyIDSecret }}
       awsSecretAccessKeySecret: ${{ inputs.awsSecretAccessKeySecret }}
       awsRegionSecret: ${{ inputs.awsRegionSecret }}
+      awsEndpointUrlSecret: ${{ inputs.awsEndpointUrlSecret }}
       cdnAwsS3BucketSecret: ${{ inputs.cdnAwsS3BucketSecret }}
       cdnAwsCloudFrontDistributionIDSecret: ${{ inputs.cdnAwsCloudFrontDistributionIDSecret }}
