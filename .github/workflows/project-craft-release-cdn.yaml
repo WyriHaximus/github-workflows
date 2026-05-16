@@ -41,6 +41,11 @@ on:
         default: "AWS_REGION"
         required: true
         type: string
+      awsEndpointUrlSecret:
+        description: The secret name that holds the AWS endpoint URL
+        default: "AWS_ENDPOINT_URL"
+        required: false
+        type: string
       cdnAwsS3BucketSecret:
         description: The secret name that holds the AWS S3 bucket name
         default: "CDN_HOSTED_S3_BUCKET"
@@ -70,24 +75,19 @@ jobs:
         with:
           name: ${{ inputs.milestone }}-dist
           path: ${{ inputs.workingDirectory }}${{ inputs.vitePressDirectory }}/.${{ inputs.applicationType }}/dist/
-  cdn-hosted-deploy-aws:
+  cdn-hosted-deploy:
     name: Deploy assets to CDN and invalidate caches
     needs:
       - build-assets
-    runs-on: ${{ inputs.runsOn }}
-    steps:
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          name: ${{ inputs.milestone }}-dist
-          path: ~/${{ inputs.milestone }}-dist
-      - uses: aws-actions/configure-aws-credentials@d979d5b3a71173a29b74b5b88418bfda9437d885 # v6.1.1
-        with:
-          aws-access-key-id: ${{ secrets[inputs.awsAccessKeyIDSecret] }}
-          aws-secret-access-key: ${{ secrets[inputs.awsSecretAccessKeySecret] }}
-          aws-region: ${{ secrets[inputs.awsRegionSecret] }}
-      - name: Deploy Non-HTML
-        run: aws s3 cp ~/${{ inputs.milestone }}-dist s3://${{ secrets[inputs.cdnAwsS3BucketSecret] }} --recursive --acl=public-read --include="*" --exclude "*.html" --cache-control max-age=31536000,public
-      - name: Deploy HTML
-        run: aws s3 cp ~/${{ inputs.milestone }}-dist s3://${{ secrets[inputs.cdnAwsS3BucketSecret] }} --recursive --acl=public-read --exclude="*" --include "*.html" --cache-control max-age=3200,no-cache,no-store,must-revalidate
-      - name: Invalidate Cloudfront
-        run: aws cloudfront create-invalidation --distribution-id=${{ secrets[inputs.cdnAwsCloudFrontDistributionIDSecret] }} --paths '/*'
+    uses: ./.github/workflows/s3-upload.yaml
+    secrets: inherit
+    with:
+      runsOn: ${{ inputs.runsOn }}
+      distBall: ${{ inputs.milestone }}-dist
+      workingDirectory: ${{ inputs.workingDirectory }}
+      awsAccessKeyIDSecret: ${{ inputs.awsAccessKeyIDSecret }}
+      awsSecretAccessKeySecret: ${{ inputs.awsSecretAccessKeySecret }}
+      awsRegionSecret: ${{ inputs.awsRegionSecret }}
+      awsEndpointUrlSecret: ${{ inputs.awsEndpointUrlSecret }}
+      cdnAwsS3BucketSecret: ${{ inputs.cdnAwsS3BucketSecret }}
+      cdnAwsCloudFrontDistributionIDSecret: ${{ inputs.cdnAwsCloudFrontDistributionIDSecret }}

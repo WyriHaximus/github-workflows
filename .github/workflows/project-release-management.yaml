@@ -280,6 +280,7 @@ jobs:
       awsAccessKeyIDSecret: ${{ inputs.awsAccessKeyIDSecret }}
       awsSecretAccessKeySecret: ${{ inputs.awsSecretAccessKeySecret }}
       awsRegionSecret: ${{ inputs.awsRegionSecret }}
+      awsEndpointUrlSecret: ${{ inputs.awsEndpointUrlSecret }}
       cdnAwsS3BucketSecret: ${{ inputs.cdnAwsS3BucketSecret }}
       cdnAwsCloudFrontDistributionIDSecret: ${{ inputs.cdnAwsCloudFrontDistributionIDSecret }}
   deploy-release-serverless:
@@ -306,6 +307,7 @@ jobs:
     secrets: inherit
     with:
       runsOn: ${{ inputs.runsOnOrder }}
+      milestone: ${{ inputs.milestone }}
       staticFilesPath: ${{ inputs.staticFilesPath }}
       workingDirectory: ${{ inputs.workingDirectory }}
       awsAccessKeyIDSecret: ${{ inputs.awsAccessKeyIDSecret }}
