@@ -4,7 +4,7 @@ on:
     inputs:
       distBall:
         description: The path to the static files to be synced to S3
-        default: "public"
+        default: "milestone-dist"
         required: true
         type: string
       workingDirectory:

@@ -418,6 +418,8 @@ jobs:
 | branch | string | The branch to tag the release on |  |
 | cdnAwsCloudFrontDistributionIDSecret | string | The secret name that holds the AWS cloudfront distribution id | CDN_HOSTED_DISTRIBUTION_ID |
 | cdnAwsS3BucketSecret | string | The secret name that holds the AWS S3 bucket name | CDN_HOSTED_S3_BUCKET |
+| commands | string | The commands to execute |  |
+| commandsOutputPath | string | Where to get to resulting files from the commands |  |
 | description | string | Additional information to add above the changelog in the release |  |
 | disableComposerLockDiff | boolean | Disable the diffing of composer lock files |  |
 | disableSetMilestone | boolean | Disable the setting of milestones |  |
@@ -429,7 +431,7 @@ jobs:
 | helmUpdateAppVersion | boolean | Update the helm charts appVersion with the passed version |  |
 | initialTag | string | The tag to fallback to when no previous tag could be found. | r1 |
 | kubeConfigSecret | string | The secret name that holds the kubeconfig to connect with Kubernetes |  |
-| labels | string | The labels to for the sections of the changelog | Bug 🐞,Dependencies 📦,Feature 🏗,Enhancement ✨,Security 🕵️‍♀️ |
+| labels | string | The labels to for the sections of the changelog | Bug 🐞,Dependencies 📦,Feature 🏗,Enhancement ✨,Deprecations 👋,Security 🕵️‍♀️ |
 | milestone | string | The milestone to tag |  |
 | mustCreateCommit | boolean | Create commit with release message as commit body |  |
 | ociPushSecretSecret | string | The secret name that holds the token to push OCI images to GHCR.io | GITHUB_TOKEN |
