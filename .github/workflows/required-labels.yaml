@@ -10,7 +10,7 @@ on:
         type: string
       requiredLabels:
         description: One of the labels to be set on PR
-        default: "Bug 🐞,Dependencies 📦,Feature 🏗,Enhancement ✨"
+        default: "Bug 🐞,Dependencies 📦,Feature 🏗,Enhancement ✨,Security 🕵️‍♀️"
         required: false
         type: string
 
