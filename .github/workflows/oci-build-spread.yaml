@@ -83,7 +83,7 @@ jobs:
           sparse-checkout-cone-mode: false
           sparse-checkout: |
             ${{ inputs.ociSparseCheckout }}
-      - uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+      - uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v4.2.0
         with:
           registry: ${{ inputs.ociRegistry }}
           username: ${{ github.actor }}
@@ -136,7 +136,7 @@ jobs:
           platform=${{ matrix.platform }}
           echo "PLATFORM_PAIR=${platform//\//-}" >> $GITHUB_ENV
           printf "PLATFORM_ARCH=%s" $(echo "${{ matrix.platform }}" | cut -d "/" -f 2) >> $GITHUB_ENV
-      - uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+      - uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v4.2.0
         with:
           registry: ${{ inputs.ociRegistry }}
           username: ${{ github.actor }}
