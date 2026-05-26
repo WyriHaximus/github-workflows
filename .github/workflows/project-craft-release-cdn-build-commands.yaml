@@ -1,0 +1,50 @@
+name: Build assets
+on:
+  workflow_call:
+    inputs:
+      workingDirectory:
+        description: The directory to run this workflow in
+        default: ""
+        required: false
+        type: string
+      applicationType:
+        description: The type of project this is, release and deployment wise
+        default: ""
+        required: false
+        type: string
+      runsOn:
+        description: Define on which runner to run workflows where order doesn't matter should run
+        default: "ubuntu-latest"
+        required: true
+        type: string
+      distBall:
+        description: The path to the static files to be synced to S3
+        default: "milestone-dist"
+        required: true
+        type: string
+      commands:
+        description: The commands to execute
+        default: ""
+        required: true
+        type: string
+      commandsOutputPath:
+        description: Where to get to resulting files from the commands
+        default: ""
+        required: true
+        type: string
+jobs:
+  build-assets:
+    name: Run commands to build assets
+    runs-on: ${{ inputs.runsOn }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+      - name: Run commands
+        run: ${{ inputs.commands }}
+        working-directory: ${{ inputs.workingDirectory }}
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ${{ inputs.distBall }}
+          path: ${{ inputs.workingDirectory }}${{ inputs.commandsOutputPath }}/

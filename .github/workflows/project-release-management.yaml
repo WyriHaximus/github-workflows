@@ -28,7 +28,7 @@ on:
         type: string
       labels:
         description: The labels to for the sections of the changelog
-        default: "Bug 🐞,Dependencies 📦,Feature 🏗,Enhancement ✨,Security 🕵️‍♀️"
+        default: "Bug 🐞,Dependencies 📦,Feature 🏗,Enhancement ✨,Deprecations 👋,Security 🕵️‍♀️"
         required: false
         type: string
       runsOnChaos:
@@ -185,6 +185,16 @@ on:
         default: "public"
         required: false
         type: string
+      commands:
+        description: The commands to execute
+        default: ""
+        required: false
+        type: string
+      commandsOutputPath:
+        description: Where to get to resulting files from the commands
+        default: ""
+        required: false
+        type: string
 jobs:
   required-labels:
     name: Required Labels
@@ -277,6 +287,8 @@ jobs:
       workingDirectory: ${{ inputs.workingDirectory }}
       vitePressDirectory: ${{ inputs.vitePressDirectory }}
       applicationType: ${{ inputs.applicationType }}
+      commands: ${{ inputs.commands }}
+      commandsOutputPath: ${{ inputs.commandsOutputPath }}
       awsAccessKeyIDSecret: ${{ inputs.awsAccessKeyIDSecret }}
       awsSecretAccessKeySecret: ${{ inputs.awsSecretAccessKeySecret }}
       awsRegionSecret: ${{ inputs.awsRegionSecret }}

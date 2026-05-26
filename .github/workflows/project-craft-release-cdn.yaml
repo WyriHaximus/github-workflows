@@ -19,7 +19,7 @@ on:
       vitePressDirectory:
         description: The directory that container VitePress
         default: ""
-        required: true
+        required: false
         type: string
       runsOn:
         description: Define on which runner to run workflows where order doesn't matter should run
@@ -56,25 +56,29 @@ on:
         default: "CDN_HOSTED_DISTRIBUTION_ID"
         required: true
         type: string
+      commands:
+        description: The commands to execute
+        default: ""
+        required: false
+        type: string
+      commandsOutputPath:
+        description: Where to get to resulting files from the commands
+        default: ""
+        required: false
+        type: string
 jobs:
   build-assets:
-    name: VitePress Build
-    runs-on: ${{ inputs.runsOn }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          fetch-depth: 0
-      - name: Install dependencies
-        run: npm ci
-        working-directory: ${{ inputs.workingDirectory }}
-      - name: Build with VitePress
-        run: npm run docs:build ${{ inputs.vitePressDirectory }}
-        working-directory: ${{ inputs.workingDirectory }}
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: ${{ inputs.milestone }}-dist
-          path: ${{ inputs.workingDirectory }}${{ inputs.vitePressDirectory }}/.${{ inputs.applicationType }}/dist/
+    name: Deploy assets to CDN and invalidate caches
+    uses: ./.github/workflows/project-craft-release-cdn-build.yaml
+    secrets: inherit
+    with:
+      runsOn: ${{ inputs.runsOn }}
+      distBall: ${{ inputs.milestone }}-dist
+      workingDirectory: ${{ inputs.workingDirectory }}
+      vitePressDirectory: ${{ inputs.vitePressDirectory }}
+      applicationType: ${{ inputs.applicationType }}
+      commands: ${{ inputs.commands }}
+      commandsOutputPath: ${{ inputs.commandsOutputPath }}
   cdn-hosted-deploy:
     name: Deploy assets to CDN and invalidate caches
     needs:

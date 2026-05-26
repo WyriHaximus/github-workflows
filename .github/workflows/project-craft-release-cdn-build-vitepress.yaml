@@ -1,0 +1,42 @@
+name: Deploy assets to CDN
+on:
+  workflow_call:
+    inputs:
+      workingDirectory:
+        description: The directory to run this workflow in
+        default: ""
+        required: false
+        type: string
+      applicationType:
+        description: The type of project this is, release and deployment wise
+        default: ""
+        required: false
+        type: string
+      vitePressDirectory:
+        description: The directory that container VitePress
+        default: ""
+        required: true
+        type: string
+      runsOn:
+        description: Define on which runner to run workflows where order doesn't matter should run
+        default: "ubuntu-latest"
+        required: true
+        type: string
+      distBall:
+        description: The path to the static files to be synced to S3
+        default: "milestone-dist"
+        required: true
+        type: string
+jobs:
+  build-assets:
+    name: Build Vitepress Assets
+    uses: ./.github/workflows/project-craft-release-cdn-build-commands.yaml
+    secrets: inherit
+    with:
+      runsOn: ${{ inputs.runsOn }}
+      distBall: ${{ inputs.distBall }}
+      workingDirectory: ${{ inputs.workingDirectory }}
+      commands: |
+        npm ci
+        npm run docs:build ${{ inputs.vitePressDirectory }}
+      commandsOutputPath: ${{ inputs.vitePressDirectory }}/.${{ inputs.applicationType }}/dist
