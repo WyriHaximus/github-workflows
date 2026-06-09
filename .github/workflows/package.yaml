@@ -32,6 +32,11 @@ on:
         default: "task-list-ci"
         required: false
         type: string
+      supportedFeaturesCommand:
+        description: The make command to invoke listing the different tasks to run across all versions, will also act as a prefix for All, Direct on OS, Lowest, Locked, and Highest task lists.
+        default: "supported-features"
+        required: false
+        type: string
       markdownLinkCheckSparseCheckout:
         description: Additional files/patterns for the sparse checkout
         default: ""
@@ -47,6 +52,7 @@ jobs:
       services: ${{ inputs.services }}
       env: ${{ inputs.env }}
       supportedChecksCommand: ${{ inputs.supportedChecksCommand }}
+      supportedFeaturesCommand: ${{ inputs.supportedFeaturesCommand }}
   markdown-link-check:
     name: Check Markdown links
     if: false

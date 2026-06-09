@@ -272,6 +272,7 @@ jobs:
 | markdownLinkCheckSparseCheckout | string | Additional files/patterns for the sparse checkout |  |
 | services | string | Any additional services to use | {} |
 | supportedChecksCommand | string | The make command to invoke listing the different tasks to run across all versions, will also act as a prefix for All, Direct on OS, Lowest, Locked, and Highest task lists. | task-list-ci |
+| supportedFeaturesCommand | string | The make command to invoke listing the different tasks to run across all versions, will also act as a prefix for All, Direct on OS, Lowest, Locked, and Highest task lists. | supported-features |
 | workingDirectory | string | The directory to run this workflow in |  |
 
 #### Release Management
