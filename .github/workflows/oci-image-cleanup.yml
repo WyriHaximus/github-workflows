@@ -1,0 +1,42 @@
+name: OCI Image Cleanup
+
+on:
+  workflow_call:
+    inputs:
+      runsOn:
+        description: Define on which runner this workflow should run
+        default: "ubuntu-latest"
+        required: false
+        type: string
+
+jobs:
+  cleanup:
+    name: Clean up old OCI images
+    runs-on: ${{ inputs.runsOn }}
+    steps:
+      - name: Fetch releases
+        run: |
+          printf '{"query":"query {repository(owner: \\"%s\\", name: \\"%s\\") {packages(first: 1, names: [\\"%s\\"]) {edges {node {id, name, versions(first: 100) {edges {node {id, version, files(last:1) {nodes {id, updatedAt}}}}}}}}}}\"}' $(echo "${GITHUB_REPOSITORY}" | cut -d "/" -f1) $(echo "${GITHUB_REPOSITORY##*/}") $(echo "${GITHUB_REPOSITORY##*/}") > /tmp/request.json
+          curl -X POST \
+            -s \
+            -H "Accept: application/vnd.github.package-deletes-preview+json" \
+            -H "Authorization: bearer ${{ secrets.GITHUB_TOKEN }}" \
+            --data-binary "@/tmp/request.json" \
+            -o /tmp/response.json \
+            --url https://api.github.com/graphql
+      - name: Filter Releases
+        id: releases
+        run: |
+          cat /tmp/response.json | jq -r 'def daysAgo(days): (now | floor) - (days * 86400); [[.data.repository.packages.edges[0].node.versions.edges | .[] | select(.node.files.nodes | length > 0)] | sort_by(.node.files.nodes[0].updatedAt|fromdate) | reverse | .[] | select( .node.version != "docker-base-layer" )] | {shaAllButOne: [. | .[] | select( .node.version | startswith("sha-"))] | .[1:], shaAllOlderThenTwoDays: [. | .[] | select( .node.version |startswith("sha-")) | select(.node.files.nodes[0].updatedAt|fromdate < daysAgo(2))], v: [. | .[] | select( .node.version | startswith("r"))] | .[2:], junk: [. | .[] | select( .node.version | startswith("r") | not ) | select( .node.version | startswith("sha-") | not ) | select(.node.files.nodes[0].updatedAt|fromdate < daysAgo(3))]} | [to_entries | .[] | .value[].node.id] | unique_by(.) | @csv' | php -r "echo str_replace('\"', '', stream_get_contents(STDIN));" > /tmp/release.json
+          printf "ids=%s" $(cat /tmp/release.json) >> $GITHUB_OUTPUT
+      - name: Repository Name
+        id: repo
+        run: |
+          printf "name=%s" $(echo "${GITHUB_REPOSITORY##*/}") >> $GITHUB_OUTPUT
+      - name: Delete Release(s)
+        uses: actions/delete-package-versions@v5
+        if: steps.releases.outputs.ids != ''
+        with:
+          package-name: ${{ steps.repo.outputs.name }}
+          package-type: container
+          package-version-ids: ${{ steps.releases.outputs.ids }}
