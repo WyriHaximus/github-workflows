@@ -64,7 +64,7 @@ jobs:
     outputs:
       package-name: ${{ steps.package-name.outputs.package-name }}
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           sparse-checkout: |
             ${{ inputs.workingDirectory }}composer.json
@@ -82,7 +82,7 @@ jobs:
       upcoming: ${{ steps.supported-versions-matrix.outputs.upcoming }}
       extensions: ${{ steps.supported-versions-matrix.outputs.extensions }}
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           sparse-checkout: |
             ${{ inputs.workingDirectory }}composer.json
@@ -116,7 +116,7 @@ jobs:
       high: ${{ steps.supported-checks-matrix.outputs.high }}
       supported-features: ${{ steps.supported-checks-matrix.outputs.supported-features }}
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           sparse-checkout: |
             ${{ inputs.workingDirectory }}composer.json
@@ -313,7 +313,7 @@ jobs:
     container:
       image: ghcr.io/wyrihaximusnet/php:${{ matrix.php }}-${{ matrix.php-to-thread-or-not-to-thread }}-alpine-dev-root
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           path: checked_out_package
           sparse-checkout: |
@@ -343,7 +343,7 @@ jobs:
     env: ${{ fromJson(inputs.env) }}
     services: ${{ fromJson(inputs.services) }}
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0 # Required due to the way Git works, without it this action won't be able to find any or the correct tags
       - uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
@@ -373,7 +373,7 @@ jobs:
     env: ${{ fromJson(inputs.env) }}
     services: ${{ fromJson(inputs.services) }}
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
         env:
           fail-fast: true
