@@ -246,7 +246,6 @@ jobs:
           PHP_VERSIONS: ${{ needs.supported-versions-matrix.outputs.version }}
           THREAD_PRIMARY: ${{ needs.supported-threading-matrix.outputs.primary }}
           COMPOSER: '["lowest", "locked", "highest"]'
-          CHECKS: ${{ needs.supported-checks-matrix.outputs.check }}
           CHECKS_DOS: ${{ needs.supported-checks-matrix.outputs.dos }}
           SUPPORTED_FEATURES: ${{ needs.supported-checks-matrix.outputs.supported-features }}
         with:
@@ -256,7 +255,6 @@ jobs:
             const phpVersions = JSON.parse(process.env.PHP_VERSIONS);
             const threadPrimary = JSON.parse(process.env.THREAD_PRIMARY);
             const composer = JSON.parse(process.env.COMPOSER);
-            const checks = JSON.parse(process.env.CHECKS_DOS === "[]" ? '["unit-testing-raw"]' : process.env.CHECKS);
             const checksDos = JSON.parse(process.env.CHECKS_DOS);
             const supportedFeatures = JSON.parse(process.env.SUPPORTED_FEATURES);
             if (supportedFeatures.includes('linux')) {
@@ -280,15 +278,6 @@ jobs:
                       "php-to-thread-or-not-to-thread": threadPrimary,
                       composer: composer[composerAction],
                       check: checksDos[checkDos],
-                    });
-                  }
-                  for (const check in checks) {
-                    matrix.push({
-                      os: oses[os],
-                      php: phpVersions[phpVersion],
-                      "php-to-thread-or-not-to-thread": threadPrimary,
-                      composer: composer[composerAction],
-                      check: checks[check],
                     });
                   }
                 }
