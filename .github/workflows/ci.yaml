@@ -358,7 +358,7 @@ jobs:
       - supported-versions-matrix
       - compile-matrix
     runs-on: ${{ matrix.os }}
-    if: ${{ inputs.isProject == false }}
+    if: ${{ inputs.isProject == false && needs.compile-matrix.outputs.directly-on-os != '[]' }}
     env: ${{ fromJson(inputs.env) }}
     services: ${{ fromJson(inputs.services) }}
     steps:
@@ -382,12 +382,22 @@ jobs:
         env:
           COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
           COVERALLS_RUN_LOCALLY: ${{ secrets.COVERALLS_RUN_LOCALLY }}
-  check-mark:
+  check-mark-dos:
     name: ✔️
+    if: ${{ inputs.isProject == false && needs.compile-matrix.outputs.directly-on-os != '[]' }}
     needs:
       - can-require
       - qa
       - directly-on-os
+    runs-on: ${{ inputs.runsOnChaos }}
+    steps:
+      - run: echo "✔️"
+  check-mark-no-dos:
+    name: ✔️
+    if: ${{ !(inputs.isProject == false && needs.compile-matrix.outputs.directly-on-os != '[]') }}
+    needs:
+      - can-require
+      - qa
     runs-on: ${{ inputs.runsOnChaos }}
     steps:
       - run: echo "✔️"
