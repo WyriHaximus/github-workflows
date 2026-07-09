@@ -248,6 +248,7 @@ jobs:
           COMPOSER: '["lowest", "locked", "highest"]'
           CHECKS_DOS: ${{ needs.supported-checks-matrix.outputs.dos }}
           SUPPORTED_FEATURES: ${{ needs.supported-checks-matrix.outputs.supported-features }}
+          SERVICES: ${{ inputs.services }}
         with:
           script: |
             let matrix = [];
@@ -257,14 +258,15 @@ jobs:
             const composer = JSON.parse(process.env.COMPOSER);
             const checksDos = JSON.parse(process.env.CHECKS_DOS);
             const supportedFeatures = JSON.parse(process.env.SUPPORTED_FEATURES);
+            const services = process.env.SERVICES;
             if (supportedFeatures.includes('linux')) {
               oses.push("ubuntu-latest");
               oses.push("ubuntu-24.04-arm");
             }
-            if (supportedFeatures.includes('macos')) {
+            if (supportedFeatures.includes('macos') && services === '{}') {
               oses.push("macos-latest");
             }
-            if (supportedFeatures.includes('windows')) {
+            if (supportedFeatures.includes('windows') && services === '{}') {
               oses.push("windows-latest");
               oses.push("windows-11-arm");
             }
