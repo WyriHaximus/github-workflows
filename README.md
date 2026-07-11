@@ -314,7 +314,7 @@ jobs:
 | description | string | Additional information to add above the changelog in the release |  |
 | disableSetMilestone | boolean | Disable the setting of milestones |  |
 | initialTag | string | The tag to fallback to when no previous tag could be found. | 1.0.0 |
-| labels | string | The labels to for the sections of the changelog | Bug 🐞,Dependencies 📦,Feature 🏗,Enhancement ✨,Deprecations 👋 |
+| labels | string | The labels to for the sections of the changelog | Bug 🐞,Configuration ⚙,Dependencies 📦,Deprecations 👋,Enhancement ✨,Feature 🏗,Security 🕵️‍♀️ |
 | milestone | string | The milestone to tag |  |
 | preReleaseScript | string | Script that runs just before the release is created |  |
 | runsOnChaos | string | Define on which runner to run workflows where order doesn&#039;t matter should run | ubuntu-latest |
@@ -432,7 +432,7 @@ jobs:
 | helmUpdateAppVersion | boolean | Update the helm charts appVersion with the passed version |  |
 | initialTag | string | The tag to fallback to when no previous tag could be found. | r1 |
 | kubeConfigSecret | string | The secret name that holds the kubeconfig to connect with Kubernetes |  |
-| labels | string | The labels to for the sections of the changelog | Bug 🐞,Dependencies 📦,Feature 🏗,Enhancement ✨,Deprecations 👋,Security 🕵️‍♀️ |
+| labels | string | The labels to for the sections of the changelog | Bug 🐞,Configuration ⚙,Dependencies 📦,Deprecations 👋,Enhancement ✨,Feature 🏗,Security 🕵️‍♀️ |
 | milestone | string | The milestone to tag |  |
 | mustCreateCommit | boolean | Create commit with release message as commit body |  |
 | ociPushSecretSecret | string | The secret name that holds the token to push OCI images to GHCR.io | GITHUB_TOKEN |
