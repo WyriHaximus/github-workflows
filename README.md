@@ -353,6 +353,7 @@ jobs:
 
 | Input | Type | Description | Default |
 |-------|------|-------------|---------|
+| artifactRetentionDays | number | Number of days to retain uploaded artifacts | 1 |
 | dependencyUpdaters | string | CSV list of bot AppId&#039;s that create PR&#039;s to updated dependencies like RenovateBot and DependaBot | 49699333 |
 | disableComposerLockDiff | boolean | Disable the diffing of composer lock files |  |
 | disableMarkdownLinkCheck | boolean | Disable the checking of links in markdown files |  |
@@ -412,6 +413,7 @@ jobs:
 | Input | Type | Description | Default |
 |-------|------|-------------|---------|
 | applicationType | string | The type of project this is, release and deployment wise |  |
+| artifactRetentionDays | number | Number of days to retain uploaded artifacts | 1 |
 | awsAccessKeyIDSecret | string | The secret name that holds the AWS access key ID | CDN_HOSTED_S3_KEY |
 | awsEndpointUrlSecret | string | The secret name that holds the AWS endpoint URL | CDN_HOSTED_S3_ENDPOINT |
 | awsRegionSecret | string | The secret name that holds the AWS region | CDN_HOSTED_S3_REGION |

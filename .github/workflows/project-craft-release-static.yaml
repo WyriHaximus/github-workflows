@@ -51,6 +51,11 @@ on:
         default: "CDN_HOSTED_DISTRIBUTION_ID"
         required: true
         type: string
+      artifactRetentionDays:
+        description: Number of days to retain uploaded artifacts
+        default: 1
+        required: false
+        type: number
 jobs:
   build-assets:
     name: Zip up static assets for upload
@@ -69,6 +74,7 @@ jobs:
         with:
           name: ${{ inputs.milestone }}-dist
           path: ${{ inputs.workingDirectory }}${{ inputs.staticFilesPath }}
+          retention-days: ${{ inputs.artifactRetentionDays }}
   cdn-hosted-deploy:
     name: Deploy assets to CDN and invalidate caches
     needs:

@@ -27,6 +27,11 @@ on:
         default: "milestone-dist"
         required: true
         type: string
+      artifactRetentionDays:
+        description: Number of days to retain uploaded artifacts
+        default: 1
+        required: false
+        type: number
 jobs:
   build-assets:
     name: Build Vitepress Assets
@@ -40,3 +45,4 @@ jobs:
         npm ci
         npm run docs:build ${{ inputs.vitePressDirectory }}
       commandsOutputPath: ${{ inputs.vitePressDirectory }}/.${{ inputs.applicationType }}/dist
+      artifactRetentionDays: ${{ inputs.artifactRetentionDays }}
