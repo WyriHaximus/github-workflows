@@ -37,6 +37,11 @@ on:
         default: ""
         required: false
         type: string
+      artifactRetentionDays:
+        description: Number of days to retain uploaded artifacts
+        default: 1
+        required: false
+        type: number
 jobs:
   vitepress:
     name: Deploy assets to CDN and invalidate caches
@@ -49,6 +54,7 @@ jobs:
       workingDirectory: ${{ inputs.workingDirectory }}
       vitePressDirectory: ${{ inputs.vitePressDirectory }}
       applicationType: ${{ inputs.applicationType }}
+      artifactRetentionDays: ${{ inputs.artifactRetentionDays }}
   commands:
     name: Deploy assets to CDN and invalidate caches
     if: ${{ inputs.applicationType == 'commands' }}
@@ -60,3 +66,4 @@ jobs:
       workingDirectory: ${{ inputs.workingDirectory }}
       commands: ${{ inputs.commands }}
       commandsOutputPath: ${{ inputs.commandsOutputPath }}
+      artifactRetentionDays: ${{ inputs.artifactRetentionDays }}

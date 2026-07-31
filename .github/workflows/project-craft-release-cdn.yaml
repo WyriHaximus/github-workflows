@@ -66,6 +66,11 @@ on:
         default: ""
         required: false
         type: string
+      artifactRetentionDays:
+        description: Number of days to retain uploaded artifacts
+        default: 1
+        required: false
+        type: number
 jobs:
   build-assets:
     name: Deploy assets to CDN and invalidate caches
@@ -79,6 +84,7 @@ jobs:
       applicationType: ${{ inputs.applicationType }}
       commands: ${{ inputs.commands }}
       commandsOutputPath: ${{ inputs.commandsOutputPath }}
+      artifactRetentionDays: ${{ inputs.artifactRetentionDays }}
   cdn-hosted-deploy:
     name: Deploy assets to CDN and invalidate caches
     needs:

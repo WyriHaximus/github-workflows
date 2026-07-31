@@ -195,6 +195,11 @@ on:
         default: ""
         required: false
         type: string
+      artifactRetentionDays:
+        description: Number of days to retain uploaded artifacts
+        default: 1
+        required: false
+        type: number
 jobs:
   required-labels:
     name: Required Labels
@@ -295,6 +300,7 @@ jobs:
       awsEndpointUrlSecret: ${{ inputs.awsEndpointUrlSecret }}
       cdnAwsS3BucketSecret: ${{ inputs.cdnAwsS3BucketSecret }}
       cdnAwsCloudFrontDistributionIDSecret: ${{ inputs.cdnAwsCloudFrontDistributionIDSecret }}
+      artifactRetentionDays: ${{ inputs.artifactRetentionDays }}
   deploy-release-serverless:
     name: "Deploy Release: Serverless"
     needs:
@@ -328,3 +334,4 @@ jobs:
       awsEndpointUrlSecret: ${{ inputs.awsEndpointUrlSecret }}
       cdnAwsS3BucketSecret: ${{ inputs.cdnAwsS3BucketSecret }}
       cdnAwsCloudFrontDistributionIDSecret: ${{ inputs.cdnAwsCloudFrontDistributionIDSecret }}
+      artifactRetentionDays: ${{ inputs.artifactRetentionDays }}

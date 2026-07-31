@@ -50,6 +50,11 @@ on:
         default: "{\"linux/arm64\": \"-arm64\", \"linux/amd64\": \"-amd64\"}"
         required: false
         type: string
+      artifactRetentionDays:
+        description: Number of days to retain uploaded artifacts
+        default: 1
+        required: false
+        type: number
 jobs:
   supported-platform-matrix:
     name: Supported Platform Matrix
@@ -119,6 +124,7 @@ jobs:
         with:
           name: docker-image-${{ github.sha }}-${{ env.PLATFORM_PAIR }}
           path: ./docker-image
+          retention-days: ${{ inputs.artifactRetentionDays }}
   oci-merge-and-push:
     name: OCI Combine and Push
     needs:
