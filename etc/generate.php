@@ -6,10 +6,12 @@ use Symfony\Component\Yaml\Yaml;
 use function WyriHaximus\Twig\render;
 
 require dirname(__DIR__) . '/vendor/autoload.php';
+require __DIR__ . '/workflow-diagram.php';
 
 $template = file_get_contents(__DIR__ . '/README.md.twig');
 
 $renderedReadme = render($template, [
+    'workflowDiagrams' => buildWorkflowDiagrams(dirname(__DIR__) . '/.github/workflows'),
     'package' => [
         'ci' => loadInputs(dirname(__DIR__) . '/.github/workflows/package.yaml'),
         'releaseManagement' => loadInputs(dirname(__DIR__) . '/.github/workflows/package-release-management.yaml'),
