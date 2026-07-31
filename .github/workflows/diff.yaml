@@ -108,7 +108,8 @@ jobs:
     uses: ./.github/workflows/helm-diff.yaml
     secrets: inherit
     with:
-      runsOn: ${{ inputs.runsOnOrder }}
+      runsOnChaos: ${{ inputs.runsOnChaos }}
+      runsOnOrder: ${{ inputs.runsOnOrder }}
       workingDirectory: ${{ inputs.workingDirectory }}
       helmReleaseName: ${{ inputs.helmReleaseName }}
       helmReleaseValueName: ${{ inputs.helmReleaseValueName }}

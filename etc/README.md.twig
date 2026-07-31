@@ -9,9 +9,9 @@ repositories.
 
 ### Runs On
 
-Each workflow, well most of them, take two runs-on arguments `runsOnChaos` and `runsOnOrder`. As the names suggest 
-`runsOnChaos` runs as many jobs at the same time as possible where `runsOnOrder` runs them one by one. For most 
-jobs `runsOnChaos` is fine, but for things like `TerraForm` apply, and `Helm` install where state somewhere is 
+Each workflow, well most of them, take two runs-on arguments `runsOn` and `runsOnOrder`. As the names suggest
+`runsOn` runs as many jobs at the same time as possible where `runsOnOrder` runs them one by one. For most
+jobs `runsOn` is fine, but for things like `TerraForm` apply, and `Helm` install where state somewhere is
 changed and only one can run at the same time `runsOnOrder` is the way to go. Mainly came to this while working on 
 getting the workflows managing my home cluster to work as intended:
 
@@ -160,8 +160,14 @@ As with any Helm chart being deployed we need to give it a name, the `helmReleas
 By default a sparse checkout is performed and only the passed `helmDirectory` is checked out, if you need than
 that you can use `helmSparseCheckout` with additional patterns to check out.
 
+Helm chart repositories are detected automatically before diff and deploy. The `helm-dependencies`
+workflow scans `repository:` entries in `Chart.yaml`, `Chart.lock`, and `charts/*/Chart.yaml`, then runs `helm repo add` for each
+unique HTTPS repository before `helm dependency build`.
+
+Repository detection runs on `runsOnChaos`. Helm diff, deploy, and dependency build run on `runsOnOrder`.
+
 To set additional values or to overwrite existing values from `values.yaml` `helmAdditionalArguments` can be used to
-pass any additional args to the diff and upgrade commands. For example  to get dynamically generated values from
+pass any additional args to the diff and upgrade commands. For example to get dynamically generated values from
 another job:
 
 ```yaml
@@ -197,7 +203,25 @@ jobs:
     secrets: inherit
     uses: WyriHaximus/github-workflows/.github/workflows/project-release-management.yaml@main
     with:
+      runsOnChaos: chaos
+      runsOnOrder: queue
+      type: kubernetes
+      milestone: {{ "${{ github.event.milestone.title }}" }}
+      description: {{ "${{ github.event.milestone.description }}" }}
+      kubeConfigSecret: HOME_KUBE_CONFIG
+      helmDirectory: deploy/helm/
+      helmReleaseName: my-app
+      helmReleaseValueName: image.tag
+      helmSparseCheckout: |
+        /deploy/helm/charts/*
       helmAdditionalArguments: --set-json='application={{ "${{ needs.helm-json.outputs.helm-json }}" }}'
+      helmUpdateAppVersion: true
+      terraformDirectory: deploy/terraform/
+      terraformVars: |
+        kubernetes_config_path   = "~/.kube/config"
+        kubernetes_context       = "$HOME_KUBE_CONTEXT"
+        kubernetes_namespace     = "$HOME_KUBE_NAMESPACE"
+      ociRetag: true
 ```
 
 Because these workflows provide diff comments on PR's for Helm and others we need to specify `helmReleaseValueName` so
@@ -406,7 +430,7 @@ jobs:
 - [ ] Get all CI QA checks to run on runsOn inputs instead of GitHub hosted Runners
 - [X] Helm Diff
 - [X] Helm Upgrading
-- [ ] Helm Automatically detect all dependencies and load those in so we can remove hardcoding them in the workflows
+- [X] Helm Automatically detect all dependencies and load those in so we can remove hardcoding them in the workflows
 - [X] TerraForm Diff (Plan)
 - [X] TerraForm Apply
 - [X] Terraform vars from secrets

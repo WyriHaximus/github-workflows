@@ -1,0 +1,110 @@
+name: Helm Dependencies
+
+on:
+  workflow_call:
+    inputs:
+      runsOn:
+        description: Define on which runner this workflow should run
+        default: "ubuntu-latest"
+        required: false
+        type: string
+      workingDirectory:
+        description: The directory to run this workflow in
+        default: ""
+        required: false
+        type: string
+      helmDirectory:
+        description: The directory to run this workflow in
+        default: ""
+        required: true
+        type: string
+      helmSparseCheckout:
+        description: Additional files/patterns for the sparse checkout
+        default: ""
+        required: false
+        type: string
+    outputs:
+      repositories:
+        description: JSON array of Helm repositories with name and url
+        value: ${{ jobs.helm-dependencies.outputs.repositories }}
+
+jobs:
+  helm-dependencies:
+    name: Helm Dependencies
+    runs-on: ${{ inputs.runsOn }}
+    outputs:
+      repositories: ${{ steps.repositories.outputs.repositories }}
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            !${{ inputs.workingDirectory }}/*
+            /${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}*
+            ${{ inputs.helmSparseCheckout }}
+      - name: Detect Helm repositories
+        id: repositories
+        run: |
+          helm_dir="${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}"
+
+          derive_name() {
+            local url="${1%/}"
+            local host path name part
+
+            host="$(printf '%s' "$url" | sed -E 's#^https?://([^/]+).*#\1#')"
+            path="$(printf '%s' "$url" | sed -E 's#^https?://[^/]+/?##')"
+
+            if [[ "$host" == *.github.io ]]; then
+              name="${host%%.github.io}"
+              name="${name##*.}"
+              printf '%s' "$name" | awk '{print toupper(substr($0,1,1)) substr($0,2)}'
+              return
+            fi
+
+            IFS='.' read -r -a host_parts <<< "$host"
+            name=""
+            for part in "${host_parts[@]}"; do
+              [[ "$part" == "www" || "$part" == "helm" || "$part" == "charts" ]] && continue
+              name+="$(printf '%s' "$part" | awk '{print toupper(substr($0,1,1)) substr($0,2)}')"
+            done
+
+            if [[ -n "$path" ]]; then
+              part="$(printf '%s' "$path" | awk -F/ '{for (i=NF; i>=1; i--) if ($i != "") { print $i; exit }}')"
+              [[ -n "$part" ]] && name+="$(printf '%s' "$part" | awk '{print toupper(substr($0,1,1)) substr($0,2)}')"
+            fi
+
+            printf '%s' "$name"
+          }
+
+          urls="$(
+            {
+              find "$helm_dir" -maxdepth 1 \( -name Chart.yaml -o -name Chart.lock \) -print 2>/dev/null
+              find "$helm_dir"/charts -mindepth 1 -maxdepth 1 -name Chart.yaml -print 2>/dev/null
+            } | sort -u | while read -r chart_file; do
+              grep -E '^[[:space:]]*repository:[[:space:]]*https?://' "$chart_file" 2>/dev/null \
+                | sed -E 's/^[[:space:]]*repository:[[:space:]]*["'\'']?([^"'\''[:space:]]+)["'\'']?.*/\1/' \
+                | sed -E 's/[[:space:]]+$//'
+            done | sort -u
+          )"
+
+          detected='[]'
+          while IFS= read -r url; do
+            [[ -z "$url" ]] && continue
+            name="$(derive_name "$url")"
+            detected="$(printf '%s' "$detected" | jq --arg name "$name" --arg url "$url" '. + [{name: $name, url: $url}]')"
+          done <<< "$urls"
+
+          repositories="$(printf '%s' "$detected" | jq '
+            group_by(.url | rtrimstr("/"))
+            | map({
+                url: .[0].url,
+                name: (map(.name) | unique | join("-"))
+              })
+          ')"
+
+          {
+            echo "repositories<<EOF"
+            printf '%s' "$repositories"
+            echo
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"

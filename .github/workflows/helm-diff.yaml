@@ -3,8 +3,13 @@ name: Helm Diff
 on:
   workflow_call:
     inputs:
-      runsOn:
-        description: Define on which runner this workflow should run
+      runsOnChaos:
+        description: Define on which runner to run workflows where order doesn't matter should run
+        default: "ubuntu-latest"
+        required: false
+        type: string
+      runsOnOrder:
+        description: Define on which runner to run workflows where order matters should run
         default: "ubuntu-latest"
         required: false
         type: string
@@ -48,9 +53,17 @@ on:
         required: true
         type: string
 jobs:
+  helm-dependencies:
+    uses: ./.github/workflows/helm-dependencies.yaml
+    with:
+      runsOn: ${{ inputs.runsOnChaos }}
+      workingDirectory: ${{ inputs.workingDirectory }}
+      helmDirectory: ${{ inputs.helmDirectory }}
+      helmSparseCheckout: ${{ inputs.helmSparseCheckout }}
   helm-diff:
     name: Helm Diff
-    runs-on: ${{ inputs.runsOn }}
+    needs: helm-dependencies
+    runs-on: ${{ inputs.runsOnOrder }}
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
@@ -80,8 +93,9 @@ jobs:
         id: diff
         with:
           exec: |
-            helm repo add WyriHaximusNet https://helm.wyrihaximus.net/
-            helm repo add MammatusPHP https://mammatusphp.github.io/helm-charts/
+            jq -c '.[]' <<< '${{ needs.helm-dependencies.outputs.repositories }}' | while read -r repo; do
+              helm repo add "$(jq -r .name <<< "$repo")" "$(jq -r .url <<< "$repo")"
+            done
             helm dependency build ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}
             helm plugin install https://github.com/databus23/helm-diff
             delimiter="$(openssl rand -hex 8)"
