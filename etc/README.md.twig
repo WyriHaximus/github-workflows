@@ -237,6 +237,8 @@ terraformVars: |
 
 ## Usage
 
+Workflow connection diagrams are generated automatically from reusable workflow `uses:` references when running `make generate`.
+
 ### Packages
 
 #### CI
@@ -261,6 +263,8 @@ jobs:
     name: Continuous Integration
     uses: WyriHaximus/github-workflows/.github/workflows/package.yaml@main
 ```
+
+{{ workflowDiagrams['package.yaml']|raw }}
 
 ##### Inputs
 
@@ -301,6 +305,8 @@ jobs:
       description: {{ "${{ github.event.milestone.title }}" }}
 ```
 
+{{ workflowDiagrams['package-release-management.yaml']|raw }}
+
 ##### Inputs
 
 | Input | Type | Description | Default |
@@ -337,6 +343,8 @@ jobs:
       runsOnChaos: chaos
       runsOnOrder: queue
 ```
+
+{{ workflowDiagrams['project.yaml']|raw }}
 
 ##### Inputs
 
@@ -377,6 +385,8 @@ jobs:
       runsOnChaos: chaos
       runsOnOrder: queue
 ```
+
+{{ workflowDiagrams['project-release-management.yaml']|raw }}
 
 ##### Inputs
 
