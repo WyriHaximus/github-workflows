@@ -117,7 +117,8 @@ jobs:
     uses: ./.github/workflows/helm-deploy.yaml
     secrets: inherit
     with:
-      runsOn: ${{ inputs.runsOnOrder }}
+      runsOnChaos: ${{ inputs.runsOnChaos }}
+      runsOnOrder: ${{ inputs.runsOnOrder }}
       version: ${{ inputs.version }}
       helmReleaseName: ${{ inputs.helmReleaseName }}
       helmReleaseValueName: ${{ inputs.helmReleaseValueName }}

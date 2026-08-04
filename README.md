@@ -9,9 +9,9 @@ repositories.
 
 ### Runs On
 
-Each workflow, well most of them, take two runs-on arguments `runsOnChaos` and `runsOnOrder`. As the names suggest 
-`runsOnChaos` runs as many jobs at the same time as possible where `runsOnOrder` runs them one by one. For most 
-jobs `runsOnChaos` is fine, but for things like `TerraForm` apply, and `Helm` install where state somewhere is 
+Each workflow, well most of them, take two runs-on arguments `runsOn` and `runsOnOrder`. As the names suggest
+`runsOn` runs as many jobs at the same time as possible where `runsOnOrder` runs them one by one. For most
+jobs `runsOn` is fine, but for things like `TerraForm` apply, and `Helm` install where state somewhere is
 changed and only one can run at the same time `runsOnOrder` is the way to go. Mainly came to this while working on 
 getting the workflows managing my home cluster to work as intended:
 
@@ -160,8 +160,14 @@ As with any Helm chart being deployed we need to give it a name, the `helmReleas
 By default a sparse checkout is performed and only the passed `helmDirectory` is checked out, if you need than
 that you can use `helmSparseCheckout` with additional patterns to check out.
 
+Helm chart repositories are detected automatically before diff and deploy. The `helm-dependencies`
+workflow scans `repository:` entries in `Chart.yaml`, `Chart.lock`, and `charts/*/Chart.yaml`, then runs `helm repo add` for each
+unique HTTPS repository before `helm dependency build`.
+
+Repository detection runs on `runsOnChaos`. Helm diff, deploy, and dependency build run on `runsOnOrder`.
+
 To set additional values or to overwrite existing values from `values.yaml` `helmAdditionalArguments` can be used to
-pass any additional args to the diff and upgrade commands. For example  to get dynamically generated values from
+pass any additional args to the diff and upgrade commands. For example to get dynamically generated values from
 another job:
 
 ```yaml
@@ -197,7 +203,25 @@ jobs:
     secrets: inherit
     uses: WyriHaximus/github-workflows/.github/workflows/project-release-management.yaml@main
     with:
+      runsOnChaos: chaos
+      runsOnOrder: queue
+      type: kubernetes
+      milestone: ${{ github.event.milestone.title }}
+      description: ${{ github.event.milestone.description }}
+      kubeConfigSecret: HOME_KUBE_CONFIG
+      helmDirectory: deploy/helm/
+      helmReleaseName: my-app
+      helmReleaseValueName: image.tag
+      helmSparseCheckout: |
+        /deploy/helm/charts/*
       helmAdditionalArguments: --set-json='application=${{ needs.helm-json.outputs.helm-json }}'
+      helmUpdateAppVersion: true
+      terraformDirectory: deploy/terraform/
+      terraformVars: |
+        kubernetes_config_path   = "~/.kube/config"
+        kubernetes_context       = "$HOME_KUBE_CONTEXT"
+        kubernetes_namespace     = "$HOME_KUBE_NAMESPACE"
+      ociRetag: true
 ```
 
 Because these workflows provide diff comments on PR's for Helm and others we need to specify `helmReleaseValueName` so
@@ -349,6 +373,7 @@ flowchart TB
   package_release_management_craft_release["craft-release.yaml"] --> package_release_management_a4("dawidd6/action-delete-branch@v3.1.0")
   package_release_management_craft_release["craft-release.yaml"] --> package_release_management_a5("haya14busa/action-update-semver@v1.5.1")
   package_release_management_craft_release["craft-release.yaml"] --> package_release_management_a6("softprops/action-gh-release@v3.0.1")
+  package_release_management_helm_dependencies["helm-dependencies.yaml"] --> package_release_management_a2("actions/checkout@v7.0.0")
   package_release_management_helm_diff["helm-diff.yaml"] --> package_release_management_a7("WyriHaximus/github-action-get-previous-tag@v2.0.0")
   package_release_management_helm_diff["helm-diff.yaml"] --> package_release_management_a8("WyriHaximus/github-action-helm3@v4.0.2")
   package_release_management_helm_diff["helm-diff.yaml"] --> package_release_management_a2("actions/checkout@v7.0.0")
@@ -371,14 +396,15 @@ flowchart TB
   package_release_management_diff["diff.yaml"] --> package_release_management_composer_diff["composer-diff.yaml"]
   package_release_management_diff["diff.yaml"] --> package_release_management_helm_diff["helm-diff.yaml"]
   package_release_management_diff["diff.yaml"] --> package_release_management_terraform_diff["terraform-diff.yaml"]
+  package_release_management_helm_diff["helm-diff.yaml"] --> package_release_management_helm_dependencies["helm-dependencies.yaml"]
   package_release_management_package_release_management["package-release-management.yaml"] --> package_release_management_craft_release["craft-release.yaml"]
   package_release_management_package_release_management["package-release-management.yaml"] --> package_release_management_diff["diff.yaml"]
   package_release_management_package_release_management["package-release-management.yaml"] --> package_release_management_package_set_milestone_on_pr["package-set-milestone-on-pr.yaml"]
   package_release_management_package_release_management["package-release-management.yaml"] --> package_release_management_required_labels["required-labels.yaml"]
   package_release_management_package_set_milestone_on_pr["package-set-milestone-on-pr.yaml"] --> package_release_management_set_milestone_on_pr["set-milestone-on-pr.yaml"]
   package_release_management_package_set_milestone_on_pr["package-set-milestone-on-pr.yaml"] --> package_release_management_supported_threading_matrix["supported-threading-matrix.yaml"]
-  linkStyle 26,27,28,29,30,31,32,33,34 stroke:#22c55e,stroke-width:2px
-  linkStyle 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25 stroke:#2563eb,stroke-width:2px
+  linkStyle 27,28,29,30,31,32,33,34,35,36 stroke:#22c55e,stroke-width:2px
+  linkStyle 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26 stroke:#2563eb,stroke-width:2px
   click package_release_management_a0 "https://github.com/WyriHaximus/github-action-composer.lock-diff/releases/tag/v2.3.0" _blank
   click package_release_management_a1 "https://github.com/WyriHaximus/github-action-jwage-changelog-generator/releases/tag/v1.4.0" _blank
   click package_release_management_a10 "https://github.com/WyriHaximus/github-action-composer-php-versions-in-range/releases/tag/v2.1.0" _blank
@@ -401,6 +427,7 @@ flowchart TB
   click package_release_management_composer_diff "https://github.com/WyriHaximus/github-workflows/blob/main/.github/workflows/composer-diff.yaml" _blank
   click package_release_management_craft_release "https://github.com/WyriHaximus/github-workflows/blob/main/.github/workflows/craft-release.yaml" _blank
   click package_release_management_diff "https://github.com/WyriHaximus/github-workflows/blob/main/.github/workflows/diff.yaml" _blank
+  click package_release_management_helm_dependencies "https://github.com/WyriHaximus/github-workflows/blob/main/.github/workflows/helm-dependencies.yaml" _blank
   click package_release_management_helm_diff "https://github.com/WyriHaximus/github-workflows/blob/main/.github/workflows/helm-diff.yaml" _blank
   click package_release_management_package_release_management "https://github.com/WyriHaximus/github-workflows/blob/main/.github/workflows/package-release-management.yaml" _blank
   click package_release_management_package_set_milestone_on_pr "https://github.com/WyriHaximus/github-workflows/blob/main/.github/workflows/package-set-milestone-on-pr.yaml" _blank
@@ -576,6 +603,7 @@ flowchart TB
   project_release_management_craft_release["craft-release.yaml"] --> project_release_management_a4("dawidd6/action-delete-branch@v3.1.0")
   project_release_management_craft_release["craft-release.yaml"] --> project_release_management_a5("haya14busa/action-update-semver@v1.5.1")
   project_release_management_craft_release["craft-release.yaml"] --> project_release_management_a6("softprops/action-gh-release@v3.0.1")
+  project_release_management_helm_dependencies["helm-dependencies.yaml"] --> project_release_management_a2("actions/checkout@v7.0.0")
   project_release_management_helm_deploy["helm-deploy.yaml"] --> project_release_management_a7("WyriHaximus/github-action-helm3@v4.0.2")
   project_release_management_helm_deploy["helm-deploy.yaml"] --> project_release_management_a2("actions/checkout@v7.0.0")
   project_release_management_helm_diff["helm-diff.yaml"] --> project_release_management_a8("WyriHaximus/github-action-get-previous-tag@v2.0.0")
@@ -614,6 +642,8 @@ flowchart TB
   project_release_management_diff["diff.yaml"] --> project_release_management_composer_diff["composer-diff.yaml"]
   project_release_management_diff["diff.yaml"] --> project_release_management_helm_diff["helm-diff.yaml"]
   project_release_management_diff["diff.yaml"] --> project_release_management_terraform_diff["terraform-diff.yaml"]
+  project_release_management_helm_deploy["helm-deploy.yaml"] --> project_release_management_helm_dependencies["helm-dependencies.yaml"]
+  project_release_management_helm_diff["helm-diff.yaml"] --> project_release_management_helm_dependencies["helm-dependencies.yaml"]
   project_release_management_project_craft_release_cdn_build_vitepress["project-craft-release-cdn-build-vitepress.yaml"] --> project_release_management_project_craft_release_cdn_build_commands["project-craft-release-cdn-build-commands.yaml"]
   project_release_management_project_craft_release_cdn_build["project-craft-release-cdn-build.yaml"] --> project_release_management_project_craft_release_cdn_build_commands["project-craft-release-cdn-build-commands.yaml"]
   project_release_management_project_craft_release_cdn_build["project-craft-release-cdn-build.yaml"] --> project_release_management_project_craft_release_cdn_build_vitepress["project-craft-release-cdn-build-vitepress.yaml"]
@@ -632,8 +662,8 @@ flowchart TB
   project_release_management_project_release_management["project-release-management.yaml"] --> project_release_management_project_set_milestone_on_pr["project-set-milestone-on-pr.yaml"]
   project_release_management_project_release_management["project-release-management.yaml"] --> project_release_management_required_labels["required-labels.yaml"]
   project_release_management_project_set_milestone_on_pr["project-set-milestone-on-pr.yaml"] --> project_release_management_set_milestone_on_pr["set-milestone-on-pr.yaml"]
-  linkStyle 42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62 stroke:#22c55e,stroke-width:2px
-  linkStyle 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41 stroke:#2563eb,stroke-width:2px
+  linkStyle 43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65 stroke:#22c55e,stroke-width:2px
+  linkStyle 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42 stroke:#2563eb,stroke-width:2px
   click project_release_management_a0 "https://github.com/WyriHaximus/github-action-composer.lock-diff/releases/tag/v2.3.0" _blank
   click project_release_management_a1 "https://github.com/WyriHaximus/github-action-jwage-changelog-generator/releases/tag/v1.4.0" _blank
   click project_release_management_a10 "https://github.com/docker/login-action/releases/tag/v4.4.0" _blank
@@ -667,6 +697,7 @@ flowchart TB
   click project_release_management_composer_diff "https://github.com/WyriHaximus/github-workflows/blob/main/.github/workflows/composer-diff.yaml" _blank
   click project_release_management_craft_release "https://github.com/WyriHaximus/github-workflows/blob/main/.github/workflows/craft-release.yaml" _blank
   click project_release_management_diff "https://github.com/WyriHaximus/github-workflows/blob/main/.github/workflows/diff.yaml" _blank
+  click project_release_management_helm_dependencies "https://github.com/WyriHaximus/github-workflows/blob/main/.github/workflows/helm-dependencies.yaml" _blank
   click project_release_management_helm_deploy "https://github.com/WyriHaximus/github-workflows/blob/main/.github/workflows/helm-deploy.yaml" _blank
   click project_release_management_helm_diff "https://github.com/WyriHaximus/github-workflows/blob/main/.github/workflows/helm-diff.yaml" _blank
   click project_release_management_oci_retag "https://github.com/WyriHaximus/github-workflows/blob/main/.github/workflows/oci-retag.yaml" _blank
@@ -742,7 +773,7 @@ flowchart TB
 - [ ] Get all CI QA checks to run on runsOn inputs instead of GitHub hosted Runners
 - [X] Helm Diff
 - [X] Helm Upgrading
-- [ ] Helm Automatically detect all dependencies and load those in so we can remove hardcoding them in the workflows
+- [X] Helm Automatically detect all dependencies and load those in so we can remove hardcoding them in the workflows
 - [X] TerraForm Diff (Plan)
 - [X] TerraForm Apply
 - [X] Terraform vars from secrets
