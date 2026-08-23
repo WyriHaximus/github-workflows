@@ -23,6 +23,51 @@ on:
         default: false
         required: false
         type: boolean
+      disableGhcrCleanup:
+        description: Disable GHCR image cleanup on `push`, `schedule`, and `workflow_dispatch`
+        default: false
+        required: false
+        type: boolean
+      ghcrCleanupOwner:
+        description: GHCR package owner; defaults to the lowercased repository owner when empty
+        default: ""
+        required: false
+        type: string
+      ghcrCleanupPackageName:
+        description: GHCR package name; defaults to the lowercased repository name when empty
+        default: ""
+        required: false
+        type: string
+      ghcrCleanupMaxBatches:
+        description: Deprecated; ignored. Kept for backward compatibility with consumers that still pass this input
+        default: 1
+        required: false
+        type: number
+      ghcrCleanupMinUntaggedVersionsToKeep:
+        description: Number of untagged package versions to retain
+        default: 0
+        required: false
+        type: number
+      ghcrCleanupKeepNTagged:
+        description: Keep N newest tagged versions outside the exclude pattern (133 newest sha-* tags by default)
+        default: 133
+        required: false
+        type: number
+      ghcrCleanupExcludeTagPattern:
+        description: Regex for tagged versions to never delete (r*, v*, and semver *.*.* patterns)
+        default: "^(r[0-9]+|v[0-9]+(\\.[0-9]+)*|[0-9]+\\.[0-9]+\\.[0-9]+.*)$"
+        required: false
+        type: string
+      ghcrCleanupDisableTaggedCleanup:
+        description: Skip tagged version cleanup; untagged-only mode
+        default: false
+        required: false
+        type: boolean
+      ghcrCleanupTokenSecret:
+        description: Secret name holding a token with packages read and delete scopes; use the same secret as ociPushSecretSecret when images are pushed with a PAT
+        default: "GITHUB_TOKEN"
+        required: false
+        type: string
 
 jobs:
   conductor:
@@ -31,3 +76,17 @@ jobs:
     uses: ./.github/workflows/conductor.yaml
     with:
       runsOn: ${{ inputs.runsOnChaos }}
+  ghcr-cleanup:
+    name: GHCR Image Cleanup
+    if: inputs.disableGhcrCleanup == false && (github.event_name == 'push' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
+    uses: ./.github/workflows/ghcr-cleanup.yaml
+    secrets:
+      token: ${{ inputs.ghcrCleanupTokenSecret == 'GITHUB_TOKEN' && github.token || secrets[inputs.ghcrCleanupTokenSecret] }}
+    with:
+      runsOn: ${{ inputs.runsOnChaos }}
+      ghcrCleanupOwner: ${{ inputs.ghcrCleanupOwner }}
+      ghcrCleanupPackageName: ${{ inputs.ghcrCleanupPackageName }}
+      ghcrCleanupMinUntaggedVersionsToKeep: ${{ inputs.ghcrCleanupMinUntaggedVersionsToKeep }}
+      ghcrCleanupKeepNTagged: ${{ inputs.ghcrCleanupKeepNTagged }}
+      ghcrCleanupExcludeTagPattern: ${{ inputs.ghcrCleanupExcludeTagPattern }}
+      ghcrCleanupDisableTaggedCleanup: ${{ inputs.ghcrCleanupDisableTaggedCleanup }}

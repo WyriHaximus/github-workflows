@@ -94,7 +94,7 @@ jobs:
             --username "${GITHUB_ACTOR}" \
             --password-stdin
           printf "FROM %s" $(echo "ghcr.io/${GITHUB_REPOSITORY}:sha-${GITHUB_SHA}" | tr '[:upper:]' '[:lower:]') >> Dockerfile.tag
-          docker build --platform=linux/arm64,linux/amd64 --output=type=registry --no-cache -f Dockerfile.tag -t $(echo "ghcr.io/${GITHUB_REPOSITORY}:${{ matrix.version }}" | tr '[:upper:]' '[:lower:]') .
+          docker build --platform=linux/arm64,linux/amd64 --output=type=registry --no-cache --label org.opencontainers.image.revision=${GITHUB_SHA} --label org.opencontainers.image.source=https://github.com/${GITHUB_REPOSITORY} --annotation "index,manifest:org.opencontainers.image.revision=${GITHUB_SHA}" --annotation "index,manifest:org.opencontainers.image.source=https://github.com/${GITHUB_REPOSITORY}" -f Dockerfile.tag -t $(echo "ghcr.io/${GITHUB_REPOSITORY}:${{ matrix.version }}" | tr '[:upper:]' '[:lower:]') .
   create-release-docker:
     name: Craft Release
     if: ${{ inputs.reTagOCIImage == true }}
