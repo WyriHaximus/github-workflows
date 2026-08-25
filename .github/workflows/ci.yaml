@@ -343,7 +343,7 @@ jobs:
           working-directory: ${{ inputs.workingDirectory }}
       - run: git config --global --add safe.directory $GITHUB_WORKSPACE # Do this ourselves because `actions/checkout@v4 doesn't succeed in doing this
         working-directory: ${{ inputs.workingDirectory }}
-      - run: make ${{ matrix.check }}
+      - run: make ${{ matrix.check }} OTEL_PHP_FIBERS_ENABLED=${{ matrix.php-to-thread-or-not-to-thread == 'zts' && 'false' || 'true' }}
         working-directory: ${{ inputs.workingDirectory }}
         env:
           COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
@@ -379,7 +379,7 @@ jobs:
         with:
           dependency-versions: ${{ matrix.composer }}
           working-directory: ${{ inputs.workingDirectory }}
-      - run: make ${{ matrix.check }}
+      - run: make ${{ matrix.check }} OTEL_PHP_FIBERS_ENABLED=${{ matrix.php-to-thread-or-not-to-thread == 'zts' && 'false' || 'true' }}
         working-directory: ${{ inputs.workingDirectory }}
         env:
           COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
