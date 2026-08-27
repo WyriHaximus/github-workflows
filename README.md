@@ -323,11 +323,13 @@ flowchart TB
 | Input | Type | Description | Default |
 |-------|------|-------------|---------|
 | dependencyUpdaters | string | CSV list of bot AppId&#039;s that create PR&#039;s to updated dependencies like RenovateBot and DependaBot | 49699333 |
+| directlyOnOsRunsOnMap | string | Map of supported-features keys to JSON arrays of runs-on labels for directly-on-os CI jobs | {&quot;linux&quot;:[&quot;ubuntu-latest&quot;,&quot;ubuntu-24.04-arm&quot;],&quot;macos&quot;:[&quot;macos-latest&quot;],&quot;windows&quot;:[&quot;windows-latest&quot;,&quot;windows-11-arm&quot;]} |
 | env | string | Any additional environment variables | {} |
 | jsonPattern | string | The pattern to match which JSON files to check | \.json$ |
 | markdownLinkCheckSparseCheckout | string | Additional files/patterns for the sparse checkout |  |
 | runsOnChaos | string | Define on which runner to run workflows where order doesn&#039;t matter should run | ubuntu-latest |
 | runsOnOrder | string | Define on which runner to run workflows where order matters should run | ubuntu-latest |
+| runsOnQASteps | string | Define on which runner to run workflows where QA ssteps should run | ubuntu-latest |
 | services | string | Any additional services to use | {} |
 | supportedChecksCommand | string | The make command to invoke listing the different tasks to run across all versions, will also act as a prefix for All, Direct on OS, Lowest, Locked, and Highest task lists. | task-list-ci |
 | supportedFeaturesCommand | string | The make command to invoke listing the different tasks to run across all versions, will also act as a prefix for All, Direct on OS, Lowest, Locked, and Highest task lists. | supported-features |
@@ -856,7 +858,7 @@ skipped with a notice instead of failing the workflow.
 - [X] TerraForm Apply
 - [X] Terraform vars from secrets
 - [X] Check links in Markdown files for non 200 status codes
-- [ ] Make CI's test directly on OS runs-on array configurable
+- [X] Make CI's test directly on OS runs-on array configurable
 - [X] Cronjob/Scheduled workflows for things like Docker image clean up
 - [X] Sparse checkout all the things
 - [ ] Fix typo in release management entry point filenames, and have all users point at the currect one
