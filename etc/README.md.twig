@@ -379,7 +379,7 @@ jobs:
   utils:
     uses: WyriHaximus/github-workflows/.github/workflows/package-utils.yaml@main
     with:
-      runsOnChaos: ubuntu-latest
+      runsOn: ubuntu-latest
 ```
 
 {{ workflowDiagrams['package-utils.yaml']|raw }}
@@ -495,7 +495,7 @@ jobs:
     secrets: inherit
     uses: WyriHaximus/github-workflows/.github/workflows/project-utils.yaml@main
     with:
-      runsOnChaos: ubuntu-latest
+      runsOn: ubuntu-latest
       disableConductor: true
       ghcrCleanupKeepNTagged: 133
       ghcrCleanupTokenSecret: CR_PAT

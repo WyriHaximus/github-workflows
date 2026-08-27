@@ -3,13 +3,8 @@ name: Utils
 on:
   workflow_call:
     inputs:
-      runsOnChaos:
+      runsOn:
         description: Define on which runner to run workflows where order doesn't matter should run
-        default: "ubuntu-latest"
-        required: false
-        type: string
-      runsOnOrder:
-        description: Define on which runner to run workflows where order matters should run
         default: "ubuntu-latest"
         required: false
         type: string
@@ -75,7 +70,7 @@ jobs:
     if: inputs.disableConductor == false && github.event_name == 'repository_dispatch' && github.event.action == 'dependency_update'
     uses: ./.github/workflows/conductor.yaml
     with:
-      runsOn: ${{ inputs.runsOnChaos }}
+      runsOn: ${{ inputs.runsOn }}
   ghcr-cleanup:
     name: GHCR Image Cleanup
     if: inputs.disableGhcrCleanup == false && (github.event_name == 'push' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
@@ -83,7 +78,7 @@ jobs:
     secrets:
       token: ${{ inputs.ghcrCleanupTokenSecret == 'GITHUB_TOKEN' && github.token || secrets[inputs.ghcrCleanupTokenSecret] }}
     with:
-      runsOn: ${{ inputs.runsOnChaos }}
+      runsOn: ${{ inputs.runsOn }}
       ghcrCleanupOwner: ${{ inputs.ghcrCleanupOwner }}
       ghcrCleanupPackageName: ${{ inputs.ghcrCleanupPackageName }}
       ghcrCleanupMinUntaggedVersionsToKeep: ${{ inputs.ghcrCleanupMinUntaggedVersionsToKeep }}
