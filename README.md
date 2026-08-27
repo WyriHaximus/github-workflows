@@ -496,7 +496,7 @@ jobs:
   utils:
     uses: WyriHaximus/github-workflows/.github/workflows/package-utils.yaml@main
     with:
-      runsOnChaos: ubuntu-latest
+      runsOn: ubuntu-latest
 ```
 
 ##### Workflow connections
@@ -524,8 +524,7 @@ flowchart TB
 | Input | Type | Description | Default |
 |-------|------|-------------|---------|
 | disableConductor | boolean | Disable the execution of Conductor on `repository_dispatch` with `dependency_update` as event type |  |
-| runsOnChaos | string | Define on which runner to run workflows where order doesn&#039;t matter should run | ubuntu-latest |
-| runsOnOrder | string | Define on which runner to run workflows where order matters should run | ubuntu-latest |
+| runsOn | string | Define on which runner to run workflows where order doesn&#039;t matter should run | ubuntu-latest |
 | workingDirectory | string | The directory to run this workflow in |  |
 
 ### Projects
@@ -860,7 +859,7 @@ jobs:
     secrets: inherit
     uses: WyriHaximus/github-workflows/.github/workflows/project-utils.yaml@main
     with:
-      runsOnChaos: ubuntu-latest
+      runsOn: ubuntu-latest
       disableConductor: true
       ghcrCleanupKeepNTagged: 133
       ghcrCleanupTokenSecret: CR_PAT
@@ -933,8 +932,7 @@ skipped with a notice instead of failing the workflow.
 | ghcrCleanupOwner | string | GHCR package owner; defaults to the lowercased repository owner when empty |  |
 | ghcrCleanupPackageName | string | GHCR package name; defaults to the lowercased repository name when empty |  |
 | ghcrCleanupTokenSecret | string | Secret name holding a token with packages read and delete scopes; use the same secret as ociPushSecretSecret when images are pushed with a PAT | GITHUB_TOKEN |
-| runsOnChaos | string | Define on which runner to run workflows where order doesn&#039;t matter should run | ubuntu-latest |
-| runsOnOrder | string | Define on which runner to run workflows where order matters should run | ubuntu-latest |
+| runsOn | string | Define on which runner to run workflows where order doesn&#039;t matter should run | ubuntu-latest |
 | workingDirectory | string | The directory to run this workflow in |  |
 
 ## TODO
