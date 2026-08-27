@@ -52,11 +52,6 @@ on:
         default: "ubuntu-latest"
         required: false
         type: string
-      runsOnQASteps:
-        description: Define on which runner to run workflows where QA ssteps should run
-        default: "ubuntu-latest"
-        required: false
-        type: string
       dockerfile:
         description: The Dockerfile to build
         default: ""
