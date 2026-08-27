@@ -10,10 +10,10 @@ const WORKFLOW_BRANCH = 'main';
 const ENTRY_POINTS = [
     'package.yaml',
     'package-release-management.yaml',
-//    'package-utils.yaml',
+    'package-utils.yaml',
     'project.yaml',
     'project-release-management.yaml',
-//    'project-utils.yaml',
+    'project-utils.yaml',
 ];
 
 /** @return array<string, string> */
