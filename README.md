@@ -77,7 +77,7 @@ PHP packages/GitHub Actions/Anything-that-is-not-a-project while the latter is f
 
 ### Release Management
 
-Each type has two entry points. The first being `Release Management`, which takes care of everything related to 
+Each type has three entry points. The first being `Release Management`, which takes care of everything related to 
 releasing new versions and all the information and bits required for that. This includes:
 
 * Required labels
@@ -101,6 +101,13 @@ through a series of [`Makefile`](#Makefile) commands. When present CI will also 
 present. Any control over the different platforms the OCI image is released for is done here, the release management
 doing any retagging will detect which platforms are in the image it retags and uses those without the need to
 configure them.
+
+#### Utils
+
+The third entry point is `Utils`. It covers scheduled and event-driven maintenance that does not belong in CI or
+Release Management. Packages use it for [Private Packagist Conductor](https://github.com/packagist/conductor-github-action)
+on `repository_dispatch` with the `dependency_update` event type. Projects add GHCR image cleanup on `push`,
+`schedule`, and `workflow_dispatch` in addition to Conductor when enabled.
 
 ## What's included
 
@@ -233,6 +240,23 @@ when set to `true`, with the same value in those two scenarios.
 
 A few, maybe somewhat random, linters are included in the work flows. One of them checks if links in markdown
 resources are responding with a ~200 status code and errors when they are no longer working.
+
+### Utils
+
+#### Conductor
+
+When `disableConductor` is `false` (the default), the Utils entry point runs [Packagist Conductor](https://github.com/packagist/conductor-github-action)
+after Private Packagist dispatches a `repository_dispatch` event with the `dependency_update` type. The workflow
+checks out `composer.json` and `composer.lock`, resolves the lowest supported PHP version from the lock file, and
+runs Conductor in that environment.
+
+The caller workflow needs `contents: read` when Conductor is enabled.
+
+#### GHCR image cleanup
+
+Project Utils can prune old container images from GHCR on `push` to configured branches, on a nightly schedule, and
+on manual `workflow_dispatch`. Set `disableGhcrCleanup: true` to skip it. See the Projects Utils usage section below for tag
+retention rules, PAT configuration, and inputs.
 
 ### TerraForm
 
@@ -455,6 +479,54 @@ flowchart TB
 | preReleaseScript | string | Script that runs just before the release is created |  |
 | runsOnChaos | string | Define on which runner to run workflows where order doesn&#039;t matter should run | ubuntu-latest |
 | runsOnOrder | string | Define on which runner to run workflows where order matters should run | ubuntu-latest |
+
+#### Utils
+
+Private Packagist Conductor on `repository_dispatch` with the `dependency_update` event type.
+
+```yaml
+name: Utils
+on:
+  repository_dispatch:
+    types:
+      - dependency_update
+permissions:
+  contents: read
+jobs:
+  utils:
+    uses: WyriHaximus/github-workflows/.github/workflows/package-utils.yaml@main
+    with:
+      runsOnChaos: ubuntu-latest
+```
+
+##### Workflow connections
+
+```mermaid
+flowchart TB
+  package_utils_conductor["conductor.yaml"] --> package_utils_a0("WyriHaximus/github-action-composer-php-versions-in-range@v2.1.0")
+  package_utils_conductor["conductor.yaml"] --> package_utils_a1("actions/checkout@v7.0.0")
+  package_utils_conductor["conductor.yaml"] --> package_utils_a2("packagist/conductor-github-action@1.6.1")
+  package_utils_conductor["conductor.yaml"] --> package_utils_a3("shivammathur/setup-php@2.37.2")
+  package_utils_package_utils["package-utils.yaml"] --> package_utils_conductor["conductor.yaml"]
+  linkStyle 4 stroke:#22c55e,stroke-width:2px
+  linkStyle 0,1,2,3 stroke:#2563eb,stroke-width:2px
+  click package_utils_a0 "https://github.com/WyriHaximus/github-action-composer-php-versions-in-range/releases/tag/v2.1.0" _blank
+  click package_utils_a1 "https://github.com/actions/checkout/releases/tag/v7.0.0" _blank
+  click package_utils_a2 "https://github.com/packagist/conductor-github-action/releases/tag/1.6.1" _blank
+  click package_utils_a3 "https://github.com/shivammathur/setup-php/releases/tag/2.37.2" _blank
+  click package_utils_conductor "https://github.com/WyriHaximus/github-workflows/blob/main/.github/workflows/conductor.yaml" _blank
+  click package_utils_package_utils "https://github.com/WyriHaximus/github-workflows/blob/main/.github/workflows/package-utils.yaml" _blank
+```
+
+
+##### Inputs
+
+| Input | Type | Description | Default |
+|-------|------|-------------|---------|
+| disableConductor | boolean | Disable the execution of Conductor on `repository_dispatch` with `dependency_update` as event type |  |
+| runsOnChaos | string | Define on which runner to run workflows where order doesn&#039;t matter should run | ubuntu-latest |
+| runsOnOrder | string | Define on which runner to run workflows where order matters should run | ubuntu-latest |
+| workingDirectory | string | The directory to run this workflow in |  |
 
 ### Projects
 
@@ -794,6 +866,28 @@ jobs:
       ghcrCleanupTokenSecret: CR_PAT
 ```
 
+##### Workflow connections
+
+```mermaid
+flowchart TB
+  project_utils_conductor["conductor.yaml"] --> project_utils_a0("WyriHaximus/github-action-composer-php-versions-in-range@v2.1.0")
+  project_utils_conductor["conductor.yaml"] --> project_utils_a1("actions/checkout@v7.0.0")
+  project_utils_conductor["conductor.yaml"] --> project_utils_a2("packagist/conductor-github-action@1.6.1")
+  project_utils_conductor["conductor.yaml"] --> project_utils_a3("shivammathur/setup-php@2.37.2")
+  project_utils_project_utils["project-utils.yaml"] --> project_utils_conductor["conductor.yaml"]
+  project_utils_project_utils["project-utils.yaml"] --> project_utils_ghcr_cleanup["ghcr-cleanup.yaml"]
+  linkStyle 4,5 stroke:#22c55e,stroke-width:2px
+  linkStyle 0,1,2,3 stroke:#2563eb,stroke-width:2px
+  click project_utils_a0 "https://github.com/WyriHaximus/github-action-composer-php-versions-in-range/releases/tag/v2.1.0" _blank
+  click project_utils_a1 "https://github.com/actions/checkout/releases/tag/v7.0.0" _blank
+  click project_utils_a2 "https://github.com/packagist/conductor-github-action/releases/tag/1.6.1" _blank
+  click project_utils_a3 "https://github.com/shivammathur/setup-php/releases/tag/2.37.2" _blank
+  click project_utils_conductor "https://github.com/WyriHaximus/github-workflows/blob/main/.github/workflows/conductor.yaml" _blank
+  click project_utils_ghcr_cleanup "https://github.com/WyriHaximus/github-workflows/blob/main/.github/workflows/ghcr-cleanup.yaml" _blank
+  click project_utils_project_utils "https://github.com/WyriHaximus/github-workflows/blob/main/.github/workflows/project-utils.yaml" _blank
+```
+
+
 GHCR cleanup runs on every push to the configured branches (alongside CI), on the nightly schedule,
 and on manual dispatch. It prunes older package versions and keeps the newest `sha-*` tags, so it
 is safe to run in parallel with image builds.
@@ -862,7 +956,7 @@ skipped with a notice instead of failing the workflow.
 - [X] Cronjob/Scheduled workflows for things like Docker image clean up
 - [X] Sparse checkout all the things
 - [ ] Fix typo in release management entry point filenames, and have all users point at the currect one
-- [ ] Add documentation once Utils entry point is more stable
+- [X] Add documentation once Utils entry point is more stable
 - [X] Add GHCR.io image clean up to project utils entry point
 
 ## License
