@@ -37,6 +37,11 @@ on:
         default: "ubuntu-latest"
         required: false
         type: string
+      directlyOnOsRunsOnMap:
+        description: Map of supported-features keys to JSON arrays of runs-on labels for directly-on-os CI jobs
+        default: '{"linux":["ubuntu-latest","ubuntu-24.04-arm"],"macos":["macos-latest"],"windows":["windows-latest","windows-11-arm"]}'
+        required: false
+        type: string
       isProject:
         description: Whether or not this is a project, defaulting to package
         default: false
@@ -249,6 +254,7 @@ jobs:
           CHECKS_DOS: ${{ needs.supported-checks-matrix.outputs.dos }}
           SUPPORTED_FEATURES: ${{ needs.supported-checks-matrix.outputs.supported-features }}
           SERVICES: ${{ inputs.services }}
+          DIRECTLY_ON_OS_RUNS_ON_MAP: ${{ inputs.directlyOnOsRunsOnMap }}
         with:
           script: |
             let matrix = [];
@@ -259,16 +265,15 @@ jobs:
             const checksDos = JSON.parse(process.env.CHECKS_DOS);
             const supportedFeatures = JSON.parse(process.env.SUPPORTED_FEATURES);
             const services = process.env.SERVICES;
-            if (supportedFeatures.includes('linux')) {
-              oses.push("ubuntu-latest");
-              oses.push("ubuntu-24.04-arm");
+            const runsOnMap = JSON.parse(process.env.DIRECTLY_ON_OS_RUNS_ON_MAP);
+            if (supportedFeatures.includes('linux') && runsOnMap.linux) {
+              oses.push(...runsOnMap.linux);
             }
-            if (supportedFeatures.includes('macos') && services === '{}') {
-              oses.push("macos-latest");
+            if (supportedFeatures.includes('macos') && services === '{}' && runsOnMap.macos) {
+              oses.push(...runsOnMap.macos);
             }
-            if (supportedFeatures.includes('windows') && services === '{}') {
-              oses.push("windows-latest");
-              oses.push("windows-11-arm");
+            if (supportedFeatures.includes('windows') && services === '{}' && runsOnMap.windows) {
+              oses.push(...runsOnMap.windows);
             }
             for (const os in oses) {
               for (const composerAction in composer) {

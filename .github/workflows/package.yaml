@@ -42,6 +42,11 @@ on:
         default: "ubuntu-latest"
         required: false
         type: string
+      directlyOnOsRunsOnMap:
+        description: Map of supported-features keys to JSON arrays of runs-on labels for directly-on-os CI jobs
+        default: '{"linux":["ubuntu-latest","ubuntu-24.04-arm"],"macos":["macos-latest"],"windows":["windows-latest","windows-11-arm"]}'
+        required: false
+        type: string
       supportedChecksCommand:
         description: The make command to invoke listing the different tasks to run across all versions, will also act as a prefix for All, Direct on OS, Lowest, Locked, and Highest task lists.
         default: "task-list-ci"
@@ -71,6 +76,7 @@ jobs:
       runsOnChaos: ${{ inputs.runsOnChaos }}
       runsOnOrder: ${{ inputs.runsOnOrder }}
       runsOnQASteps: ${{ inputs.runsOnQASteps }}
+      directlyOnOsRunsOnMap: ${{ inputs.directlyOnOsRunsOnMap }}
   markdown-link-check:
     name: Check Markdown links
     if: false
