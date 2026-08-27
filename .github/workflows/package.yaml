@@ -27,6 +27,21 @@ on:
         default: "{}"
         required: false
         type: string
+      runsOnChaos:
+        description: Define on which runner to run workflows where order doesn't matter should run
+        default: "ubuntu-latest"
+        required: false
+        type: string
+      runsOnOrder:
+        description: Define on which runner to run workflows where order matters should run
+        default: "ubuntu-latest"
+        required: false
+        type: string
+      runsOnQASteps:
+        description: Define on which runner to run workflows where QA ssteps should run
+        default: "ubuntu-latest"
+        required: false
+        type: string
       supportedChecksCommand:
         description: The make command to invoke listing the different tasks to run across all versions, will also act as a prefix for All, Direct on OS, Lowest, Locked, and Highest task lists.
         default: "task-list-ci"
@@ -53,11 +68,15 @@ jobs:
       env: ${{ inputs.env }}
       supportedChecksCommand: ${{ inputs.supportedChecksCommand }}
       supportedFeaturesCommand: ${{ inputs.supportedFeaturesCommand }}
+      runsOnChaos: ${{ inputs.runsOnChaos }}
+      runsOnOrder: ${{ inputs.runsOnOrder }}
+      runsOnQASteps: ${{ inputs.runsOnQASteps }}
   markdown-link-check:
     name: Check Markdown links
     if: false
 #    if: inputs.disableMarkdownLinkCheck == false
     uses: ./.github/workflows/markdown-check-links.yaml
     with:
+      runsOn: ${{ inputs.runsOnChaos }}
       workingDirectory: ${{ inputs.workingDirectory }}
       markdownLinkCheckSparseCheckout: ${{ inputs.markdownLinkCheckSparseCheckout }}

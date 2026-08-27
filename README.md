@@ -326,6 +326,8 @@ flowchart TB
 | env | string | Any additional environment variables | {} |
 | jsonPattern | string | The pattern to match which JSON files to check | \.json$ |
 | markdownLinkCheckSparseCheckout | string | Additional files/patterns for the sparse checkout |  |
+| runsOnChaos | string | Define on which runner to run workflows where order doesn&#039;t matter should run | ubuntu-latest |
+| runsOnOrder | string | Define on which runner to run workflows where order matters should run | ubuntu-latest |
 | services | string | Any additional services to use | {} |
 | supportedChecksCommand | string | The make command to invoke listing the different tasks to run across all versions, will also act as a prefix for All, Direct on OS, Lowest, Locked, and Highest task lists. | task-list-ci |
 | supportedFeaturesCommand | string | The make command to invoke listing the different tasks to run across all versions, will also act as a prefix for All, Direct on OS, Lowest, Locked, and Highest task lists. | supported-features |
@@ -556,7 +558,6 @@ flowchart TB
 | ociSpreadBuild | string | Spread the build OCI images over different runners |  |
 | runsOnChaos | string | Define on which runner to run workflows where order doesn&#039;t matter should run | ubuntu-latest |
 | runsOnOrder | string | Define on which runner to run workflows where order matters should run | ubuntu-latest |
-| runsOnQASteps | string | Define on which runner to run workflows where QA ssteps should run | ubuntu-latest |
 | services | string | Any additional services to use | {} |
 | workingDirectory | string | The directory to run this workflow in |  |
 
@@ -847,7 +848,7 @@ skipped with a notice instead of failing the workflow.
 - [X] OCI Retagging
 - [X] Make all runs-on for projects configurable
 - [X] Make all runs-on for packages configurable
-- [ ] Get all CI QA checks to run on runsOn inputs instead of GitHub hosted Runners
+- [X] Get all CI QA checks to run on runsOn inputs instead of GitHub hosted Runners
 - [X] Helm Diff
 - [X] Helm Upgrading
 - [X] Helm Automatically detect all dependencies and load those in so we can remove hardcoding them in the workflows
