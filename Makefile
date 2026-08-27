@@ -25,8 +25,12 @@ else
 		${CONTAINER_NAME}
 endif
 
-generate: install
+generate-readme:
 	$(DOCKER_RUN) php etc/generate.php
+
+generate: install generate-readme
+
+after-renovate: generate-readme ## Tasks to run after Renovate updates dependencies ####
 
 shell: ## Provides Shell access in the expected environment ####
 	$(DOCKER_RUN) bash
