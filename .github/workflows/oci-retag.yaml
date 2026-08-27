@@ -77,4 +77,4 @@ jobs:
           timeout_minutes: 120
           retry_wait_seconds: 10
           max_attempts: 13
-          command: docker build --platform=${{ steps.platform.outputs.platform_csv }} --output=type=registry --no-cache -f Dockerfile.tag -t "${{ steps.lowercase.outputs.to }}" .
+          command: docker build --platform=${{ steps.platform.outputs.platform_csv }} --output=type=registry --no-cache --label org.opencontainers.image.revision=${{ github.sha }} --label org.opencontainers.image.source=https://github.com/${{ github.repository }} --annotation "index,manifest:org.opencontainers.image.revision=${{ github.sha }}" --annotation "index,manifest:org.opencontainers.image.source=https://github.com/${{ github.repository }}" -f Dockerfile.tag -t "${{ steps.lowercase.outputs.to }}" .

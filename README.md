@@ -763,6 +763,83 @@ flowchart TB
 | vitePressDirectory | string | The directory that container VitePress |  |
 | workingDirectory | string | The directory to run this workflow in |  |
 
+#### Utils
+
+Scheduled, push, and manual utilities such as GHCR image cleanup.
+
+```yaml
+name: Utils
+on:
+  push:
+    branches:
+      - main
+      - master
+      - 'refs/heads/r[0-9]+'
+  workflow_dispatch:
+  schedule:
+    - cron: "13 0 * * *"
+permissions:
+  packages: write
+jobs:
+  utils:
+    secrets: inherit
+    uses: WyriHaximus/github-workflows/.github/workflows/project-utils.yaml@main
+    with:
+      runsOnChaos: ubuntu-latest
+      disableConductor: true
+      ghcrCleanupKeepNTagged: 133
+      ghcrCleanupTokenSecret: CR_PAT
+```
+
+GHCR cleanup runs on every push to the configured branches (alongside CI), on the nightly schedule,
+and on manual dispatch. It prunes older package versions and keeps the newest `sha-*` tags, so it
+is safe to run in parallel with image builds.
+
+When Conductor is enabled on `repository_dispatch`, the caller workflow needs `contents: read`
+in addition to any other permissions.
+
+GHCR cleanup tag pattern rules:
+
+| Tag pattern | Example | Cleanup rule |
+|-------------|---------|--------------|
+| `sha-*` | `sha-abc1234` | Keep 133 most recent; prune older |
+| `r*` | `r1`, `r42` | Never deleted |
+| `v*` | `v1`, `v2.0.0` | Never deleted |
+| `*.*.*` | `1.2.3`, `4.5.6abc`, `7.8.9-abc.apha-13-betazoid` | Never deleted |
+| _(untagged)_ | — | Delete all |
+
+The default exclude regex is `^(r[0-9]+|v[0-9]+(\.[0-9]+)*|[0-9]+\.[0-9]+\.[0-9]+.*)$`. Override
+`ghcrCleanupExcludeTagPattern`, `ghcrCleanupKeepNTagged`, or set `ghcrCleanupDisableTaggedCleanup: true`
+for untagged-only cleanup. Set `ghcrCleanupPackageName` when the GHCR package name differs from the
+repository name. Each cleanup phase deletes up to 100 package versions per run via the GitHub Packages
+REST API (curl), using the org or user endpoint as appropriate. Self-hosted runners do not need the
+GitHub CLI installed.
+
+The repository running the workflow must have **Admin** access to the GHCR package under **Package
+settings → Manage Actions access**, unless cleanup uses the same PAT as image pushes. When CI pushes
+images with a PAT via `ociPushSecretSecret` (for example `CR_PAT`), set `ghcrCleanupTokenSecret` to
+the same secret name in the utils workflow. Packages first pushed outside Actions may need Manage
+Actions access configured manually. When the package does not exist or is not accessible, cleanup is
+skipped with a notice instead of failing the workflow.
+
+##### Inputs
+
+| Input | Type | Description | Default |
+|-------|------|-------------|---------|
+| disableConductor | boolean | Disable the execution of Conductor on `repository_dispatch` with `dependency_update` as event type |  |
+| disableGhcrCleanup | boolean | Disable GHCR image cleanup on `push`, `schedule`, and `workflow_dispatch` |  |
+| ghcrCleanupDisableTaggedCleanup | boolean | Skip tagged version cleanup; untagged-only mode |  |
+| ghcrCleanupExcludeTagPattern | string | Regex for tagged versions to never delete (r*, v*, and semver *.*.* patterns) | ^(r[0-9]+|v[0-9]+(\.[0-9]+)*|[0-9]+\.[0-9]+\.[0-9]+.*)$ |
+| ghcrCleanupKeepNTagged | number | Keep N newest tagged versions outside the exclude pattern (133 newest sha-* tags by default) | 133 |
+| ghcrCleanupMaxBatches | number | Deprecated; ignored. Kept for backward compatibility with consumers that still pass this input | 1 |
+| ghcrCleanupMinUntaggedVersionsToKeep | number | Number of untagged package versions to retain | 0 |
+| ghcrCleanupOwner | string | GHCR package owner; defaults to the lowercased repository owner when empty |  |
+| ghcrCleanupPackageName | string | GHCR package name; defaults to the lowercased repository name when empty |  |
+| ghcrCleanupTokenSecret | string | Secret name holding a token with packages read and delete scopes; use the same secret as ociPushSecretSecret when images are pushed with a PAT | GITHUB_TOKEN |
+| runsOnChaos | string | Define on which runner to run workflows where order doesn&#039;t matter should run | ubuntu-latest |
+| runsOnOrder | string | Define on which runner to run workflows where order matters should run | ubuntu-latest |
+| workingDirectory | string | The directory to run this workflow in |  |
+
 ## TODO
 
 - [ ] Tag `v1`(`.0`(`.0`)) - Needs to be done at some point as I want to version all of this in the same way as GitHub Actions are version with mutable major and minor tags and immutable patch tags.
@@ -779,15 +856,15 @@ flowchart TB
 - [X] Terraform vars from secrets
 - [X] Check links in Markdown files for non 200 status codes
 - [ ] Make CI's test directly on OS runs-on array configurable
-- [ ] Cronjob/Scheduled workflows for things like Docker image clean up
+- [X] Cronjob/Scheduled workflows for things like Docker image clean up
 - [X] Sparse checkout all the things
 - [ ] Fix typo in release management entry point filenames, and have all users point at the currect one
 - [ ] Add documentation once Utils entry point is more stable
-- [ ] Add GHCR.io image clean up to project utils entry point
+- [X] Add GHCR.io image clean up to project utils entry point
 
 ## License
 
-Copyright (c) 2025 Cees-Jan Kiewiet
+Copyright (c) 2026 Cees-Jan Kiewiet
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

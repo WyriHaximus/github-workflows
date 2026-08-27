@@ -1,0 +1,278 @@
+name: GHCR Image Cleanup
+
+on:
+  workflow_call:
+    inputs:
+      runsOn:
+        description: Define on which runner this workflow should run
+        default: "ubuntu-latest"
+        required: false
+        type: string
+      ghcrCleanupOwner:
+        description: GHCR package owner; defaults to the lowercased repository owner when empty
+        default: ""
+        required: false
+        type: string
+      ghcrCleanupPackageName:
+        description: GHCR package name; defaults to the lowercased repository name when empty
+        default: ""
+        required: false
+        type: string
+      ghcrCleanupMinUntaggedVersionsToKeep:
+        description: Number of untagged package versions to retain
+        default: 0
+        required: false
+        type: number
+      ghcrCleanupKeepNTagged:
+        description: Keep N newest tagged versions outside the exclude pattern (133 newest sha-* tags by default)
+        default: 133
+        required: false
+        type: number
+      ghcrCleanupExcludeTagPattern:
+        description: Regex for tagged versions to never delete (r*, v*, and semver *.*.* patterns)
+        default: "^(r[0-9]+|v[0-9]+(\\.[0-9]+)*|[0-9]+\\.[0-9]+\\.[0-9]+.*)$"
+        required: false
+        type: string
+      ghcrCleanupDisableTaggedCleanup:
+        description: Skip tagged version cleanup; untagged-only mode
+        default: false
+        required: false
+        type: boolean
+    secrets:
+      token:
+        description: Token with packages read and delete scopes
+        required: false
+
+permissions:
+  packages: write
+
+jobs:
+  setup:
+    name: Resolve GHCR package
+    runs-on: ${{ inputs.runsOn }}
+    outputs:
+      package-exists: ${{ steps.verify.outputs.exists }}
+      owner-api-prefix: ${{ steps.verify.outputs.owner-api-prefix }}
+    steps:
+      - name: Resolve GHCR package owner and name
+        id: package
+        run: |
+          owner="${{ inputs.ghcrCleanupOwner }}"
+          if [ -z "$owner" ]; then
+            owner=$(echo "${GITHUB_REPOSITORY_OWNER}" | tr '[:upper:]' '[:lower:]')
+          fi
+          package="${{ inputs.ghcrCleanupPackageName }}"
+          if [ -z "$package" ]; then
+            package=$(echo "${GITHUB_REPOSITORY}" | cut -d/ -f2 | tr '[:upper:]' '[:lower:]')
+          fi
+          if [ -z "$owner" ] || [ -z "$package" ]; then
+            echo "Failed to resolve GHCR package (owner='$owner', package='$package')" >&2
+            exit 1
+          fi
+          echo "Resolved GHCR package: ${owner}/${package}"
+          echo "owner=$owner" >> "$GITHUB_OUTPUT"
+          echo "package-name=$package" >> "$GITHUB_OUTPUT"
+      - name: Verify GHCR package is accessible
+        id: verify
+        env:
+          GH_TOKEN: ${{ secrets.token }}
+          GHCR_OWNER: ${{ steps.package.outputs.owner }}
+          GHCR_PACKAGE: ${{ steps.package.outputs.package-name }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${GH_TOKEN}" ]; then
+            echo "::error::Package cleanup token is empty. Check ghcrCleanupTokenSecret and secrets: inherit."
+            exit 1
+          fi
+
+          ghcr_api_status() {
+            curl -sSL -o /dev/null -w '%{http_code}' \
+              -H "Authorization: Bearer ${GH_TOKEN}" \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              "${GITHUB_API_URL:-https://api.github.com}$1"
+          }
+
+          exists=false
+          owner_api_prefix=""
+          for kind in orgs users; do
+            prefix="${kind}/${GHCR_OWNER}"
+            path="/${prefix}/packages/container/${GHCR_PACKAGE}/versions?per_page=1"
+            status="$(ghcr_api_status "$path")"
+            echo "Package probe ${path}: HTTP ${status}"
+            if [ "$status" = "200" ]; then
+              exists=true
+              owner_api_prefix="$prefix"
+              break
+            fi
+          done
+
+          if [ "$exists" = "false" ]; then
+            echo "::notice title=GHCR package not found::Container package '${GHCR_OWNER}/${GHCR_PACKAGE}' was not found or is not accessible with the configured token. Skipping cleanup. When images are pushed with a PAT (for example via ociPushSecretSecret: CR_PAT), set ghcrCleanupTokenSecret to the same secret. Otherwise grant this repository Admin access under the package's Manage Actions access settings."
+          else
+            echo "Using GitHub Packages API prefix: ${owner_api_prefix}"
+          fi
+
+          echo "exists=$exists" >> "$GITHUB_OUTPUT"
+          echo "owner-api-prefix=$owner_api_prefix" >> "$GITHUB_OUTPUT"
+
+  cleanup-untagged:
+    name: Clean up untagged
+    needs: setup
+    if: needs.setup.outputs.package-exists == 'true'
+    runs-on: ${{ inputs.runsOn }}
+    permissions:
+      packages: write
+    continue-on-error: true
+    steps:
+      - name: Delete untagged package versions
+        env:
+          GH_TOKEN: ${{ secrets.token }}
+          OWNER_API_PREFIX: ${{ needs.setup.outputs.owner-api-prefix }}
+          GHCR_CLEANUP_PACKAGE: ${{ inputs.ghcrCleanupPackageName }}
+          MIN_VERSIONS_TO_KEEP: ${{ inputs.ghcrCleanupMinUntaggedVersionsToKeep }}
+        run: |
+          set -euo pipefail
+
+          package="$GHCR_CLEANUP_PACKAGE"
+          if [ -z "$package" ]; then
+            package=$(echo "${GITHUB_REPOSITORY}" | cut -d/ -f2 | tr '[:upper:]' '[:lower:]')
+          fi
+
+          ghcr_api() {
+            curl -fsSL \
+              -H "Authorization: Bearer ${GH_TOKEN}" \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              "${GITHUB_API_URL:-https://api.github.com}$1"
+          }
+
+          ghcr_delete() {
+            curl -fsSL -X DELETE \
+              -H "Authorization: Bearer ${GH_TOKEN}" \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              "${GITHUB_API_URL:-https://api.github.com}$1"
+          }
+
+          fetch_package_versions() {
+            local prefix="$1"
+            local package_name="$2"
+            local page=1
+            local all='[]'
+            while true; do
+              local response
+              response="$(ghcr_api "/${prefix}/packages/container/${package_name}/versions?per_page=100&page=${page}")"
+              local count
+              count="$(printf '%s' "$response" | jq 'length')"
+              all="$(jq -s 'add' <<< "$all" <<< "$response")"
+              if [ "$count" -lt 100 ]; then
+                break
+              fi
+              page=$((page + 1))
+            done
+            printf '%s' "$all"
+          }
+
+          versions="$(fetch_package_versions "$OWNER_API_PREFIX" "$package")"
+          ids="$(printf '%s' "$versions" | jq --argjson keep "$MIN_VERSIONS_TO_KEEP" '
+            [.[] | select((.metadata.container.tags // []) | length == 0)]
+            | sort_by(.created_at)
+            | if length <= $keep then [] else .[0:(length - $keep)] end
+            | .[:100]
+            | map(.id)
+          ')"
+
+          count="$(printf '%s' "$ids" | jq 'length')"
+          echo "Deleting ${count} untagged package version(s)"
+
+          if [ "$count" -eq 0 ]; then
+            exit 0
+          fi
+
+          printf '%s' "$ids" | jq -r '.[]' | while read -r id; do
+            ghcr_delete "/${OWNER_API_PREFIX}/packages/container/${package}/versions/${id}"
+            echo "Deleted untagged version ${id}"
+          done
+
+  cleanup-tagged:
+    name: Clean up tagged
+    needs: setup
+    if: needs.setup.outputs.package-exists == 'true' && inputs.ghcrCleanupDisableTaggedCleanup == false
+    runs-on: ${{ inputs.runsOn }}
+    permissions:
+      packages: write
+    continue-on-error: true
+    steps:
+      - name: Delete tagged package versions
+        env:
+          GH_TOKEN: ${{ secrets.token }}
+          OWNER_API_PREFIX: ${{ needs.setup.outputs.owner-api-prefix }}
+          GHCR_CLEANUP_PACKAGE: ${{ inputs.ghcrCleanupPackageName }}
+          MIN_VERSIONS_TO_KEEP: ${{ inputs.ghcrCleanupKeepNTagged }}
+          IGNORE_PATTERN: ${{ inputs.ghcrCleanupExcludeTagPattern }}
+        run: |
+          set -euo pipefail
+
+          package="$GHCR_CLEANUP_PACKAGE"
+          if [ -z "$package" ]; then
+            package=$(echo "${GITHUB_REPOSITORY}" | cut -d/ -f2 | tr '[:upper:]' '[:lower:]')
+          fi
+
+          ghcr_api() {
+            curl -fsSL \
+              -H "Authorization: Bearer ${GH_TOKEN}" \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              "${GITHUB_API_URL:-https://api.github.com}$1"
+          }
+
+          ghcr_delete() {
+            curl -fsSL -X DELETE \
+              -H "Authorization: Bearer ${GH_TOKEN}" \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              "${GITHUB_API_URL:-https://api.github.com}$1"
+          }
+
+          fetch_package_versions() {
+            local prefix="$1"
+            local package_name="$2"
+            local page=1
+            local all='[]'
+            while true; do
+              local response
+              response="$(ghcr_api "/${prefix}/packages/container/${package_name}/versions?per_page=100&page=${page}")"
+              local count
+              count="$(printf '%s' "$response" | jq 'length')"
+              all="$(jq -s 'add' <<< "$all" <<< "$response")"
+              if [ "$count" -lt 100 ]; then
+                break
+              fi
+              page=$((page + 1))
+            done
+            printf '%s' "$all"
+          }
+
+          versions="$(fetch_package_versions "$OWNER_API_PREFIX" "$package")"
+          ids="$(printf '%s' "$versions" | jq --argjson keep "$MIN_VERSIONS_TO_KEEP" --arg pattern "$IGNORE_PATTERN" '
+            [.[] | select((.metadata.container.tags // []) | length > 0)]
+            | map(select([.metadata.container.tags[] | test($pattern)] | any | not))
+            | sort_by(.created_at)
+            | if length <= $keep then [] else .[0:(length - $keep)] end
+            | .[:100]
+            | map(.id)
+          ')"
+
+          count="$(printf '%s' "$ids" | jq 'length')"
+          echo "Deleting ${count} tagged package version(s)"
+
+          if [ "$count" -eq 0 ]; then
+            exit 0
+          fi
+
+          printf '%s' "$ids" | jq -r '.[]' | while read -r id; do
+            ghcr_delete "/${OWNER_API_PREFIX}/packages/container/${package}/versions/${id}"
+            echo "Deleted tagged version ${id}"
+          done
