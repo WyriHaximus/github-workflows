@@ -30,7 +30,7 @@ generate-readme:
 
 generate: install generate-readme
 
-after-renovate: generate-readme ## Tasks to run after Renovate updates dependencies ####
+after-renovate: generate ## Tasks to run after Renovate updates dependencies ####
 
 shell: ## Provides Shell access in the expected environment ####
 	$(DOCKER_RUN) bash
