@@ -5,10 +5,10 @@
     },
     "scripts": {
         "post-install-cmd": [
-            "make after-renovate || true"
+            "make generate-readme || true"
         ],
         "post-update-cmd": [
-            "make after-renovate || true"
+            "make generate-readme || true"
         ]
     }
 }
