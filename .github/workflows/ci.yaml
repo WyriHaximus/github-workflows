@@ -141,7 +141,7 @@ jobs:
           printf "Locked Checks found: %s\r\n" $(make ${{ inputs.supportedChecksCommand }}-locked || echo "[]")
           printf "locked=%s\n" $(make ${{ inputs.supportedChecksCommand }}-locked || echo "[]") >> $GITHUB_OUTPUT
           printf "High Checks found: %s\r\n" $(make ${{ inputs.supportedChecksCommand }}-high || echo "[]")
-          printf "high=%s\n" $(make ${{ inputs.supportedChecksCommand }} || echo "[]") >> $GITHUB_OUTPUT
+          printf "high=%s\n" $(make ${{ inputs.supportedChecksCommand }}-high || echo "[]") >> $GITHUB_OUTPUT
           printf "Supported features found: %s\r\n" $(make ${{ inputs.supportedFeaturesCommand }} || echo "[]")
           printf "supported-features=%s\n" $(make ${{ inputs.supportedFeaturesCommand }} || echo "[]") >> $GITHUB_OUTPUT
         working-directory: ${{ inputs.workingDirectory }}
@@ -174,7 +174,7 @@ jobs:
           IS_PROJECT: ${{ toJson(inputs.isProject) }}
         with:
           script: |
-            let matrix = [];
+            const matrixByKey = {};
             const phpLowest = JSON.parse(process.env.PHP_LOWEST);
             const phpVersions = JSON.parse(process.env.PHP_VERSIONS);
             const phpToThreadOrNotToThread = JSON.parse(process.env.PHP_TO_THREAD_OR_NOT_TO_THREAD);
@@ -185,63 +185,47 @@ jobs:
             const checksLow = JSON.parse(process.env.CHECKS_LOW);
             const checksLocked = JSON.parse(process.env.CHECKS_LOCKED === "[]" ? process.env.CHECKS : process.env.CHECKS_LOCKED);
             const checksHigh = JSON.parse(process.env.CHECKS_HIGH);
+            const matrixKey = (php, thread, composerPreference, check) =>
+              `${String(php)}|${String(thread)}|${composerPreference}|${check}`;
+            const addCell = (php, thread, composerPreference, check) => {
+              matrixByKey[matrixKey(php, thread, composerPreference, check)] = {
+                php: String(php),
+                "php-to-thread-or-not-to-thread": thread,
+                composer: composerPreference,
+                check: check,
+              };
+            };
             if (JSON.parse(process.env.IS_PROJECT) == true) {
               for (const checkLocked in checksLocked) {
-                  matrix.push({
-                    php: phpLowest,
-                    "php-to-thread-or-not-to-thread": threadPrimary,
-                    composer: 'locked',
-                    check: checksLocked[checkLocked],
-                  });   
-              }  
+                addCell(phpLowest, threadPrimary, 'locked', checksLocked[checkLocked]);
+              }
             } else {
               for (const checkLow in checksLow) {
-                  matrix.push({
-                    php: phpLowest,
-                    "php-to-thread-or-not-to-thread": threadPrimary,
-                    composer: 'lowest',
-                    check: checksLow[checkLow],
-                  });   
+                addCell(phpLowest, threadPrimary, 'lowest', checksLow[checkLow]);
               }
               for (const checkLocked in checksLocked) {
-                  matrix.push({
-                    php: phpLowest,
-                    "php-to-thread-or-not-to-thread": threadPrimary,
-                    composer: 'locked',
-                    check: checksLocked[checkLocked],
-                  });   
+                addCell(phpLowest, threadPrimary, 'locked', checksLocked[checkLocked]);
               }
               for (const checkHigh in checksHigh) {
-                  matrix.push({
-                    php: phpLowest,
-                    "php-to-thread-or-not-to-thread": threadPrimary,
-                    composer: 'highest',
-                    check: checksHigh[checkHigh],
-                  });   
+                addCell(phpLowest, threadPrimary, 'highest', checksHigh[checkHigh]);
               }
               for (const ztsOrNts in phpToThreadOrNotToThread) {
                 for (const composerAction in composer) {
                   for (const phpVersion in phpVersions) {
+                    const php = phpVersions[phpVersion];
+                    const thread = phpToThreadOrNotToThread[ztsOrNts];
+                    const composerPreference = composer[composerAction];
                     for (const checkAll in checksAll) {
-                      matrix.push({
-                        php: phpVersions[phpVersion],
-                        "php-to-thread-or-not-to-thread": phpToThreadOrNotToThread[ztsOrNts],
-                        composer: composer[composerAction],
-                        check: checksAll[checkAll],
-                      });
+                      addCell(php, thread, composerPreference, checksAll[checkAll]);
                     }
-                    for (const check in checks) {
-                      matrix.push({
-                        php: phpVersions[phpVersion],
-                        "php-to-thread-or-not-to-thread": phpToThreadOrNotToThread[ztsOrNts],
-                        composer: composer[composerAction],
-                        check: checks[check],
-                      });
+                    for (const checkIndex in checks) {
+                      addCell(php, thread, composerPreference, checks[checkIndex]);
                     }
                   }
                 }
               }
             }
+            const matrix = Object.values(matrixByKey);
             console.log(JSON.stringify(matrix, null, 4));
             return matrix;
       - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
