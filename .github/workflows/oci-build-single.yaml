@@ -63,7 +63,7 @@ jobs:
       - name: Detect Platform Flag
         if: inputs.ociPlatforms == ''
         id: platform
-        uses: wyrihaximus/github-action-oci-image-supported-platforms@v1.0.0
+        uses: wyrihaximus/github-action-oci-image-supported-platforms@e85320eed654eed6c3db49c00f866f53c08663a6 # v1.0.0
         with:
           dockerfile: ${{ inputs.dockerfile }}
       - name: Set up QEMU

@@ -43,7 +43,7 @@ jobs:
           timeout-seconds: 10800
       - name: Detect Platform Flag
         id: platform
-        uses: wyrihaximus/github-action-oci-image-supported-platforms@v1.0.0
+        uses: wyrihaximus/github-action-oci-image-supported-platforms@e85320eed654eed6c3db49c00f866f53c08663a6 # v1.0.0
         with:
           image: ${{ steps.lowercase.outputs.from }}
       - name: Set up QEMU

@@ -21,11 +21,11 @@ jobs:
       - name: 'Setup jq'
         uses: dcarbone/install-jq-action@4fcb5062d7ce9bc4382d1a352d19ba3ba2c317c1 # v4.0.1
       - name: Set Milestone through Chores.Dev
-        uses: chores-dev/set-milestone-action@main
+        uses: chores-dev/set-milestone-action@2f954697c051ed825b75061c21b5d45cae6788a6 # main
         with:
           milestone: ${{ inputs.version }}
       - name: Get Milestones
-        uses: WyriHaximus/github-action-get-milestones@master
+        uses: WyriHaximus/github-action-get-milestones@264481fc8db95e8e233ac43da8a803a612bcbc56 # master
         id: milestones
         env:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
@@ -55,7 +55,7 @@ jobs:
           CREATED_NUMBER: ${{ steps.createmilestone.outputs.number }}
           QUERY_NUMBER: ${{ steps.querymilestone.outputs.number }}
       - name: Set Milestone
-        uses: WyriHaximus/github-action-set-milestone@master
+        uses: WyriHaximus/github-action-set-milestone@9121691224645139fbafc4b26fa43dfabb06ce95 # master
         with:
           issue_number: ${{ github.event.pull_request.number }}
           milestone_number: ${{ steps.selectmilestone.outputs.number }}

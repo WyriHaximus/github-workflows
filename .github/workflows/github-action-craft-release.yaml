@@ -46,7 +46,7 @@ jobs:
       tag_versions: ${{ steps.generate-version-strategy.outputs.tag_versions }}
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-      - uses: WyriHaximus/github-action-break-up-semver@v1
+      - uses: WyriHaximus/github-action-break-up-semver@04d837a8e3d26dff8f9cbf318c1b73e4f937b906 # v1
         id: breakupsemver
         with:
           version: ${{ inputs.milestone }}
