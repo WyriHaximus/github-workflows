@@ -19,7 +19,7 @@ jobs:
   release-managment:
     name: Release Management
     secrets: inherit
-    uses: ./.github/workflows/github-action-release-management.yaml@main
+    uses: ./.github/workflows/github-action-release-management.yaml
     with:
       milestone: ${{ github.event.milestone.title }}
       description: ${{ github.event.milestone.description }}
