@@ -15,7 +15,7 @@ jobs `runsOn` is fine, but for things like `TerraForm` apply, and `Helm` install
 changed and only one can run at the same time `runsOnOrder` is the way to go. Mainly came to this while working on 
 getting the workflows managing my home cluster to work as intended:
 
-![Home Cluster](./images/home-cluster.jpg)
+![Home Cluster](https://images.wyrihaximus.net/home-cluster.jpg)
 
 When not set they all default to `ubuntu-latest` which means it will run on GitHub provided Runners.
 
