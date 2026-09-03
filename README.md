@@ -624,6 +624,7 @@ flowchart TB
 | ociSparseCheckout | string | Sparse checkout patterns in cone mode |  |
 | ociSpreadBuild | string | Spread the build OCI images over different runners |  |
 | runsOnChaos | string | Define on which runner to run workflows where order doesn&#039;t matter should run | ubuntu-latest |
+| runsOnChaosUnicorn | string | Define on which runner to run workflows where order doesn&#039;t matter should run | ubuntu-slim |
 | runsOnOrder | string | Define on which runner to run workflows where order matters should run | ubuntu-latest |
 | runsOnQASteps | string | Define on which runner to run workflows where QA ssteps should run | ubuntu-latest |
 | services | string | Any additional services to use | {} |
@@ -812,6 +813,7 @@ flowchart TB
 | ociRetag | boolean | Whether or not to retag OCI images with the release tag |  |
 | preReleaseScript | string | Script that runs just before the release is created |  |
 | runsOnChaos | string | Define on which runner to run workflows where order doesn&#039;t matter should run | ubuntu-latest |
+| runsOnChaosUnicorn | string | Define on which runner to run workflows where order doesn&#039;t matter should run | ubuntu-slim |
 | runsOnOrder | string | Define on which runner to run workflows where order matters should run | ubuntu-latest |
 | serverlessSparseCheckout | string | Additional files/patterns for the sparse checkout |  |
 | staticFilesPath | string | The path to the static files to be synced to S3 | public |
