@@ -70,10 +70,13 @@ jobs:
           sparse-checkout: |
             !${{ inputs.workingDirectory }}/*
             /${{ inputs.workingDirectory }}${{ inputs.staticFilesPath }}*
+      - name: Archive static assets
+        run: tar -czf "${{ inputs.milestone }}-dist.tar.gz" -C "${{ inputs.staticFilesPath }}" .
+        working-directory: ${{ inputs.workingDirectory }}
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ inputs.milestone }}-dist
-          path: ${{ inputs.workingDirectory }}${{ inputs.staticFilesPath }}
+          path: ${{ inputs.workingDirectory }}${{ inputs.milestone }}-dist.tar.gz
           retention-days: ${{ inputs.artifactRetentionDays }}
   cdn-hosted-deploy:
     name: Deploy assets to CDN and invalidate caches
