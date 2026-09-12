@@ -39,7 +39,7 @@ jobs:
           title: README
   markdown-link-check:
     name: Check Markdown links
-    uses: ./.github/workflows/markdown-check-links.yaml
+    uses: $/.github/workflows/markdown-check-links.yaml
     with:
       markdownLinkCheckSparseCheckout: |
         /images/*

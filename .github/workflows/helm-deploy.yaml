@@ -58,7 +58,7 @@ on:
         type: string
 jobs:
   helm-dependencies:
-    uses: ./.github/workflows/helm-dependencies.yaml
+    uses: $/.github/workflows/helm-dependencies.yaml
     with:
       runsOn: ${{ inputs.runsOnChaos }}
       workingDirectory: ${{ inputs.workingDirectory }}

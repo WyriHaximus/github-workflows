@@ -204,14 +204,14 @@ jobs:
   required-labels:
     name: Required Labels
     if: inputs.disableRequiredLabels == false && github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'labeled' || github.event.action == 'unlabeled')
-    uses: ./.github/workflows/required-labels.yaml
+    uses: $/.github/workflows/required-labels.yaml
     with:
       runsOn: ${{ inputs.runsOnChaos }}
       requiredLabels: ${{ inputs.labels }}
   set-milestone:
     name: Set Milestone
     if: github.event.pull_request.milestone == null && inputs.disableSetMilestone == false && github.event_name == 'pull_request'
-    uses: ./.github/workflows/project-set-milestone-on-pr.yaml
+    uses: $/.github/workflows/project-set-milestone-on-pr.yaml
     secrets: inherit
     with:
       runsOn: ${{ inputs.runsOnChaos }}
@@ -219,7 +219,7 @@ jobs:
   diff:
     name: Diff
     if: github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'synchronize' || github.event.action == 'reopened')
-    uses: ./.github/workflows/diff.yaml
+    uses: $/.github/workflows/diff.yaml
     secrets: inherit
     with:
       runsOnChaos: ${{ inputs.runsOnChaos }}
@@ -244,7 +244,7 @@ jobs:
   create-release:
     name: Craft Release
     if: github.event_name == 'milestone' && contains(fromJSON('["closed"]'), github.event.action)
-    uses: ./.github/workflows/craft-release.yaml
+    uses: $/.github/workflows/craft-release.yaml
     with:
       runsOn: ${{ inputs.runsOnChaos }}
       milestone: ${{ inputs.milestone }}
@@ -259,7 +259,7 @@ jobs:
     needs:
       - create-release
     if: inputs.type == 'kubernetes' && github.event_name == 'milestone' && contains(fromJSON('["closed"]'), github.event.action)
-    uses: ./.github/workflows/project-craft-release-kubernetes.yaml
+    uses: $/.github/workflows/project-craft-release-kubernetes.yaml
     secrets: inherit
     with:
       runsOnOrder: ${{ inputs.runsOnOrder }}
@@ -284,7 +284,7 @@ jobs:
     needs:
       - create-release
     if: inputs.type == 'cdn' && github.event_name == 'milestone' && contains(fromJSON('["closed"]'), github.event.action)
-    uses: ./.github/workflows/project-craft-release-cdn.yaml
+    uses: $/.github/workflows/project-craft-release-cdn.yaml
     secrets: inherit
     with:
       runsOn: ${{ inputs.runsOnOrder }}
@@ -306,7 +306,7 @@ jobs:
     needs:
       - create-release
     if: inputs.type == 'serverless' && github.event_name == 'milestone' && contains(fromJSON('["closed"]'), github.event.action)
-    uses: ./.github/workflows/project-craft-release-serverless.yaml
+    uses: $/.github/workflows/project-craft-release-serverless.yaml
     secrets: inherit
     with:
       runsOn: ${{ inputs.runsOnOrder }}
@@ -321,7 +321,7 @@ jobs:
     needs:
       - create-release
     if: inputs.type == 'static' && github.event_name == 'milestone' && contains(fromJSON('["closed"]'), github.event.action)
-    uses: ./.github/workflows/project-craft-release-static.yaml
+    uses: $/.github/workflows/project-craft-release-static.yaml
     secrets: inherit
     with:
       runsOn: ${{ inputs.runsOnOrder }}

@@ -100,7 +100,7 @@ jobs:
     if: ${{ inputs.reTagOCIImage == true }}
     needs:
       - tag-docker-image
-    uses: ./.github/workflows/craft-release.yaml
+    uses: $/.github/workflows/craft-release.yaml
     secrets: inherit
     with:
       milestone: ${{ inputs.milestone }}
@@ -113,7 +113,7 @@ jobs:
   create-release-non-docker:
     name: Craft Release
     if: ${{ inputs.reTagOCIImage == false }}
-    uses: ./.github/workflows/craft-release.yaml
+    uses: $/.github/workflows/craft-release.yaml
     secrets: inherit
     with:
       milestone: ${{ inputs.milestone }}

@@ -42,7 +42,7 @@ jobs:
     name: Set Milestone
     needs:
       - figure-out-version
-    uses: ./.github/workflows/set-milestone-on-pr.yaml
+    uses: $/.github/workflows/set-milestone-on-pr.yaml
     secrets: inherit
     with:
       runsOn: ${{ inputs.runsOn }}

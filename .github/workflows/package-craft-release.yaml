@@ -29,7 +29,7 @@ on:
 jobs:
   create-release:
     name: Craft Release
-    uses: ./.github/workflows/craft-release.yaml
+    uses: $/.github/workflows/craft-release.yaml
     secrets: inherit
     with:
       milestone: ${{ inputs.milestone }}

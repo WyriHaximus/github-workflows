@@ -35,7 +35,7 @@ on:
 jobs:
   build-assets:
     name: Build Vitepress Assets
-    uses: ./.github/workflows/project-craft-release-cdn-build-commands.yaml
+    uses: $/.github/workflows/project-craft-release-cdn-build-commands.yaml
     secrets: inherit
     with:
       runsOn: ${{ inputs.runsOn }}

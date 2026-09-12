@@ -46,7 +46,7 @@ jobs:
   vitepress:
     name: Deploy assets to CDN and invalidate caches
     if: ${{ inputs.applicationType == 'vitepress' || inputs.applicationType == 'vuepress' }}
-    uses: ./.github/workflows/project-craft-release-cdn-build-vitepress.yaml
+    uses: $/.github/workflows/project-craft-release-cdn-build-vitepress.yaml
     secrets: inherit
     with:
       runsOn: ${{ inputs.runsOn }}
@@ -58,7 +58,7 @@ jobs:
   commands:
     name: Deploy assets to CDN and invalidate caches
     if: ${{ inputs.applicationType == 'commands' }}
-    uses: ./.github/workflows/project-craft-release-cdn-build-commands.yaml
+    uses: $/.github/workflows/project-craft-release-cdn-build-commands.yaml
     secrets: inherit
     with:
       runsOn: ${{ inputs.runsOn }}

@@ -89,7 +89,7 @@ jobs:
   terraform-apply:
     name: Terraform Apply
     if: inputs.terraformDirectory != ''
-    uses: ./.github/workflows/terraform-apply.yaml
+    uses: $/.github/workflows/terraform-apply.yaml
     secrets: inherit
     with:
       runsOn: ${{ inputs.runsOnOrder }}
@@ -102,7 +102,7 @@ jobs:
   image-retag:
     name: OCI Image Re-tag
     if: inputs.ociRetag
-    uses: ./.github/workflows/oci-retag.yaml
+    uses: $/.github/workflows/oci-retag.yaml
     secrets: inherit
     with:
       runsOn: ${{ inputs.runsOnChaos }}
@@ -114,7 +114,7 @@ jobs:
     needs:
       - terraform-apply
       - image-retag
-    uses: ./.github/workflows/helm-deploy.yaml
+    uses: $/.github/workflows/helm-deploy.yaml
     secrets: inherit
     with:
       runsOnChaos: ${{ inputs.runsOnChaos }}

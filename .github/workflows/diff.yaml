@@ -105,7 +105,7 @@ jobs:
   helm-diff:
     name: Helm Diff
     if: inputs.helmDirectory != ''
-    uses: ./.github/workflows/helm-diff.yaml
+    uses: $/.github/workflows/helm-diff.yaml
     secrets: inherit
     with:
       runsOnChaos: ${{ inputs.runsOnChaos }}
@@ -121,7 +121,7 @@ jobs:
   terraform-diff:
     name: Terraform Diff
     if: inputs.terraformDirectory != ''
-    uses: ./.github/workflows/terraform-diff.yaml
+    uses: $/.github/workflows/terraform-diff.yaml
     secrets: inherit
     with:
       runsOn: ${{ inputs.runsOnOrder }}
@@ -135,7 +135,7 @@ jobs:
 #  serverless-diff:
 #    name: Serverless Diff
 ##    if: inputs.terraformDirectory != ''
-#    uses: ./.github/workflows/serverless-diff.yaml
+#    uses: $/.github/workflows/serverless-diff.yaml
 #    secrets: inherit
 #    with:
 #      runsOn: ${{ inputs.runsOnOrder }}
@@ -147,7 +147,7 @@ jobs:
   comment-composer-lock-diff:
     name: Composer Diff
     if: inputs.disableComposerLockDiff == false
-    uses: ./.github/workflows/composer-diff.yaml
+    uses: $/.github/workflows/composer-diff.yaml
     secrets: inherit
     with:
       runsOn: ${{ inputs.runsOnChaos }}

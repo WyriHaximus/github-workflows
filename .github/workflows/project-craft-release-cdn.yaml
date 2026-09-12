@@ -74,7 +74,7 @@ on:
 jobs:
   build-assets:
     name: Deploy assets to CDN and invalidate caches
-    uses: ./.github/workflows/project-craft-release-cdn-build.yaml
+    uses: $/.github/workflows/project-craft-release-cdn-build.yaml
     secrets: inherit
     with:
       runsOn: ${{ inputs.runsOn }}
@@ -89,7 +89,7 @@ jobs:
     name: Deploy assets to CDN and invalidate caches
     needs:
       - build-assets
-    uses: ./.github/workflows/s3-upload.yaml
+    uses: $/.github/workflows/s3-upload.yaml
     secrets: inherit
     with:
       runsOn: ${{ inputs.runsOn }}

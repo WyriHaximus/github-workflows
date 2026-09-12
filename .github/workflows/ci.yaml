@@ -101,7 +101,7 @@ jobs:
     name: Supported Threading Matrix
     needs:
       - supported-versions-matrix
-    uses: ./.github/workflows/supported-threading-matrix.yaml
+    uses: $/.github/workflows/supported-threading-matrix.yaml
     with:
       extensions: ${{ needs.supported-versions-matrix.outputs.extensions }}
       runsOn: ${{ inputs.runsOnChaos }}

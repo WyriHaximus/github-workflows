@@ -40,13 +40,13 @@ jobs:
   required-labels:
     name: Required Labels
     if: inputs.disableRequiredLabels == false && github.event_name == 'pull_request'
-    uses: ./.github/workflows/required-labels.yaml
+    uses: $/.github/workflows/required-labels.yaml
     with:
       requiredLabels: ${{ inputs.labels }}
   create-release:
     name: Craft Release
     if: github.event_name == 'milestone' && contains(fromJSON('["closed"]'), github.event.action)
-    uses: ./.github/workflows/github-action-craft-release.yaml
+    uses: $/.github/workflows/github-action-craft-release.yaml
     secrets: inherit
     with:
       milestone: ${{ inputs.milestone }}

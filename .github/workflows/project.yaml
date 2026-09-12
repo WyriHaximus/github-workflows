@@ -114,7 +114,7 @@ on:
 jobs:
   ci:
     name: Continuous Integration
-    uses: ./.github/workflows/ci.yaml
+    uses: $/.github/workflows/ci.yaml
     with:
       jsonPattern: ${{ inputs.jsonPattern }}
       workingDirectory: ${{ inputs.workingDirectory }}
@@ -140,7 +140,7 @@ jobs:
     if: inputs.dockerfile != '' && !inputs.ociSpreadBuild
     needs:
       - oci-tag
-    uses: ./.github/workflows/oci-build-single.yaml
+    uses: $/.github/workflows/oci-build-single.yaml
     secrets: inherit
     with:
       runsOn: ${{ inputs.runsOnChaos }}
@@ -156,7 +156,7 @@ jobs:
     if: inputs.dockerfile != '' && inputs.ociSpreadBuild
     needs:
       - oci-tag
-    uses: ./.github/workflows/oci-build-spread.yaml
+    uses: $/.github/workflows/oci-build-spread.yaml
     secrets: inherit
     with:
       runsOn: ${{ inputs.runsOnChaos }}
@@ -172,7 +172,7 @@ jobs:
     name: Check Markdown links
     if: false
 #    if: inputs.disableMarkdownLinkCheck == false && github.event_name == 'pull_request'
-    uses: ./.github/workflows/markdown-check-links.yaml
+    uses: $/.github/workflows/markdown-check-links.yaml
     with:
       runsOn: ${{ inputs.runsOnChaos }}
       workingDirectory: ${{ inputs.workingDirectory }}

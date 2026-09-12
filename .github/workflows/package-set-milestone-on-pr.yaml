@@ -40,7 +40,7 @@ jobs:
     name: Supported Threading Matrix
     needs:
       - supported-versions-matrix
-    uses: ./.github/workflows/supported-threading-matrix.yaml
+    uses: $/.github/workflows/supported-threading-matrix.yaml
     with:
       extensions: ${{ needs.supported-versions-matrix.outputs.extensions }}
       runsOn: ${{ inputs.runsOn }}
@@ -107,7 +107,7 @@ jobs:
     name: Set Milestone
     needs:
       - figure-out-version
-    uses: ./.github/workflows/set-milestone-on-pr.yaml
+    uses: $/.github/workflows/set-milestone-on-pr.yaml
     secrets: inherit
     with:
       runsOn: ${{ inputs.runsOn }}

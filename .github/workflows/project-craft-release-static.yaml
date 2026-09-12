@@ -79,7 +79,7 @@ jobs:
     name: Deploy assets to CDN and invalidate caches
     needs:
       - build-assets
-    uses: ./.github/workflows/s3-upload.yaml
+    uses: $/.github/workflows/s3-upload.yaml
     secrets: inherit
     with:
       runsOn: ${{ inputs.runsOn }}

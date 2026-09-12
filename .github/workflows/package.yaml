@@ -65,7 +65,7 @@ on:
 jobs:
   ci:
     name: Continuous Integration
-    uses: ./.github/workflows/ci.yaml
+    uses: $/.github/workflows/ci.yaml
     with:
       jsonPattern: ${{ inputs.jsonPattern }}
       workingDirectory: ${{ inputs.workingDirectory }}
@@ -81,7 +81,7 @@ jobs:
     name: Check Markdown links
     if: false
 #    if: inputs.disableMarkdownLinkCheck == false
-    uses: ./.github/workflows/markdown-check-links.yaml
+    uses: $/.github/workflows/markdown-check-links.yaml
     with:
       runsOn: ${{ inputs.runsOnChaos }}
       workingDirectory: ${{ inputs.workingDirectory }}
