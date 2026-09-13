@@ -64,8 +64,8 @@ jobs:
       workingDirectory: ${{ inputs.workingDirectory }}
       helmDirectory: ${{ inputs.helmDirectory }}
       helmSparseCheckout: ${{ inputs.helmSparseCheckout }}
-  helm-deploy:
-    name: Helm Deploy
+  helm-deploy-prepare:
+    name: Build Chart
     needs: helm-dependencies
     runs-on: ${{ inputs.runsOnOrder }}
     steps:
@@ -84,14 +84,37 @@ jobs:
           rm ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}Chart.old.yaml
           echo -e "\r\nappVersion: ${{ inputs.version }}\r\n" >> ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}Chart.yaml &&
           cat ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}Chart.yaml
-      - name: Deploy
-        uses: WyriHaximus/github-action-helm3@e3894d973c282349e3d41d3347767f2b2545b583 # v4.0.2
+      - name: Determine chart artifact path
+        id: chart-artifact
+        run: |
+          chart="${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}"
+          chart="${chart%/}"
+          parent="$(dirname "$chart")"
+          if [[ "$parent" == "." ]]; then
+            echo "path=$chart" >> "$GITHUB_OUTPUT"
+          else
+            echo "path=$parent" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          exec: |
-            jq -c '.[]' <<< '${{ needs.helm-dependencies.outputs.repositories }}' | while read -r repo; do
-              helm repo add "$(jq -r .name <<< "$repo")" "$(jq -r .url <<< "$repo")"
-            done
-            helm dependency build ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}
-            helm upgrade --install --wait --atomic --timeout 60m6s ${{ inputs.helmReleaseName }} ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}  --set ${{ inputs.helmReleaseValueName }}=${{ inputs.version }} ${{ inputs.helmAdditionalArguments }}
-          kubeconfig: ${{ secrets[inputs.kubeConfigSecret] }}
-          overrule_existing_kubeconfig: "true"
+          name: helm-chart
+          path: ${{ steps.chart-artifact.outputs.path }}
+          include-hidden-files: true
+  helm-deploy-exec:
+    name: Deploy Release
+    needs:
+      - helm-dependencies
+      - helm-deploy-prepare
+    uses: $/.github/workflows/helm-exec.yaml
+    secrets: inherit
+    with:
+      runsOn: ${{ inputs.runsOnOrder }}
+      kubeConfigSecret: ${{ inputs.kubeConfigSecret }}
+      artifactName: helm-chart
+      chartPath: ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}
+      exec: |
+        jq -c '.[]' <<< '${{ needs.helm-dependencies.outputs.repositories }}' | while read -r repo; do
+          helm repo add "$(jq -r .name <<< "$repo")" "$(jq -r .url <<< "$repo")"
+        done
+        helm dependency build ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}
+        helm upgrade --install --wait --atomic --timeout 60m6s ${{ inputs.helmReleaseName }} ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }} --set ${{ inputs.helmReleaseValueName }}=${{ inputs.version }} ${{ inputs.helmAdditionalArguments }}

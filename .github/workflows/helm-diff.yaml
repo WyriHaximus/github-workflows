@@ -60,10 +60,12 @@ jobs:
       workingDirectory: ${{ inputs.workingDirectory }}
       helmDirectory: ${{ inputs.helmDirectory }}
       helmSparseCheckout: ${{ inputs.helmSparseCheckout }}
-  helm-diff:
-    name: Helm Diff
+  helm-diff-prepare:
+    name: Build Chart
     needs: helm-dependencies
     runs-on: ${{ inputs.runsOnOrder }}
+    outputs:
+      previousTag: ${{ steps.previousgittag.outputs.tag }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -88,28 +90,67 @@ jobs:
           rm ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}Chart.old.yaml
           echo -e "\r\nappVersion: ${{ steps.previousgittag.outputs.tag }}\r\n" >> ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}Chart.yaml &&
           cat ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}Chart.yaml
-      - name: Diff
-        uses: WyriHaximus/github-action-helm3@e3894d973c282349e3d41d3347767f2b2545b583 # v4.0.2
-        id: diff
+      - name: Determine chart artifact path
+        id: chart-artifact
+        run: |
+          chart="${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}"
+          chart="${chart%/}"
+          parent="$(dirname "$chart")"
+          if [[ "$parent" == "." ]]; then
+            echo "path=$chart" >> "$GITHUB_OUTPUT"
+          else
+            echo "path=$parent" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          exec: |
-            jq -c '.[]' <<< '${{ needs.helm-dependencies.outputs.repositories }}' | while read -r repo; do
-              helm repo add "$(jq -r .name <<< "$repo")" "$(jq -r .url <<< "$repo")"
-            done
-            helm dependency build ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}
-            helm plugin install https://github.com/databus23/helm-diff
-            delimiter="$(openssl rand -hex 8)"
-            echo "diff<<${delimiter}" >> "${GITHUB_OUTPUT}"
-            echo "$(helm diff upgrade ${{ inputs.helmReleaseName }} --allow-unreleased ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }} --set ${{ inputs.helmReleaseValueName }}=${{ steps.previousgittag.outputs.tag }} ${{ inputs.helmAdditionalArguments }})" >> "${GITHUB_OUTPUT}"
-            echo "${delimiter}" >> "${GITHUB_OUTPUT}"
-          kubeconfig: ${{ secrets[inputs.kubeConfigSecret] }}
-          overrule_existing_kubeconfig: "true"
+          name: helm-chart
+          path: ${{ steps.chart-artifact.outputs.path }}
+          include-hidden-files: true
+  helm-diff-exec:
+    name: Generate Diff
+    needs: [helm-dependencies, helm-diff-prepare]
+    uses: $/.github/workflows/helm-exec.yaml
+    secrets: inherit
+    with:
+      runsOn: ${{ inputs.runsOnOrder }}
+      kubeConfigSecret: ${{ inputs.kubeConfigSecret }}
+      installHelmDiffPlugin: true
+      artifactName: helm-chart
+      chartPath: ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}
+      resultsArtifactName: helm-exec-results
+      validateClusterConnectivity: true
+      exec: |
+        jq -c '.[]' <<< '${{ needs.helm-dependencies.outputs.repositories }}' | while read -r repo; do
+          helm repo add "$(jq -r .name <<< "$repo")" "$(jq -r .url <<< "$repo")"
+        done
+        helm dependency build ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }}
+        helm plugin list 2>/dev/null | awk 'NR>1 {print $1}' | grep -qx diff || helm plugin install https://github.com/databus23/helm-diff
+        mkdir -p helm-exec-results
+        helm diff upgrade ${{ inputs.helmReleaseName }} --allow-unreleased ${{ inputs.workingDirectory }}${{ inputs.helmDirectory }} --set ${{ inputs.helmReleaseValueName }}=${{ needs.helm-diff-prepare.outputs.previousTag }} ${{ inputs.helmAdditionalArguments }} > helm-exec-results/output.txt
+  helm-diff-comment:
+    name: Comment on PR
+    needs: helm-diff-exec
+    runs-on: ${{ inputs.runsOnChaos }}
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: helm-exec-results
+          path: helm-exec-results
+      - name: Build comment message
+        id: message
+        run: |
+          delimiter="$(openssl rand -hex 8)"
+          {
+            echo "body<<${delimiter}"
+            echo "Helm Diff"
+            echo
+            echo '```diff'
+            cat helm-exec-results/output.txt
+            echo '```'
+            echo "${delimiter}"
+          } >> "$GITHUB_OUTPUT"
       - name: 'Upsert comment'
         uses: marocchino/sticky-pull-request-comment@5770ad5eb8f42dd2c4f34da00c94c5381e49af88 # v3.0.5
         with:
           header: helm-diff
-          message: |
-            Helm Diff:
-            ```diff
-            ${{ steps.diff.outputs.diff }}
-            ```
+          message: ${{ steps.message.outputs.body }}
