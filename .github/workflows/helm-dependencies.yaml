@@ -1,4 +1,4 @@
-name: Helm Dependencies
+name: Resolve Dependencies
 
 on:
   workflow_call:
@@ -30,7 +30,7 @@ on:
 
 jobs:
   helm-dependencies:
-    name: Helm Dependencies
+    name: Resolve Dependencies
     runs-on: ${{ inputs.runsOn }}
     outputs:
       repositories: ${{ steps.repositories.outputs.repositories }}

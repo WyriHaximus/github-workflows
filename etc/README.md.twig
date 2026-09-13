@@ -167,9 +167,8 @@ As with any Helm chart being deployed we need to give it a name, the `helmReleas
 By default a sparse checkout is performed and only the passed `helmDirectory` is checked out, if you need than
 that you can use `helmSparseCheckout` with additional patterns to check out.
 
-Helm chart repositories are detected automatically before diff and deploy. The `helm-dependencies`
-workflow scans `repository:` entries in `Chart.yaml`, `Chart.lock`, and `charts/*/Chart.yaml`, then runs `helm repo add` for each
-unique HTTPS repository before `helm dependency build`.
+Helm chart repositories are detected automatically from `repository:` entries in `Chart.yaml`, `Chart.lock`, and
+subcharts before diff and deploy.
 
 Repository detection runs on `runsOnChaos`. Helm diff, deploy, and dependency build run on `runsOnOrder`.
 

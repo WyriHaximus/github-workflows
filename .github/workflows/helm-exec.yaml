@@ -1,0 +1,133 @@
+name: Helm Runner
+
+on:
+  workflow_call:
+    inputs:
+      exec:
+        description: Multiline shell script to run with Helm
+        required: true
+        type: string
+      runsOn:
+        description: Define on which runner this workflow should run
+        default: "ubuntu-latest"
+        required: false
+        type: string
+      kubeConfigSecret:
+        description: The secret name that holds the kubeconfig to connect with Kubernetes
+        required: true
+        type: string
+      installHelmDiffPlugin:
+        description: Install the helm-diff plugin on the runner path when missing
+        default: false
+        required: false
+        type: boolean
+      artifactName:
+        description: Artifact containing the prepared Helm chart workspace
+        default: "helm-chart"
+        required: false
+        type: string
+      chartPath:
+        description: Expected chart directory after artifact download (for example .helm/prod/)
+        default: ""
+        required: false
+        type: string
+      resultsArtifactName:
+        description: When set, upload helm-exec-results artifact for downstream jobs
+        default: ""
+        required: false
+        type: string
+      validateClusterConnectivity:
+        description: Fail the job when the kubeconfig cannot reach the API server
+        default: true
+        required: false
+        type: boolean
+    outputs:
+      source:
+        description: runner when Helm was found on PATH, action when github-action-helm3 was used
+        value: ${{ jobs.helm-exec.outputs.source }}
+
+jobs:
+  helm-exec:
+    name: Run Helm
+    runs-on: ${{ inputs.runsOn }}
+    outputs:
+      source: ${{ steps.detect.outputs.source }}
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: ${{ inputs.artifactName }}
+      - name: Restore chart directory layout
+        if: inputs.chartPath != ''
+        run: |
+          chart="${{ inputs.chartPath }}"
+          chart="${chart%/}"
+          if [[ -d "$chart" ]]; then
+            exit 0
+          fi
+          leaf="$(basename "$chart")"
+          parent="$(dirname "$chart")"
+          if [[ -d "$leaf" && "$parent" != "." ]]; then
+            mkdir -p "$parent"
+            mv "$leaf" "$chart"
+          fi
+      - name: Detect Helm
+        id: detect
+        run: |
+          if command -v helm >/dev/null 2>&1; then
+            echo "source=runner" >> "$GITHUB_OUTPUT"
+            helm version --short
+          else
+            echo "source=action" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Put Kubernetes Configuration In Place
+        run: |
+          mkdir -p ~/.kube
+          printf '%s' "$HOME_KUBECONFIG" > ~/.kube/config
+          chmod 600 ~/.kube/config
+        env:
+          HOME_KUBECONFIG: ${{ secrets[inputs.kubeConfigSecret] }}
+      - name: Validate Kubernetes connectivity
+        if: inputs.validateClusterConnectivity
+        run: |
+          config="${HOME}/.kube/config"
+          export KUBECONFIG="$config"
+          if command -v helm >/dev/null 2>&1; then
+            helm list --all-namespaces --max 1 --request-timeout=15s >/dev/null 2>&1 || \
+            kubectl get --raw /version --request-timeout=15s >/dev/null 2>&1 || {
+              echo "::error::Cannot connect to Kubernetes cluster. Check kubeConfigSecret and runner network."
+              exit 1
+            }
+          elif command -v kubectl >/dev/null 2>&1; then
+            kubectl get --raw /version --request-timeout=15s >/dev/null || {
+              echo "::error::Cannot connect to Kubernetes cluster. Check kubeConfigSecret and runner network."
+              exit 1
+            }
+          else
+            echo "::error::Cannot validate cluster connectivity: neither kubectl nor helm on PATH"
+            exit 1
+          fi
+      - name: Install helm-diff plugin
+        if: steps.detect.outputs.source == 'runner' && inputs.installHelmDiffPlugin
+        run: |
+          if ! helm plugin list 2>/dev/null | awk 'NR>1 {print $1}' | grep -qx diff; then
+            helm plugin install https://github.com/databus23/helm-diff
+          fi
+      - name: Exec
+        id: exec-runner
+        if: steps.detect.outputs.source == 'runner'
+        run: ${{ inputs.exec }}
+      - name: Exec
+        id: exec-action
+        if: steps.detect.outputs.source == 'action'
+        uses: WyriHaximus/github-action-helm3@e3894d973c282349e3d41d3347767f2b2545b583 # v4.0.2
+        with:
+          exec: ${{ inputs.exec }}
+          kubeconfig: ${{ secrets[inputs.kubeConfigSecret] }}
+          overrule_existing_kubeconfig: "true"
+      - name: Upload helm exec results
+        if: inputs.resultsArtifactName != ''
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ${{ inputs.resultsArtifactName }}
+          path: helm-exec-results/
+          if-no-files-found: error
