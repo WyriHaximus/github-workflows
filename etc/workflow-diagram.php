@@ -86,14 +86,34 @@ function readWorkflow(string $workflowsDir, string $filename): ?string
     return is_file($path) ? file_get_contents($path) : null;
 }
 
+function parseLocalWorkflowReference(string $uses): ?string
+{
+    if (str_starts_with($uses, './.github/workflows/') || str_starts_with($uses, '$/.github/workflows/')) {
+        return basename($uses);
+    }
+
+    $prefix = WORKFLOW_REPOSITORY . '/.github/workflows/';
+    if (str_starts_with($uses, $prefix)) {
+        return basename(explode('@', substr($uses, strlen($prefix)), 2)[0]);
+    }
+
+    return null;
+}
+
 /** @return list<string> */
 function parseWorkflowUses(string $content): array
 {
     $uses = [];
 
     foreach (Yaml::parse($content)['jobs'] ?? [] as $job) {
-        if (isset($job['uses']) && is_string($job['uses']) && str_starts_with($job['uses'], './.github/workflows/')) {
-            $uses[] = basename($job['uses']);
+        if (!isset($job['uses']) || !is_string($job['uses'])) {
+            continue;
+        }
+
+        $workflow = parseLocalWorkflowReference($job['uses']);
+
+        if ($workflow !== null) {
+            $uses[] = $workflow;
         }
     }
 
@@ -119,7 +139,7 @@ function parseWorkflowActions(string $content): array
     foreach ($matches as $match) {
         $reference = trim($match[1], " \t\n\r\0\x0B\"'");
 
-        if (str_starts_with($reference, './.github/workflows/')) {
+        if (parseLocalWorkflowReference($reference) !== null) {
             continue;
         }
 
