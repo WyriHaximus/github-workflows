@@ -401,7 +401,7 @@ flowchart TB
   package_release_management_craft_release["craft-release.yaml"] --> package_release_management_a5("haya14busa/action-update-semver@v1.5.1")
   package_release_management_craft_release["craft-release.yaml"] --> package_release_management_a6("softprops/action-gh-release@v3.0.3")
   package_release_management_helm_dependencies["helm-dependencies.yaml"] --> package_release_management_a2("actions/checkout@v7.0.1")
-  package_release_management_helm_diff["helm-diff.yaml"] --> package_release_management_a7("WyriHaximus/github-action-get-previous-tag@v2.0.0")
+  package_release_management_helm_diff["helm-diff.yaml"] --> package_release_management_a7("WyriHaximus/github-action-get-previous-tag@v2.1.0")
   package_release_management_helm_diff["helm-diff.yaml"] --> package_release_management_a2("actions/checkout@v7.0.1")
   package_release_management_helm_diff["helm-diff.yaml"] --> package_release_management_a8("actions/download-artifact@v8.0.1")
   package_release_management_helm_diff["helm-diff.yaml"] --> package_release_management_a9("actions/upload-artifact@v7.0.1")
@@ -410,7 +410,7 @@ flowchart TB
   package_release_management_helm_exec["helm-exec.yaml"] --> package_release_management_a8("actions/download-artifact@v8.0.1")
   package_release_management_helm_exec["helm-exec.yaml"] --> package_release_management_a9("actions/upload-artifact@v7.0.1")
   package_release_management_package_set_milestone_on_pr["package-set-milestone-on-pr.yaml"] --> package_release_management_a12("WyriHaximus/github-action-composer-php-versions-in-range@v2.1.0")
-  package_release_management_package_set_milestone_on_pr["package-set-milestone-on-pr.yaml"] --> package_release_management_a7("WyriHaximus/github-action-get-previous-tag@v2.0.0")
+  package_release_management_package_set_milestone_on_pr["package-set-milestone-on-pr.yaml"] --> package_release_management_a7("WyriHaximus/github-action-get-previous-tag@v2.1.0")
   package_release_management_package_set_milestone_on_pr["package-set-milestone-on-pr.yaml"] --> package_release_management_a13("WyriHaximus/github-action-next-semvers@v1.2.1")
   package_release_management_package_set_milestone_on_pr["package-set-milestone-on-pr.yaml"] --> package_release_management_a2("actions/checkout@v7.0.1")
   package_release_management_package_set_milestone_on_pr["package-set-milestone-on-pr.yaml"] --> package_release_management_a14("dcarbone/install-jq-action@v4.0.1")
@@ -449,7 +449,7 @@ flowchart TB
   click package_release_management_a4 "https://github.com/dawidd6/action-delete-branch/releases/tag/v3.1.0" _blank
   click package_release_management_a5 "https://github.com/haya14busa/action-update-semver/releases/tag/v1.5.1" _blank
   click package_release_management_a6 "https://github.com/softprops/action-gh-release/releases/tag/v3.0.3" _blank
-  click package_release_management_a7 "https://github.com/WyriHaximus/github-action-get-previous-tag/releases/tag/v2.0.0" _blank
+  click package_release_management_a7 "https://github.com/WyriHaximus/github-action-get-previous-tag/releases/tag/v2.1.0" _blank
   click package_release_management_a8 "https://github.com/actions/download-artifact/releases/tag/v8.0.1" _blank
   click package_release_management_a9 "https://github.com/actions/upload-artifact/releases/tag/v7.0.1" _blank
   click package_release_management_composer_diff "https://github.com/WyriHaximus/github-workflows/blob/main/.github/workflows/composer-diff.yaml" _blank
@@ -682,7 +682,7 @@ flowchart TB
   project_release_management_helm_dependencies["helm-dependencies.yaml"] --> project_release_management_a2("actions/checkout@v7.0.1")
   project_release_management_helm_deploy["helm-deploy.yaml"] --> project_release_management_a2("actions/checkout@v7.0.1")
   project_release_management_helm_deploy["helm-deploy.yaml"] --> project_release_management_a7("actions/upload-artifact@v7.0.1")
-  project_release_management_helm_diff["helm-diff.yaml"] --> project_release_management_a8("WyriHaximus/github-action-get-previous-tag@v2.0.0")
+  project_release_management_helm_diff["helm-diff.yaml"] --> project_release_management_a8("WyriHaximus/github-action-get-previous-tag@v2.1.0")
   project_release_management_helm_diff["helm-diff.yaml"] --> project_release_management_a2("actions/checkout@v7.0.1")
   project_release_management_helm_diff["helm-diff.yaml"] --> project_release_management_a9("actions/download-artifact@v8.0.1")
   project_release_management_helm_diff["helm-diff.yaml"] --> project_release_management_a7("actions/upload-artifact@v7.0.1")
@@ -703,7 +703,7 @@ flowchart TB
   project_release_management_project_craft_release_serverless["project-craft-release-serverless.yaml"] --> project_release_management_a19("ramsey/composer-install@4.0.0")
   project_release_management_project_craft_release_static["project-craft-release-static.yaml"] --> project_release_management_a2("actions/checkout@v7.0.1")
   project_release_management_project_craft_release_static["project-craft-release-static.yaml"] --> project_release_management_a7("actions/upload-artifact@v7.0.1")
-  project_release_management_project_set_milestone_on_pr["project-set-milestone-on-pr.yaml"] --> project_release_management_a8("WyriHaximus/github-action-get-previous-tag@v2.0.0")
+  project_release_management_project_set_milestone_on_pr["project-set-milestone-on-pr.yaml"] --> project_release_management_a8("WyriHaximus/github-action-get-previous-tag@v2.1.0")
   project_release_management_project_set_milestone_on_pr["project-set-milestone-on-pr.yaml"] --> project_release_management_a20("WyriHaximus/github-action-next-release-version@v1.1.0")
   project_release_management_project_set_milestone_on_pr["project-set-milestone-on-pr.yaml"] --> project_release_management_a2("actions/checkout@v7.0.1")
   project_release_management_required_labels["required-labels.yaml"] --> project_release_management_a21("mheap/github-action-required-labels@v5.6.0")
@@ -766,7 +766,7 @@ flowchart TB
   click project_release_management_a5 "https://github.com/haya14busa/action-update-semver/releases/tag/v1.5.1" _blank
   click project_release_management_a6 "https://github.com/softprops/action-gh-release/releases/tag/v3.0.3" _blank
   click project_release_management_a7 "https://github.com/actions/upload-artifact/releases/tag/v7.0.1" _blank
-  click project_release_management_a8 "https://github.com/WyriHaximus/github-action-get-previous-tag/releases/tag/v2.0.0" _blank
+  click project_release_management_a8 "https://github.com/WyriHaximus/github-action-get-previous-tag/releases/tag/v2.1.0" _blank
   click project_release_management_a9 "https://github.com/actions/download-artifact/releases/tag/v8.0.1" _blank
   click project_release_management_composer_diff "https://github.com/WyriHaximus/github-workflows/blob/main/.github/workflows/composer-diff.yaml" _blank
   click project_release_management_craft_release "https://github.com/WyriHaximus/github-workflows/blob/main/.github/workflows/craft-release.yaml" _blank
