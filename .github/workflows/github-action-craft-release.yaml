@@ -79,14 +79,13 @@ jobs:
         uses: docker/setup-qemu-action@96fe6ef7f33517b61c61be40b68a1882f3264fb8 # v4.2.0
       - name: Set up Docker Buildx
         id: buildx
-        uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
       - name: Inspect builder
         run: |
           echo "Name:      ${{ steps.buildx.outputs.name }}"
-          echo "Endpoint:  ${{ steps.buildx.outputs.endpoint }}"
-          echo "Status:    ${{ steps.buildx.outputs.status }}"
-          echo "Flags:     ${{ steps.buildx.outputs.flags }}"
+          echo "Driver:    ${{ steps.buildx.outputs.driver }}"
           echo "Platforms: ${{ steps.buildx.outputs.platforms }}"
+          echo "Nodes:     ${{ steps.buildx.outputs.nodes }}"
       - run: echo "ghcr.io/${GITHUB_REPOSITORY}:sha-${GITHUB_SHA}" | tr '[:upper:]' '[:lower:]'
       - name: Login to GitHub Container Registry
         run: |
@@ -97,7 +96,7 @@ jobs:
       - name: Push version tag to GHCR
         run: |
           printf "FROM %s" $(echo "ghcr.io/${GITHUB_REPOSITORY}:sha-${GITHUB_SHA}" | tr '[:upper:]' '[:lower:]') >> Dockerfile.tag
-          docker build --platform=linux/arm64,linux/amd64 --output=type=registry --no-cache --label org.opencontainers.image.revision=${GITHUB_SHA} --label org.opencontainers.image.source=https://github.com/${GITHUB_REPOSITORY} --annotation "index,manifest:org.opencontainers.image.revision=${GITHUB_SHA}" --annotation "index,manifest:org.opencontainers.image.source=https://github.com/${GITHUB_REPOSITORY}" -f Dockerfile.tag -t $(echo "ghcr.io/${GITHUB_REPOSITORY}:${{ matrix.version }}" | tr '[:upper:]' '[:lower:]') .
+          docker buildx build --platform=linux/arm64,linux/amd64 --output=type=registry --no-cache --label org.opencontainers.image.revision=${GITHUB_SHA} --label org.opencontainers.image.source=https://github.com/${GITHUB_REPOSITORY} -f Dockerfile.tag -t $(echo "ghcr.io/${GITHUB_REPOSITORY}:${{ matrix.version }}" | tr '[:upper:]' '[:lower:]') .
   create-release-docker:
     name: Craft Release
     if: ${{ inputs.reTagOCIImage == true }}
