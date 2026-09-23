@@ -605,7 +605,7 @@ flowchart TB
   project_oci_build_single["oci-build-single.yaml"] --> project_a1("actions/checkout@v7.0.1")
   project_oci_build_single["oci-build-single.yaml"] --> project_a6("docker/login-action@v4.6.0")
   project_oci_build_single["oci-build-single.yaml"] --> project_a7("docker/setup-buildx-action@v4.4.1")
-  project_oci_build_single["oci-build-single.yaml"] --> project_a8("docker/setup-qemu-action@v4.2.0")
+  project_oci_build_single["oci-build-single.yaml"] --> project_a8("docker/setup-qemu-action@v4.4.0")
   project_oci_build_single["oci-build-single.yaml"] --> project_a9("wyrihaximus/github-action-oci-image-supported-platforms@v1.0.0")
   project_oci_build_spread["oci-build-spread.yaml"] --> project_a10("$/.github/actions/ci-artifacts-aws-config")
   project_oci_build_spread["oci-build-spread.yaml"] --> project_a11("$/.github/actions/ci-artifacts-download")
@@ -613,7 +613,7 @@ flowchart TB
   project_oci_build_spread["oci-build-spread.yaml"] --> project_a1("actions/checkout@v7.0.1")
   project_oci_build_spread["oci-build-spread.yaml"] --> project_a6("docker/login-action@v4.6.0")
   project_oci_build_spread["oci-build-spread.yaml"] --> project_a7("docker/setup-buildx-action@v4.4.1")
-  project_oci_build_spread["oci-build-spread.yaml"] --> project_a8("docker/setup-qemu-action@v4.2.0")
+  project_oci_build_spread["oci-build-spread.yaml"] --> project_a8("docker/setup-qemu-action@v4.4.0")
   project_oci_build_spread["oci-build-spread.yaml"] --> project_a9("wyrihaximus/github-action-oci-image-supported-platforms@v1.0.0")
   project_supported_threading_matrix["supported-threading-matrix.yaml"] --> project_a2("actions/github-script@v9.0.0")
   project_ci["ci.yaml"] --> project_supported_threading_matrix["supported-threading-matrix.yaml"]
@@ -631,7 +631,7 @@ flowchart TB
   click project_a5 "https://github.com/umbrelladocs/action-linkspector/releases/tag/v1.5.5" _blank
   click project_a6 "https://github.com/docker/login-action/releases/tag/v4.6.0" _blank
   click project_a7 "https://github.com/docker/setup-buildx-action/releases/tag/v4.4.1" _blank
-  click project_a8 "https://github.com/docker/setup-qemu-action/releases/tag/v4.2.0" _blank
+  click project_a8 "https://github.com/docker/setup-qemu-action/releases/tag/v4.4.0" _blank
   click project_a9 "https://github.com/wyrihaximus/github-action-oci-image-supported-platforms/releases/tag/v1.0.0" _blank
   click project_ci "https://github.com/WyriHaximus/github-workflows/blob/main/.github/workflows/ci.yaml" _blank
   click project_markdown_check_links "https://github.com/WyriHaximus/github-workflows/blob/main/.github/workflows/markdown-check-links.yaml" _blank
@@ -731,7 +731,7 @@ flowchart TB
   project_release_management_helm_exec["helm-exec.yaml"] --> project_release_management_a11("WyriHaximus/github-action-helm3@v4.0.2")
   project_release_management_oci_retag["oci-retag.yaml"] --> project_release_management_a12("docker/login-action@v4.6.0")
   project_release_management_oci_retag["oci-retag.yaml"] --> project_release_management_a13("docker/setup-buildx-action@v4.4.1")
-  project_release_management_oci_retag["oci-retag.yaml"] --> project_release_management_a14("docker/setup-qemu-action@v4.2.0")
+  project_release_management_oci_retag["oci-retag.yaml"] --> project_release_management_a14("docker/setup-qemu-action@v4.4.0")
   project_release_management_oci_retag["oci-retag.yaml"] --> project_release_management_a15("int128/wait-for-docker-image-action@v1.29.0")
   project_release_management_oci_retag["oci-retag.yaml"] --> project_release_management_a16("nick-invision/retry@v4.0.0")
   project_release_management_oci_retag["oci-retag.yaml"] --> project_release_management_a17("wyrihaximus/github-action-oci-image-supported-platforms@v1.0.0")
@@ -787,7 +787,7 @@ flowchart TB
   click project_release_management_a11 "https://github.com/WyriHaximus/github-action-helm3/releases/tag/v4.0.2" _blank
   click project_release_management_a12 "https://github.com/docker/login-action/releases/tag/v4.6.0" _blank
   click project_release_management_a13 "https://github.com/docker/setup-buildx-action/releases/tag/v4.4.1" _blank
-  click project_release_management_a14 "https://github.com/docker/setup-qemu-action/releases/tag/v4.2.0" _blank
+  click project_release_management_a14 "https://github.com/docker/setup-qemu-action/releases/tag/v4.4.0" _blank
   click project_release_management_a15 "https://github.com/int128/wait-for-docker-image-action/releases/tag/v1.29.0" _blank
   click project_release_management_a16 "https://github.com/nick-invision/retry/releases/tag/v4.0.0" _blank
   click project_release_management_a17 "https://github.com/wyrihaximus/github-action-oci-image-supported-platforms/releases/tag/v1.0.0" _blank
