@@ -393,7 +393,7 @@ jobs:
 
 ```mermaid
 flowchart TB
-  package_release_management_composer_diff["composer-diff.yaml"] --> package_release_management_a0("WyriHaximus/github-action-composer.lock-diff@v2.3.0")
+  package_release_management_composer_diff["composer-diff.yaml"] --> package_release_management_a0("WyriHaximus/github-action-composer.lock-diff@v3.0.0")
   package_release_management_craft_release["craft-release.yaml"] --> package_release_management_a1("WyriHaximus/github-action-jwage-changelog-generator@v1.4.0")
   package_release_management_craft_release["craft-release.yaml"] --> package_release_management_a2("actions/checkout@v7.0.1")
   package_release_management_craft_release["craft-release.yaml"] --> package_release_management_a3("ad-m/github-push-action@v1.3.0")
@@ -434,7 +434,7 @@ flowchart TB
   package_release_management_package_set_milestone_on_pr["package-set-milestone-on-pr.yaml"] --> package_release_management_supported_threading_matrix["supported-threading-matrix.yaml"]
   linkStyle 28,29,30,31,32,33,34,35,36,37,38 stroke:#22c55e,stroke-width:2px
   linkStyle 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27 stroke:#2563eb,stroke-width:2px
-  click package_release_management_a0 "https://github.com/WyriHaximus/github-action-composer.lock-diff/releases/tag/v2.3.0" _blank
+  click package_release_management_a0 "https://github.com/WyriHaximus/github-action-composer.lock-diff/releases/tag/v3.0.0" _blank
   click package_release_management_a1 "https://github.com/WyriHaximus/github-action-jwage-changelog-generator/releases/tag/v1.4.0" _blank
   click package_release_management_a10 "https://github.com/marocchino/sticky-pull-request-comment/releases/tag/v3.0.5" _blank
   click package_release_management_a11 "https://github.com/WyriHaximus/github-action-helm3/releases/tag/v4.0.2" _blank
@@ -672,7 +672,7 @@ jobs:
 
 ```mermaid
 flowchart TB
-  project_release_management_composer_diff["composer-diff.yaml"] --> project_release_management_a0("WyriHaximus/github-action-composer.lock-diff@v2.3.0")
+  project_release_management_composer_diff["composer-diff.yaml"] --> project_release_management_a0("WyriHaximus/github-action-composer.lock-diff@v3.0.0")
   project_release_management_craft_release["craft-release.yaml"] --> project_release_management_a1("WyriHaximus/github-action-jwage-changelog-generator@v1.4.0")
   project_release_management_craft_release["craft-release.yaml"] --> project_release_management_a2("actions/checkout@v7.0.1")
   project_release_management_craft_release["craft-release.yaml"] --> project_release_management_a3("ad-m/github-push-action@v1.3.0")
@@ -742,7 +742,7 @@ flowchart TB
   project_release_management_project_set_milestone_on_pr["project-set-milestone-on-pr.yaml"] --> project_release_management_set_milestone_on_pr["set-milestone-on-pr.yaml"]
   linkStyle 43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67 stroke:#22c55e,stroke-width:2px
   linkStyle 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42 stroke:#2563eb,stroke-width:2px
-  click project_release_management_a0 "https://github.com/WyriHaximus/github-action-composer.lock-diff/releases/tag/v2.3.0" _blank
+  click project_release_management_a0 "https://github.com/WyriHaximus/github-action-composer.lock-diff/releases/tag/v3.0.0" _blank
   click project_release_management_a1 "https://github.com/WyriHaximus/github-action-jwage-changelog-generator/releases/tag/v1.4.0" _blank
   click project_release_management_a10 "https://github.com/marocchino/sticky-pull-request-comment/releases/tag/v3.0.5" _blank
   click project_release_management_a11 "https://github.com/WyriHaximus/github-action-helm3/releases/tag/v4.0.2" _blank
