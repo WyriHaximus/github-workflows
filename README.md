@@ -540,14 +540,14 @@ jobs:
 flowchart TB
   package_utils_conductor["conductor.yaml"] --> package_utils_a0("WyriHaximus/github-action-composer-php-versions-in-range@v2.1.0")
   package_utils_conductor["conductor.yaml"] --> package_utils_a1("actions/checkout@v7.0.1")
-  package_utils_conductor["conductor.yaml"] --> package_utils_a2("packagist/conductor-github-action@1.6.1")
+  package_utils_conductor["conductor.yaml"] --> package_utils_a2("packagist/conductor-github-action@1.7.0")
   package_utils_conductor["conductor.yaml"] --> package_utils_a3("shivammathur/setup-php@2.37.2")
   package_utils_package_utils["package-utils.yaml"] --> package_utils_conductor["conductor.yaml"]
   linkStyle 4 stroke:#22c55e,stroke-width:2px
   linkStyle 0,1,2,3 stroke:#2563eb,stroke-width:2px
   click package_utils_a0 "https://github.com/WyriHaximus/github-action-composer-php-versions-in-range/releases/tag/v2.1.0" _blank
   click package_utils_a1 "https://github.com/actions/checkout/releases/tag/v7.0.1" _blank
-  click package_utils_a2 "https://github.com/packagist/conductor-github-action/releases/tag/1.6.1" _blank
+  click package_utils_a2 "https://github.com/packagist/conductor-github-action/releases/tag/1.7.0" _blank
   click package_utils_a3 "https://github.com/shivammathur/setup-php/releases/tag/2.37.2" _blank
   click package_utils_conductor "https://github.com/WyriHaximus/github-workflows/blob/main/.github/workflows/conductor.yaml" _blank
   click package_utils_package_utils "https://github.com/WyriHaximus/github-workflows/blob/main/.github/workflows/package-utils.yaml" _blank
@@ -918,7 +918,7 @@ flowchart TB
   project_utils_ci_artifacts_cleanup["ci-artifacts-cleanup.yaml"] --> project_utils_a0("$/.github/actions/ci-artifacts-aws-config")
   project_utils_conductor["conductor.yaml"] --> project_utils_a1("WyriHaximus/github-action-composer-php-versions-in-range@v2.1.0")
   project_utils_conductor["conductor.yaml"] --> project_utils_a2("actions/checkout@v7.0.1")
-  project_utils_conductor["conductor.yaml"] --> project_utils_a3("packagist/conductor-github-action@1.6.1")
+  project_utils_conductor["conductor.yaml"] --> project_utils_a3("packagist/conductor-github-action@1.7.0")
   project_utils_conductor["conductor.yaml"] --> project_utils_a4("shivammathur/setup-php@2.37.2")
   project_utils_project_utils["project-utils.yaml"] --> project_utils_ci_artifacts_cleanup["ci-artifacts-cleanup.yaml"]
   project_utils_project_utils["project-utils.yaml"] --> project_utils_conductor["conductor.yaml"]
@@ -927,7 +927,7 @@ flowchart TB
   linkStyle 0,1,2,3,4 stroke:#2563eb,stroke-width:2px
   click project_utils_a1 "https://github.com/WyriHaximus/github-action-composer-php-versions-in-range/releases/tag/v2.1.0" _blank
   click project_utils_a2 "https://github.com/actions/checkout/releases/tag/v7.0.1" _blank
-  click project_utils_a3 "https://github.com/packagist/conductor-github-action/releases/tag/1.6.1" _blank
+  click project_utils_a3 "https://github.com/packagist/conductor-github-action/releases/tag/1.7.0" _blank
   click project_utils_a4 "https://github.com/shivammathur/setup-php/releases/tag/2.37.2" _blank
   click project_utils_ci_artifacts_cleanup "https://github.com/WyriHaximus/github-workflows/blob/main/.github/workflows/ci-artifacts-cleanup.yaml" _blank
   click project_utils_conductor "https://github.com/WyriHaximus/github-workflows/blob/main/.github/workflows/conductor.yaml" _blank
