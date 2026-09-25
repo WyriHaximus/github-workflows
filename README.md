@@ -747,7 +747,7 @@ flowchart TB
   project_release_management_project_set_milestone_on_pr["project-set-milestone-on-pr.yaml"] --> project_release_management_a2("actions/checkout@v7.0.1")
   project_release_management_required_labels["required-labels.yaml"] --> project_release_management_a22("mheap/github-action-required-labels@v5.6.0")
   project_release_management_s3_upload["s3-upload.yaml"] --> project_release_management_a23("actions/download-artifact@v8.0.1")
-  project_release_management_s3_upload["s3-upload.yaml"] --> project_release_management_a24("aws-actions/configure-aws-credentials@v6.2.3")
+  project_release_management_s3_upload["s3-upload.yaml"] --> project_release_management_a24("aws-actions/configure-aws-credentials@v6.3.0")
   project_release_management_set_milestone_on_pr["set-milestone-on-pr.yaml"] --> project_release_management_a25("WyriHaximus/github-action-create-milestone@v1.2.0")
   project_release_management_set_milestone_on_pr["set-milestone-on-pr.yaml"] --> project_release_management_a26("dcarbone/install-jq-action@v4.0.1")
   project_release_management_terraform_apply["terraform-apply.yaml"] --> project_release_management_a2("actions/checkout@v7.0.1")
@@ -798,7 +798,7 @@ flowchart TB
   click project_release_management_a21 "https://github.com/WyriHaximus/github-action-next-release-version/releases/tag/v1.1.0" _blank
   click project_release_management_a22 "https://github.com/mheap/github-action-required-labels/releases/tag/v5.6.0" _blank
   click project_release_management_a23 "https://github.com/actions/download-artifact/releases/tag/v8.0.1" _blank
-  click project_release_management_a24 "https://github.com/aws-actions/configure-aws-credentials/releases/tag/v6.2.3" _blank
+  click project_release_management_a24 "https://github.com/aws-actions/configure-aws-credentials/releases/tag/v6.3.0" _blank
   click project_release_management_a25 "https://github.com/WyriHaximus/github-action-create-milestone/releases/tag/v1.2.0" _blank
   click project_release_management_a26 "https://github.com/dcarbone/install-jq-action/releases/tag/v4.0.1" _blank
   click project_release_management_a27 "https://github.com/actions/github-script/releases/tag/v9.0.0" _blank
