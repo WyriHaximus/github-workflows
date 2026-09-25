@@ -1,0 +1,68 @@
+name: Upload CI artifact
+description: Upload a directory to GitHub Actions artifacts or S3-backed CI artifact storage
+inputs:
+  backend:
+    description: "github or s3"
+    required: true
+  artifactName:
+    description: Artifact name (GitHub artifact name or S3 object prefix segment)
+    required: true
+  path:
+    description: Local directory or file path to upload
+    required: true
+  retentionDays:
+    description: GitHub artifact retention days
+    required: false
+    default: "1"
+  includeHiddenFiles:
+    description: Include hidden files when uploading to GitHub Actions artifacts
+    required: false
+    default: "false"
+  s3Bucket:
+    description: S3 bucket name
+    required: false
+    default: ""
+  s3KeyPrefix:
+    description: S3 key prefix including run id, attempt, and artifact name
+    required: false
+    default: ""
+  awsAccessKeyId:
+    required: false
+    default: ""
+  awsSecretAccessKey:
+    required: false
+    default: ""
+  awsRegion:
+    required: false
+    default: ""
+  awsEndpointUrl:
+    required: false
+    default: ""
+runs:
+  using: composite
+  steps:
+    - name: Upload to GitHub Actions artifacts
+      if: inputs.backend == 'github'
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      with:
+        name: ${{ inputs.artifactName }}
+        path: ${{ inputs.path }}
+        retention-days: ${{ inputs.retentionDays }}
+        include-hidden-files: ${{ inputs.includeHiddenFiles }}
+    - uses: $/.github/actions/ci-artifacts-aws-config
+      if: inputs.backend == 's3'
+      with:
+        awsAccessKeyId: ${{ inputs.awsAccessKeyId }}
+        awsSecretAccessKey: ${{ inputs.awsSecretAccessKey }}
+        awsRegion: ${{ inputs.awsRegion }}
+        awsEndpointUrl: ${{ inputs.awsEndpointUrl }}
+    - name: Upload to S3
+      if: inputs.backend == 's3'
+      shell: bash
+      run: |
+        set -euo pipefail
+        endpoint_args=()
+        if [ -n "${{ inputs.awsEndpointUrl }}" ]; then
+          endpoint_args=(--endpoint-url "${{ inputs.awsEndpointUrl }}")
+        fi
+        aws s3 cp "${{ inputs.path }}" "s3://${{ inputs.s3Bucket }}/${{ inputs.s3KeyPrefix }}/" --recursive "${endpoint_args[@]}"

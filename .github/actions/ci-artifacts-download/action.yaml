@@ -1,0 +1,87 @@
+name: Download CI artifact
+description: Download from GitHub Actions artifacts or S3-backed CI artifact storage
+inputs:
+  backend:
+    description: "github or s3"
+    required: true
+  artifactName:
+    description: GitHub artifact name or unused for S3 run prefix download
+    required: false
+    default: ""
+  artifactPattern:
+    description: GitHub download-artifact pattern
+    required: false
+    default: ""
+  downloadPath:
+    description: Local directory to extract into
+    required: true
+  mergeMultiple:
+    description: Merge multiple GitHub artifacts into one directory
+    required: false
+    default: "false"
+  s3Bucket:
+    required: false
+    default: ""
+  s3RunPrefix:
+    description: S3 key prefix (run_id/run_attempt/ or run_id/run_attempt/artifact_name/)
+    required: false
+    default: ""
+  s3SyncLayout:
+    description: "tree syncs the prefix into downloadPath; flat collects docker tars and tag-push scripts"
+    required: false
+    default: "tree"
+  awsAccessKeyId:
+    required: false
+    default: ""
+  awsSecretAccessKey:
+    required: false
+    default: ""
+  awsRegion:
+    required: false
+    default: ""
+  awsEndpointUrl:
+    required: false
+    default: ""
+runs:
+  using: composite
+  steps:
+    - name: Download from GitHub Actions artifacts by pattern
+      if: inputs.backend == 'github' && inputs.artifactPattern != ''
+      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      with:
+        pattern: ${{ inputs.artifactPattern }}
+        path: ${{ inputs.downloadPath }}
+        merge-multiple: ${{ inputs.mergeMultiple }}
+    - name: Download from GitHub Actions artifacts by name
+      if: inputs.backend == 'github' && inputs.artifactPattern == ''
+      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      with:
+        name: ${{ inputs.artifactName }}
+        path: ${{ inputs.downloadPath }}
+        merge-multiple: ${{ inputs.mergeMultiple }}
+    - uses: $/.github/actions/ci-artifacts-aws-config
+      if: inputs.backend == 's3'
+      with:
+        awsAccessKeyId: ${{ inputs.awsAccessKeyId }}
+        awsSecretAccessKey: ${{ inputs.awsSecretAccessKey }}
+        awsRegion: ${{ inputs.awsRegion }}
+        awsEndpointUrl: ${{ inputs.awsEndpointUrl }}
+    - name: Download from S3
+      if: inputs.backend == 's3'
+      shell: bash
+      run: |
+        set -euo pipefail
+        endpoint_args=()
+        if [ -n "${{ inputs.awsEndpointUrl }}" ]; then
+          endpoint_args=(--endpoint-url "${{ inputs.awsEndpointUrl }}")
+        fi
+        mkdir -p "${{ inputs.downloadPath }}"
+        if [ "${{ inputs.s3SyncLayout }}" = "flat" ]; then
+          staging="$(mktemp -d)"
+          aws s3 sync "s3://${{ inputs.s3Bucket }}/${{ inputs.s3RunPrefix }}" "$staging" "${endpoint_args[@]}"
+          find "$staging" -name '*.tar' -exec cp -t "${{ inputs.downloadPath }}" {} +
+          find "$staging" -name 'tag-push-*.sh' -exec cp -t "${{ inputs.downloadPath }}" {} +
+          rm -rf "$staging"
+        else
+          aws s3 sync "s3://${{ inputs.s3Bucket }}/${{ inputs.s3RunPrefix }}" "${{ inputs.downloadPath }}" "${endpoint_args[@]}"
+        fi

@@ -1,0 +1,33 @@
+name: Configure AWS CLI for CI artifacts S3
+description: Configures AWS CLI for Bunny S3-compatible endpoints or standard AWS S3
+inputs:
+  awsAccessKeyId:
+    description: AWS access key ID
+    required: true
+  awsSecretAccessKey:
+    description: AWS secret access key
+    required: true
+  awsRegion:
+    description: AWS region
+    required: true
+  awsEndpointUrl:
+    description: S3 endpoint URL; empty for native AWS
+    required: false
+    default: ""
+runs:
+  using: composite
+  steps:
+    - name: Set up AWS CLI credentials
+      if: inputs.awsEndpointUrl == ''
+      uses: aws-actions/configure-aws-credentials@e6de054238d6b7531b4efff3b6587d9aade6a06c # v6.2.3
+      with:
+        aws-access-key-id: ${{ inputs.awsAccessKeyId }}
+        aws-secret-access-key: ${{ inputs.awsSecretAccessKey }}
+        aws-region: ${{ inputs.awsRegion }}
+    - name: Set up AWS CLI credentials
+      if: inputs.awsEndpointUrl != ''
+      shell: bash
+      run: |
+        aws configure set default.region "${{ inputs.awsRegion }}"
+        aws configure set aws_access_key_id "${{ inputs.awsAccessKeyId }}"
+        aws configure set aws_secret_access_key "${{ inputs.awsSecretAccessKey }}"

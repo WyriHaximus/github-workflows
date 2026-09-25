@@ -1,0 +1,68 @@
+name: Upload CI artifact
+
+on:
+  workflow_call:
+    inputs:
+      runsOn:
+        default: "ubuntu-latest"
+        required: false
+        type: string
+      backend:
+        description: "github or s3"
+        default: "github"
+        required: false
+        type: string
+      artifactName:
+        required: true
+        type: string
+      path:
+        required: true
+        type: string
+      retentionDays:
+        default: 1
+        required: false
+        type: number
+      s3KeyPrefix:
+        description: Full S3 key prefix (run_id/run_attempt/artifact_name); defaults from workflow run context
+        default: ""
+        required: false
+        type: string
+      ciArtifactsS3BucketSecret:
+        default: "CI_ARTIFACTS_S3_BUCKET"
+        required: false
+        type: string
+      ciArtifactsAwsAccessKeyIDSecret:
+        default: "CI_ARTIFACTS_AWS_KEY"
+        required: false
+        type: string
+      ciArtifactsAwsSecretAccessKeySecret:
+        default: "CI_ARTIFACTS_AWS_SECRET"
+        required: false
+        type: string
+      ciArtifactsAwsRegionSecret:
+        default: "CI_ARTIFACTS_S3_REGION"
+        required: false
+        type: string
+      ciArtifactsAwsEndpointUrlSecret:
+        default: "CI_ARTIFACTS_S3_ENDPOINT"
+        required: false
+        type: string
+
+jobs:
+  upload:
+    name: Upload CI artifact
+    runs-on: ${{ inputs.runsOn }}
+    steps:
+      - name: Upload
+        uses: $/.github/actions/ci-artifacts-upload
+        with:
+          backend: ${{ inputs.backend }}
+          artifactName: ${{ inputs.artifactName }}
+          path: ${{ inputs.path }}
+          retentionDays: ${{ inputs.retentionDays }}
+          s3Bucket: ${{ secrets[inputs.ciArtifactsS3BucketSecret] }}
+          s3KeyPrefix: ${{ inputs.s3KeyPrefix != '' && inputs.s3KeyPrefix || format('{0}/{1}/{2}', github.run_id, github.run_attempt, inputs.artifactName) }}
+          awsAccessKeyId: ${{ secrets[inputs.ciArtifactsAwsAccessKeyIDSecret] }}
+          awsSecretAccessKey: ${{ secrets[inputs.ciArtifactsAwsSecretAccessKeySecret] }}
+          awsRegion: ${{ secrets[inputs.ciArtifactsAwsRegionSecret] }}
+          awsEndpointUrl: ${{ secrets[inputs.ciArtifactsAwsEndpointUrlSecret] }}

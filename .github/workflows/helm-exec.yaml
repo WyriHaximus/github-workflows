@@ -41,6 +41,35 @@ on:
         default: true
         required: false
         type: boolean
+      artifactBackend:
+        description: "Where to stage cross-job CI artifacts: github or s3"
+        default: "github"
+        required: false
+        type: string
+      artifactRetentionDays:
+        default: 1
+        required: false
+        type: number
+      ciArtifactsS3BucketSecret:
+        default: "CI_ARTIFACTS_S3_BUCKET"
+        required: false
+        type: string
+      ciArtifactsAwsAccessKeyIDSecret:
+        default: "CI_ARTIFACTS_AWS_KEY"
+        required: false
+        type: string
+      ciArtifactsAwsSecretAccessKeySecret:
+        default: "CI_ARTIFACTS_AWS_SECRET"
+        required: false
+        type: string
+      ciArtifactsAwsRegionSecret:
+        default: "CI_ARTIFACTS_S3_REGION"
+        required: false
+        type: string
+      ciArtifactsAwsEndpointUrlSecret:
+        default: "CI_ARTIFACTS_S3_ENDPOINT"
+        required: false
+        type: string
     outputs:
       source:
         description: runner when Helm was found on PATH, action when github-action-helm3 was used
@@ -53,9 +82,18 @@ jobs:
     outputs:
       source: ${{ steps.detect.outputs.source }}
     steps:
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      - name: Download chart artifact
+        uses: $/.github/actions/ci-artifacts-download
         with:
-          name: ${{ inputs.artifactName }}
+          backend: ${{ inputs.artifactBackend }}
+          artifactName: ${{ inputs.artifactName }}
+          downloadPath: .
+          s3Bucket: ${{ secrets[inputs.ciArtifactsS3BucketSecret] }}
+          s3RunPrefix: ${{ github.run_id }}/${{ github.run_attempt }}/${{ inputs.artifactName }}/
+          awsAccessKeyId: ${{ secrets[inputs.ciArtifactsAwsAccessKeyIDSecret] }}
+          awsSecretAccessKey: ${{ secrets[inputs.ciArtifactsAwsSecretAccessKeySecret] }}
+          awsRegion: ${{ secrets[inputs.ciArtifactsAwsRegionSecret] }}
+          awsEndpointUrl: ${{ secrets[inputs.ciArtifactsAwsEndpointUrlSecret] }}
       - name: Restore chart directory layout
         if: inputs.chartPath != ''
         run: |
@@ -126,8 +164,15 @@ jobs:
           overrule_existing_kubeconfig: "true"
       - name: Upload helm exec results
         if: inputs.resultsArtifactName != ''
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: $/.github/actions/ci-artifacts-upload
         with:
-          name: ${{ inputs.resultsArtifactName }}
+          backend: ${{ inputs.artifactBackend }}
+          artifactName: ${{ inputs.resultsArtifactName }}
           path: helm-exec-results/
-          if-no-files-found: error
+          retentionDays: ${{ inputs.artifactRetentionDays }}
+          s3Bucket: ${{ secrets[inputs.ciArtifactsS3BucketSecret] }}
+          s3KeyPrefix: ${{ github.run_id }}/${{ github.run_attempt }}/${{ inputs.resultsArtifactName }}
+          awsAccessKeyId: ${{ secrets[inputs.ciArtifactsAwsAccessKeyIDSecret] }}
+          awsSecretAccessKey: ${{ secrets[inputs.ciArtifactsAwsSecretAccessKeySecret] }}
+          awsRegion: ${{ secrets[inputs.ciArtifactsAwsRegionSecret] }}
+          awsEndpointUrl: ${{ secrets[inputs.ciArtifactsAwsEndpointUrlSecret] }}

@@ -101,6 +101,34 @@ on:
         default: "SERVERLESS_REGION"
         required: false
         type: string
+      artifactBackend:
+        default: "github"
+        required: false
+        type: string
+      artifactRetentionDays:
+        default: 1
+        required: false
+        type: number
+      ciArtifactsS3BucketSecret:
+        default: "CI_ARTIFACTS_S3_BUCKET"
+        required: false
+        type: string
+      ciArtifactsAwsAccessKeyIDSecret:
+        default: "CI_ARTIFACTS_AWS_KEY"
+        required: false
+        type: string
+      ciArtifactsAwsSecretAccessKeySecret:
+        default: "CI_ARTIFACTS_AWS_SECRET"
+        required: false
+        type: string
+      ciArtifactsAwsRegionSecret:
+        default: "CI_ARTIFACTS_S3_REGION"
+        required: false
+        type: string
+      ciArtifactsAwsEndpointUrlSecret:
+        default: "CI_ARTIFACTS_S3_ENDPOINT"
+        required: false
+        type: string
 jobs:
   helm-diff:
     name: Helm Diff
@@ -118,6 +146,13 @@ jobs:
       helmAdditionalArguments: ${{ inputs.helmAdditionalArguments }}
       helmUpdateAppVersion: ${{ inputs.helmUpdateAppVersion }}
       kubeConfigSecret: ${{ inputs.kubeConfigSecret }}
+      artifactBackend: ${{ inputs.artifactBackend }}
+      artifactRetentionDays: ${{ inputs.artifactRetentionDays }}
+      ciArtifactsS3BucketSecret: ${{ inputs.ciArtifactsS3BucketSecret }}
+      ciArtifactsAwsAccessKeyIDSecret: ${{ inputs.ciArtifactsAwsAccessKeyIDSecret }}
+      ciArtifactsAwsSecretAccessKeySecret: ${{ inputs.ciArtifactsAwsSecretAccessKeySecret }}
+      ciArtifactsAwsRegionSecret: ${{ inputs.ciArtifactsAwsRegionSecret }}
+      ciArtifactsAwsEndpointUrlSecret: ${{ inputs.ciArtifactsAwsEndpointUrlSecret }}
   terraform-diff:
     name: Terraform Diff
     if: inputs.terraformDirectory != ''

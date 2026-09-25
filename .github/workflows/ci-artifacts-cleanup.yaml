@@ -1,0 +1,96 @@
+name: CI artifacts cleanup
+
+on:
+  workflow_call:
+    inputs:
+      runsOn:
+        default: "ubuntu-latest"
+        required: false
+        type: string
+      retentionDays:
+        description: Delete objects older than this many days
+        default: 3
+        required: false
+        type: number
+      ciArtifactsS3BucketSecret:
+        default: "CI_ARTIFACTS_S3_BUCKET"
+        required: false
+        type: string
+      ciArtifactsAwsAccessKeyIDSecret:
+        default: "CI_ARTIFACTS_AWS_KEY"
+        required: false
+        type: string
+      ciArtifactsAwsSecretAccessKeySecret:
+        default: "CI_ARTIFACTS_AWS_SECRET"
+        required: false
+        type: string
+      ciArtifactsAwsRegionSecret:
+        default: "CI_ARTIFACTS_S3_REGION"
+        required: false
+        type: string
+      ciArtifactsAwsEndpointUrlSecret:
+        default: "CI_ARTIFACTS_S3_ENDPOINT"
+        required: false
+        type: string
+
+jobs:
+  cleanup:
+    name: Clean up stale CI artifacts
+    runs-on: ${{ inputs.runsOn }}
+    continue-on-error: true
+    steps:
+      - name: Verify CI artifacts bucket is configured
+        id: bucket
+        env:
+          CI_ARTIFACTS_S3_BUCKET: ${{ secrets[inputs.ciArtifactsS3BucketSecret] }}
+        run: |
+          if [ -z "${CI_ARTIFACTS_S3_BUCKET}" ]; then
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice title=CI artifacts cleanup skipped::CI_ARTIFACTS_S3_BUCKET is not set."
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: $/.github/actions/ci-artifacts-aws-config
+        if: steps.bucket.outputs.configured == 'true'
+        with:
+          awsAccessKeyId: ${{ secrets[inputs.ciArtifactsAwsAccessKeyIDSecret] }}
+          awsSecretAccessKey: ${{ secrets[inputs.ciArtifactsAwsSecretAccessKeySecret] }}
+          awsRegion: ${{ secrets[inputs.ciArtifactsAwsRegionSecret] }}
+          awsEndpointUrl: ${{ secrets[inputs.ciArtifactsAwsEndpointUrlSecret] }}
+      - name: Delete objects older than retention
+        if: steps.bucket.outputs.configured == 'true'
+        env:
+          CI_ARTIFACTS_S3_BUCKET: ${{ secrets[inputs.ciArtifactsS3BucketSecret] }}
+          CI_ARTIFACTS_S3_ENDPOINT: ${{ secrets[inputs.ciArtifactsAwsEndpointUrlSecret] }}
+          RETENTION_DAYS: ${{ inputs.retentionDays }}
+        run: |
+          set -euo pipefail
+          endpoint_args=()
+          if [ -n "${CI_ARTIFACTS_S3_ENDPOINT}" ]; then
+            endpoint_args=(--endpoint-url "${CI_ARTIFACTS_S3_ENDPOINT}")
+          fi
+          cutoff_epoch="$(date -u -d "${RETENTION_DAYS} days ago" +%s)"
+          deleted=0
+          continuation=""
+          while true; do
+            if [ -n "$continuation" ]; then
+              response="$(aws s3api list-objects-v2 --bucket "${CI_ARTIFACTS_S3_BUCKET}" "${endpoint_args[@]}" --continuation-token "$continuation")"
+            else
+              response="$(aws s3api list-objects-v2 --bucket "${CI_ARTIFACTS_S3_BUCKET}" "${endpoint_args[@]}")"
+            fi
+            keys="$(printf '%s' "$response" | jq -r --argjson cutoff "$cutoff_epoch" '
+              (.Contents // [])
+              | map(select((.LastModified | fromdateiso8601) < $cutoff))
+              | .[].Key
+            ')"
+            if [ -n "$keys" ]; then
+              while IFS= read -r key; do
+                [ -z "$key" ] && continue
+                aws s3api delete-object --bucket "${CI_ARTIFACTS_S3_BUCKET}" --key "$key" "${endpoint_args[@]}"
+                deleted=$((deleted + 1))
+              done <<< "$keys"
+            fi
+            continuation="$(printf '%s' "$response" | jq -r '.NextContinuationToken // empty')"
+            [ -z "$continuation" ] && break
+          done
+          echo "Deleted ${deleted} object(s) older than ${RETENTION_DAYS} day(s)"
