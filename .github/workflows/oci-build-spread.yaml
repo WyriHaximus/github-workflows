@@ -55,6 +55,36 @@ on:
         default: 1
         required: false
         type: number
+      artifactBackend:
+        description: "Where to stage cross-job CI artifacts: github or s3"
+        default: "github"
+        required: false
+        type: string
+      ciArtifactsS3BucketSecret:
+        description: Secret name for the CI artifacts S3 bucket
+        default: "CI_ARTIFACTS_S3_BUCKET"
+        required: false
+        type: string
+      ciArtifactsAwsAccessKeyIDSecret:
+        description: Secret name for CI artifacts S3 access key ID
+        default: "CI_ARTIFACTS_AWS_KEY"
+        required: false
+        type: string
+      ciArtifactsAwsSecretAccessKeySecret:
+        description: Secret name for CI artifacts S3 secret access key
+        default: "CI_ARTIFACTS_AWS_SECRET"
+        required: false
+        type: string
+      ciArtifactsAwsRegionSecret:
+        description: Secret name for CI artifacts S3 region
+        default: "CI_ARTIFACTS_S3_REGION"
+        required: false
+        type: string
+      ciArtifactsAwsEndpointUrlSecret:
+        description: Secret name for CI artifacts S3 endpoint URL
+        default: "CI_ARTIFACTS_S3_ENDPOINT"
+        required: false
+        type: string
 jobs:
   supported-platform-matrix:
     name: Supported Platform Matrix
@@ -116,14 +146,21 @@ jobs:
       - run: echo "docker tag ${{ inputs.ociRegistry }}/${{ inputs.tag }}-${{ env.PLATFORM_ARCH }} localhost:5000/${{ inputs.tag }}-${{ env.PLATFORM_ARCH }}" >> ./docker-image/tag-push-${{ env.PLATFORM_PAIR }}.sh
       - run: echo "docker push localhost:5000/${{ inputs.tag }}-${{ env.PLATFORM_ARCH }}" >> ./docker-image/tag-push-${{ env.PLATFORM_PAIR }}.sh
       - name: Build image
-        run: docker buildx build --platform=${{ matrix.platform }} -f ${{ inputs.dockerfile }} -t ${{ inputs.ociRegistry }}/${{ inputs.tag }}-${{ env.PLATFORM_ARCH }} --label org.opencontainers.image.revision=${{ github.sha }} --label org.opencontainers.image.source=https://github.com/${{ github.repository }} . ${{ inputs.dockerBuildTarget != '' && format('--target={0}', inputs.dockerBuildTarget) || ''}} ${{ inputs.dockerBuildExtraArguments }}
+        run: docker build --platform=${{ matrix.platform }} -f ${{ inputs.dockerfile }} -t ${{ inputs.ociRegistry }}/${{ inputs.tag }}-${{ env.PLATFORM_ARCH }} --label org.opencontainers.image.revision=${{ github.sha }} --label org.opencontainers.image.source=https://github.com/${{ github.repository }} --annotation "org.opencontainers.image.revision=${{ github.sha }}" --annotation "org.opencontainers.image.source=https://github.com/${{ github.repository }}" . ${{ inputs.dockerBuildTarget != '' && format('--target={0}', inputs.dockerBuildTarget) || ''}} ${{ inputs.dockerBuildExtraArguments }}
       - run: docker save ${{ inputs.ociRegistry }}/${{ inputs.tag }}-${{ env.PLATFORM_ARCH }} -o ./docker-image/docker_image-${{ env.PLATFORM_PAIR }}.tar
       - name: Upload Images
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: $/.github/actions/ci-artifacts-upload
         with:
-          name: docker-image-${{ github.sha }}-${{ env.PLATFORM_PAIR }}
+          backend: ${{ inputs.artifactBackend }}
+          artifactName: docker-image-${{ github.sha }}-${{ env.PLATFORM_PAIR }}
           path: ./docker-image
-          retention-days: ${{ inputs.artifactRetentionDays }}
+          retentionDays: ${{ inputs.artifactRetentionDays }}
+          s3Bucket: ${{ secrets[inputs.ciArtifactsS3BucketSecret] }}
+          s3KeyPrefix: ${{ github.run_id }}/${{ github.run_attempt }}/docker-image-${{ github.sha }}-${{ env.PLATFORM_PAIR }}
+          awsAccessKeyId: ${{ secrets[inputs.ciArtifactsAwsAccessKeyIDSecret] }}
+          awsSecretAccessKey: ${{ secrets[inputs.ciArtifactsAwsSecretAccessKeySecret] }}
+          awsRegion: ${{ secrets[inputs.ciArtifactsAwsRegionSecret] }}
+          awsEndpointUrl: ${{ secrets[inputs.ciArtifactsAwsEndpointUrlSecret] }}
   oci-merge-and-push:
     name: OCI Combine and Push
     needs:
@@ -166,11 +203,20 @@ jobs:
           echo "Driver:    ${{ steps.buildx.outputs.driver }}"
           echo "Platforms: ${{ steps.buildx.outputs.platforms }}"
           echo "Nodes:     ${{ steps.buildx.outputs.nodes }}"
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      - name: Download Images
+        uses: $/.github/actions/ci-artifacts-download
         with:
-          pattern: docker-image-${{ github.sha }}-*
-          path: /tmp/docker-image
-          merge-multiple: true
+          backend: ${{ inputs.artifactBackend }}
+          artifactPattern: docker-image-${{ github.sha }}-*
+          downloadPath: /tmp/docker-image
+          mergeMultiple: "true"
+          s3Bucket: ${{ secrets[inputs.ciArtifactsS3BucketSecret] }}
+          s3RunPrefix: ${{ github.run_id }}/${{ github.run_attempt }}/
+          s3SyncLayout: flat
+          awsAccessKeyId: ${{ secrets[inputs.ciArtifactsAwsAccessKeyIDSecret] }}
+          awsSecretAccessKey: ${{ secrets[inputs.ciArtifactsAwsSecretAccessKeySecret] }}
+          awsRegion: ${{ secrets[inputs.ciArtifactsAwsRegionSecret] }}
+          awsEndpointUrl: ${{ secrets[inputs.ciArtifactsAwsEndpointUrlSecret] }}
       - run: |
           for f in /tmp/docker-image/docker_image-*.tar; do
             docker load --input $f
@@ -179,3 +225,23 @@ jobs:
       - run: cat /tmp/docker-image/tag-push-*.sh | sh
       - run: echo "FROM localhost:5000/${{ inputs.tag }}-\${TARGETARCH}" >> docker-file-push
       - run: docker buildx build -f docker-file-push -t ${{ inputs.ociRegistry }}/${{ inputs.tag }} --platform=${{ needs.supported-platform-matrix.outputs.platform_csv }} --label org.opencontainers.image.revision=${{ github.sha }} --label org.opencontainers.image.source=https://github.com/${{ github.repository }} --output=type=registry .
+      - name: Clean up CI artifacts on S3
+        if: inputs.artifactBackend == 's3' && success()
+        uses: $/.github/actions/ci-artifacts-aws-config
+        with:
+          awsAccessKeyId: ${{ secrets[inputs.ciArtifactsAwsAccessKeyIDSecret] }}
+          awsSecretAccessKey: ${{ secrets[inputs.ciArtifactsAwsSecretAccessKeySecret] }}
+          awsRegion: ${{ secrets[inputs.ciArtifactsAwsRegionSecret] }}
+          awsEndpointUrl: ${{ secrets[inputs.ciArtifactsAwsEndpointUrlSecret] }}
+      - name: Delete run prefix on S3
+        if: inputs.artifactBackend == 's3' && success()
+        env:
+          CI_ARTIFACTS_S3_BUCKET: ${{ secrets[inputs.ciArtifactsS3BucketSecret] }}
+          CI_ARTIFACTS_S3_ENDPOINT: ${{ secrets[inputs.ciArtifactsAwsEndpointUrlSecret] }}
+        run: |
+          set -euo pipefail
+          endpoint_args=()
+          if [ -n "${CI_ARTIFACTS_S3_ENDPOINT}" ]; then
+            endpoint_args=(--endpoint-url "${CI_ARTIFACTS_S3_ENDPOINT}")
+          fi
+          aws s3 rm "s3://${CI_ARTIFACTS_S3_BUCKET}/${{ github.run_id }}/${{ github.run_attempt }}/" --recursive "${endpoint_args[@]}"

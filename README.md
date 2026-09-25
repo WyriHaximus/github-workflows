@@ -155,6 +155,31 @@ ociSparseCheckout: |
   !/tests/data/*
 ```
 
+When `ociSpreadBuild` is enabled, platform-specific image layers are built on separate runners and combined in a
+follow-up job. Those jobs need to pass files between each other using **CI artifacts**. By default they use GitHub
+Actions artifacts (`artifactBackend: github`, controlled with `artifactRetentionDays`). On self-hosted or
+capacity-constrained setups, you can store the same payloads in S3 instead:
+
+```yaml
+with:
+  ociSpreadBuild: true
+  artifactBackend: s3
+```
+
+Set `artifactBackend` on the **Projects CI** entry point (`project.yaml`). The spread OCI workflow uploads under
+`{run_id}/{run_attempt}/{artifact_name}/` in the bucket and removes that prefix after a successful merge when using S3.
+
+Configure the repository with these secrets (names are configurable via `ciArtifacts*Secret` inputs; defaults shown):
+
+* `CI_ARTIFACTS_S3_BUCKET` — bucket name
+* `CI_ARTIFACTS_AWS_KEY` — access key ID
+* `CI_ARTIFACTS_AWS_SECRET` — secret access key
+* `CI_ARTIFACTS_S3_REGION` — region (for example `de` on Bunny Storage)
+* `CI_ARTIFACTS_S3_ENDPOINT` — optional; set for S3-compatible endpoints (Bunny, MinIO, etc.). Leave unset for native AWS S3.
+
+Reusable workflows `artifact-upload.yaml` and `artifact-download.yaml`, and composite actions under
+`.github/actions/ci-artifacts-*`, implement the same backend switch for other workflows if needed.
+
 To kick off retagging simple set `ociRetag` to `true` on the Release Management entry point.
 
 ### Helm
@@ -256,6 +281,17 @@ The caller workflow needs `contents: read` when Conductor is enabled.
 Project Utils can prune old container images from GHCR on `push` to configured branches, on a nightly schedule, and
 on manual `workflow_dispatch`. Set `disableGhcrCleanup: true` to skip it. See the Projects Utils usage section below for tag
 retention rules, PAT configuration, and inputs.
+
+#### CI artifacts cleanup (S3)
+
+When spread OCI builds (or other jobs) use `artifactBackend: s3`, objects can remain in the bucket if a run fails
+before per-run cleanup or when cleanup is disabled. **Project Utils** can delete stale objects on `push`, `schedule`,
+and `workflow_dispatch`. This is **off by default** (`disableCiArtifactsCleanup: true`). Enable it only when the
+repository uses S3-backed CI artifacts and defines the same `CI_ARTIFACTS_*` secrets as for CI.
+
+The job lists the bucket and deletes objects whose `LastModified` is older than `ciArtifactsRetentionDays` (default
+`3`). If `CI_ARTIFACTS_S3_BUCKET` is not set, cleanup is skipped with a notice. The job uses `continue-on-error: true`
+so a misconfigured bucket does not fail the utils workflow.
 
 ### TerraForm
 
@@ -401,16 +437,16 @@ flowchart TB
   package_release_management_craft_release["craft-release.yaml"] --> package_release_management_a5("haya14busa/action-update-semver@v1.5.1")
   package_release_management_craft_release["craft-release.yaml"] --> package_release_management_a6("softprops/action-gh-release@v3.0.3")
   package_release_management_helm_dependencies["helm-dependencies.yaml"] --> package_release_management_a2("actions/checkout@v7.0.1")
-  package_release_management_helm_diff["helm-diff.yaml"] --> package_release_management_a7("WyriHaximus/github-action-get-previous-tag@v2.1.0")
+  package_release_management_helm_diff["helm-diff.yaml"] --> package_release_management_a7("$/.github/actions/ci-artifacts-download")
+  package_release_management_helm_diff["helm-diff.yaml"] --> package_release_management_a8("$/.github/actions/ci-artifacts-upload")
+  package_release_management_helm_diff["helm-diff.yaml"] --> package_release_management_a9("WyriHaximus/github-action-get-previous-tag@v2.1.0")
   package_release_management_helm_diff["helm-diff.yaml"] --> package_release_management_a2("actions/checkout@v7.0.1")
-  package_release_management_helm_diff["helm-diff.yaml"] --> package_release_management_a8("actions/download-artifact@v8.0.1")
-  package_release_management_helm_diff["helm-diff.yaml"] --> package_release_management_a9("actions/upload-artifact@v7.0.1")
   package_release_management_helm_diff["helm-diff.yaml"] --> package_release_management_a10("marocchino/sticky-pull-request-comment@v3.0.5")
+  package_release_management_helm_exec["helm-exec.yaml"] --> package_release_management_a7("$/.github/actions/ci-artifacts-download")
+  package_release_management_helm_exec["helm-exec.yaml"] --> package_release_management_a8("$/.github/actions/ci-artifacts-upload")
   package_release_management_helm_exec["helm-exec.yaml"] --> package_release_management_a11("WyriHaximus/github-action-helm3@v4.0.2")
-  package_release_management_helm_exec["helm-exec.yaml"] --> package_release_management_a8("actions/download-artifact@v8.0.1")
-  package_release_management_helm_exec["helm-exec.yaml"] --> package_release_management_a9("actions/upload-artifact@v7.0.1")
   package_release_management_package_set_milestone_on_pr["package-set-milestone-on-pr.yaml"] --> package_release_management_a12("WyriHaximus/github-action-composer-php-versions-in-range@v2.1.0")
-  package_release_management_package_set_milestone_on_pr["package-set-milestone-on-pr.yaml"] --> package_release_management_a7("WyriHaximus/github-action-get-previous-tag@v2.1.0")
+  package_release_management_package_set_milestone_on_pr["package-set-milestone-on-pr.yaml"] --> package_release_management_a9("WyriHaximus/github-action-get-previous-tag@v2.1.0")
   package_release_management_package_set_milestone_on_pr["package-set-milestone-on-pr.yaml"] --> package_release_management_a13("WyriHaximus/github-action-next-semvers@v1.2.1")
   package_release_management_package_set_milestone_on_pr["package-set-milestone-on-pr.yaml"] --> package_release_management_a2("actions/checkout@v7.0.1")
   package_release_management_package_set_milestone_on_pr["package-set-milestone-on-pr.yaml"] --> package_release_management_a14("dcarbone/install-jq-action@v4.0.1")
@@ -449,9 +485,7 @@ flowchart TB
   click package_release_management_a4 "https://github.com/dawidd6/action-delete-branch/releases/tag/v3.1.0" _blank
   click package_release_management_a5 "https://github.com/haya14busa/action-update-semver/releases/tag/v1.5.1" _blank
   click package_release_management_a6 "https://github.com/softprops/action-gh-release/releases/tag/v3.0.3" _blank
-  click package_release_management_a7 "https://github.com/WyriHaximus/github-action-get-previous-tag/releases/tag/v2.1.0" _blank
-  click package_release_management_a8 "https://github.com/actions/download-artifact/releases/tag/v8.0.1" _blank
-  click package_release_management_a9 "https://github.com/actions/upload-artifact/releases/tag/v7.0.1" _blank
+  click package_release_management_a9 "https://github.com/WyriHaximus/github-action-get-previous-tag/releases/tag/v2.1.0" _blank
   click package_release_management_composer_diff "https://github.com/WyriHaximus/github-workflows/blob/main/.github/workflows/composer-diff.yaml" _blank
   click package_release_management_craft_release "https://github.com/WyriHaximus/github-workflows/blob/main/.github/workflows/craft-release.yaml" _blank
   click package_release_management_diff "https://github.com/WyriHaximus/github-workflows/blob/main/.github/workflows/diff.yaml" _blank
@@ -573,9 +607,10 @@ flowchart TB
   project_oci_build_single["oci-build-single.yaml"] --> project_a7("docker/setup-buildx-action@v4.4.1")
   project_oci_build_single["oci-build-single.yaml"] --> project_a8("docker/setup-qemu-action@v4.2.0")
   project_oci_build_single["oci-build-single.yaml"] --> project_a9("wyrihaximus/github-action-oci-image-supported-platforms@v1.0.0")
+  project_oci_build_spread["oci-build-spread.yaml"] --> project_a10("$/.github/actions/ci-artifacts-aws-config")
+  project_oci_build_spread["oci-build-spread.yaml"] --> project_a11("$/.github/actions/ci-artifacts-download")
+  project_oci_build_spread["oci-build-spread.yaml"] --> project_a12("$/.github/actions/ci-artifacts-upload")
   project_oci_build_spread["oci-build-spread.yaml"] --> project_a1("actions/checkout@v7.0.1")
-  project_oci_build_spread["oci-build-spread.yaml"] --> project_a10("actions/download-artifact@v8.0.1")
-  project_oci_build_spread["oci-build-spread.yaml"] --> project_a11("actions/upload-artifact@v7.0.1")
   project_oci_build_spread["oci-build-spread.yaml"] --> project_a6("docker/login-action@v4.6.0")
   project_oci_build_spread["oci-build-spread.yaml"] --> project_a7("docker/setup-buildx-action@v4.4.1")
   project_oci_build_spread["oci-build-spread.yaml"] --> project_a8("docker/setup-qemu-action@v4.2.0")
@@ -586,12 +621,10 @@ flowchart TB
   project_project["project.yaml"] --> project_markdown_check_links["markdown-check-links.yaml"]
   project_project["project.yaml"] --> project_oci_build_single["oci-build-single.yaml"]
   project_project["project.yaml"] --> project_oci_build_spread["oci-build-spread.yaml"]
-  linkStyle 20,21,22,23,24 stroke:#22c55e,stroke-width:2px
-  linkStyle 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19 stroke:#2563eb,stroke-width:2px
+  linkStyle 21,22,23,24,25 stroke:#22c55e,stroke-width:2px
+  linkStyle 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20 stroke:#2563eb,stroke-width:2px
   click project_a0 "https://github.com/WyriHaximus/github-action-composer-php-versions-in-range/releases/tag/v2.1.0" _blank
   click project_a1 "https://github.com/actions/checkout/releases/tag/v7.0.1" _blank
-  click project_a10 "https://github.com/actions/download-artifact/releases/tag/v8.0.1" _blank
-  click project_a11 "https://github.com/actions/upload-artifact/releases/tag/v7.0.1" _blank
   click project_a2 "https://github.com/actions/github-script/releases/tag/v9.0.0" _blank
   click project_a3 "https://github.com/ramsey/composer-install/releases/tag/4.0.0" _blank
   click project_a4 "https://github.com/shivammathur/setup-php/releases/tag/2.37.2" _blank
@@ -613,7 +646,13 @@ flowchart TB
 
 | Input | Type | Description | Default |
 |-------|------|-------------|---------|
+| artifactBackend | string | Where to stage cross-job CI artifacts: github or s3 | github |
 | artifactRetentionDays | number | Number of days to retain uploaded artifacts | 1 |
+| ciArtifactsAwsAccessKeyIDSecret | string | Secret name for CI artifacts S3 access key ID | CI_ARTIFACTS_AWS_KEY |
+| ciArtifactsAwsEndpointUrlSecret | string | Secret name for CI artifacts S3 endpoint URL | CI_ARTIFACTS_S3_ENDPOINT |
+| ciArtifactsAwsRegionSecret | string | Secret name for CI artifacts S3 region | CI_ARTIFACTS_S3_REGION |
+| ciArtifactsAwsSecretAccessKeySecret | string | Secret name for CI artifacts S3 secret access key | CI_ARTIFACTS_AWS_SECRET |
+| ciArtifactsS3BucketSecret | string | Secret name for the CI artifacts S3 bucket | CI_ARTIFACTS_S3_BUCKET |
 | dependencyUpdaters | string | CSV list of bot AppId&#039;s that create PR&#039;s to updated dependencies like RenovateBot and DependaBot | 49699333 |
 | disableComposerLockDiff | boolean | Disable the diffing of composer lock files |  |
 | disableMarkdownLinkCheck | boolean | Disable the checking of links in markdown files |  |
@@ -680,16 +719,16 @@ flowchart TB
   project_release_management_craft_release["craft-release.yaml"] --> project_release_management_a5("haya14busa/action-update-semver@v1.5.1")
   project_release_management_craft_release["craft-release.yaml"] --> project_release_management_a6("softprops/action-gh-release@v3.0.3")
   project_release_management_helm_dependencies["helm-dependencies.yaml"] --> project_release_management_a2("actions/checkout@v7.0.1")
+  project_release_management_helm_deploy["helm-deploy.yaml"] --> project_release_management_a7("$/.github/actions/ci-artifacts-upload")
   project_release_management_helm_deploy["helm-deploy.yaml"] --> project_release_management_a2("actions/checkout@v7.0.1")
-  project_release_management_helm_deploy["helm-deploy.yaml"] --> project_release_management_a7("actions/upload-artifact@v7.0.1")
-  project_release_management_helm_diff["helm-diff.yaml"] --> project_release_management_a8("WyriHaximus/github-action-get-previous-tag@v2.1.0")
+  project_release_management_helm_diff["helm-diff.yaml"] --> project_release_management_a8("$/.github/actions/ci-artifacts-download")
+  project_release_management_helm_diff["helm-diff.yaml"] --> project_release_management_a7("$/.github/actions/ci-artifacts-upload")
+  project_release_management_helm_diff["helm-diff.yaml"] --> project_release_management_a9("WyriHaximus/github-action-get-previous-tag@v2.1.0")
   project_release_management_helm_diff["helm-diff.yaml"] --> project_release_management_a2("actions/checkout@v7.0.1")
-  project_release_management_helm_diff["helm-diff.yaml"] --> project_release_management_a9("actions/download-artifact@v8.0.1")
-  project_release_management_helm_diff["helm-diff.yaml"] --> project_release_management_a7("actions/upload-artifact@v7.0.1")
   project_release_management_helm_diff["helm-diff.yaml"] --> project_release_management_a10("marocchino/sticky-pull-request-comment@v3.0.5")
+  project_release_management_helm_exec["helm-exec.yaml"] --> project_release_management_a8("$/.github/actions/ci-artifacts-download")
+  project_release_management_helm_exec["helm-exec.yaml"] --> project_release_management_a7("$/.github/actions/ci-artifacts-upload")
   project_release_management_helm_exec["helm-exec.yaml"] --> project_release_management_a11("WyriHaximus/github-action-helm3@v4.0.2")
-  project_release_management_helm_exec["helm-exec.yaml"] --> project_release_management_a9("actions/download-artifact@v8.0.1")
-  project_release_management_helm_exec["helm-exec.yaml"] --> project_release_management_a7("actions/upload-artifact@v7.0.1")
   project_release_management_oci_retag["oci-retag.yaml"] --> project_release_management_a12("docker/login-action@v4.6.0")
   project_release_management_oci_retag["oci-retag.yaml"] --> project_release_management_a13("docker/setup-buildx-action@v4.4.1")
   project_release_management_oci_retag["oci-retag.yaml"] --> project_release_management_a14("docker/setup-qemu-action@v4.2.0")
@@ -697,23 +736,23 @@ flowchart TB
   project_release_management_oci_retag["oci-retag.yaml"] --> project_release_management_a16("nick-invision/retry@v4.0.0")
   project_release_management_oci_retag["oci-retag.yaml"] --> project_release_management_a17("wyrihaximus/github-action-oci-image-supported-platforms@v1.0.0")
   project_release_management_project_craft_release_cdn_build_commands["project-craft-release-cdn-build-commands.yaml"] --> project_release_management_a2("actions/checkout@v7.0.1")
-  project_release_management_project_craft_release_cdn_build_commands["project-craft-release-cdn-build-commands.yaml"] --> project_release_management_a7("actions/upload-artifact@v7.0.1")
-  project_release_management_project_craft_release_serverless["project-craft-release-serverless.yaml"] --> project_release_management_a18("WyriHaximus/github-action-composer-php-versions-in-range@v2.1.0")
+  project_release_management_project_craft_release_cdn_build_commands["project-craft-release-cdn-build-commands.yaml"] --> project_release_management_a18("actions/upload-artifact@v7.0.1")
+  project_release_management_project_craft_release_serverless["project-craft-release-serverless.yaml"] --> project_release_management_a19("WyriHaximus/github-action-composer-php-versions-in-range@v2.1.0")
   project_release_management_project_craft_release_serverless["project-craft-release-serverless.yaml"] --> project_release_management_a2("actions/checkout@v7.0.1")
-  project_release_management_project_craft_release_serverless["project-craft-release-serverless.yaml"] --> project_release_management_a19("ramsey/composer-install@4.0.0")
+  project_release_management_project_craft_release_serverless["project-craft-release-serverless.yaml"] --> project_release_management_a20("ramsey/composer-install@4.0.0")
   project_release_management_project_craft_release_static["project-craft-release-static.yaml"] --> project_release_management_a2("actions/checkout@v7.0.1")
-  project_release_management_project_craft_release_static["project-craft-release-static.yaml"] --> project_release_management_a7("actions/upload-artifact@v7.0.1")
-  project_release_management_project_set_milestone_on_pr["project-set-milestone-on-pr.yaml"] --> project_release_management_a8("WyriHaximus/github-action-get-previous-tag@v2.1.0")
-  project_release_management_project_set_milestone_on_pr["project-set-milestone-on-pr.yaml"] --> project_release_management_a20("WyriHaximus/github-action-next-release-version@v1.1.0")
+  project_release_management_project_craft_release_static["project-craft-release-static.yaml"] --> project_release_management_a18("actions/upload-artifact@v7.0.1")
+  project_release_management_project_set_milestone_on_pr["project-set-milestone-on-pr.yaml"] --> project_release_management_a9("WyriHaximus/github-action-get-previous-tag@v2.1.0")
+  project_release_management_project_set_milestone_on_pr["project-set-milestone-on-pr.yaml"] --> project_release_management_a21("WyriHaximus/github-action-next-release-version@v1.1.0")
   project_release_management_project_set_milestone_on_pr["project-set-milestone-on-pr.yaml"] --> project_release_management_a2("actions/checkout@v7.0.1")
-  project_release_management_required_labels["required-labels.yaml"] --> project_release_management_a21("mheap/github-action-required-labels@v5.6.0")
-  project_release_management_s3_upload["s3-upload.yaml"] --> project_release_management_a9("actions/download-artifact@v8.0.1")
-  project_release_management_s3_upload["s3-upload.yaml"] --> project_release_management_a22("aws-actions/configure-aws-credentials@v6.2.3")
-  project_release_management_set_milestone_on_pr["set-milestone-on-pr.yaml"] --> project_release_management_a23("WyriHaximus/github-action-create-milestone@v1.2.0")
-  project_release_management_set_milestone_on_pr["set-milestone-on-pr.yaml"] --> project_release_management_a24("dcarbone/install-jq-action@v4.0.1")
+  project_release_management_required_labels["required-labels.yaml"] --> project_release_management_a22("mheap/github-action-required-labels@v5.6.0")
+  project_release_management_s3_upload["s3-upload.yaml"] --> project_release_management_a23("actions/download-artifact@v8.0.1")
+  project_release_management_s3_upload["s3-upload.yaml"] --> project_release_management_a24("aws-actions/configure-aws-credentials@v6.2.3")
+  project_release_management_set_milestone_on_pr["set-milestone-on-pr.yaml"] --> project_release_management_a25("WyriHaximus/github-action-create-milestone@v1.2.0")
+  project_release_management_set_milestone_on_pr["set-milestone-on-pr.yaml"] --> project_release_management_a26("dcarbone/install-jq-action@v4.0.1")
   project_release_management_terraform_apply["terraform-apply.yaml"] --> project_release_management_a2("actions/checkout@v7.0.1")
   project_release_management_terraform_diff["terraform-diff.yaml"] --> project_release_management_a2("actions/checkout@v7.0.1")
-  project_release_management_terraform_diff["terraform-diff.yaml"] --> project_release_management_a25("actions/github-script@v9.0.0")
+  project_release_management_terraform_diff["terraform-diff.yaml"] --> project_release_management_a27("actions/github-script@v9.0.0")
   project_release_management_terraform_diff["terraform-diff.yaml"] --> project_release_management_a10("marocchino/sticky-pull-request-comment@v3.0.5")
   project_release_management_diff["diff.yaml"] --> project_release_management_composer_diff["composer-diff.yaml"]
   project_release_management_diff["diff.yaml"] --> project_release_management_helm_diff["helm-diff.yaml"]
@@ -752,22 +791,22 @@ flowchart TB
   click project_release_management_a15 "https://github.com/int128/wait-for-docker-image-action/releases/tag/v1.29.0" _blank
   click project_release_management_a16 "https://github.com/nick-invision/retry/releases/tag/v4.0.0" _blank
   click project_release_management_a17 "https://github.com/wyrihaximus/github-action-oci-image-supported-platforms/releases/tag/v1.0.0" _blank
-  click project_release_management_a18 "https://github.com/WyriHaximus/github-action-composer-php-versions-in-range/releases/tag/v2.1.0" _blank
-  click project_release_management_a19 "https://github.com/ramsey/composer-install/releases/tag/4.0.0" _blank
+  click project_release_management_a18 "https://github.com/actions/upload-artifact/releases/tag/v7.0.1" _blank
+  click project_release_management_a19 "https://github.com/WyriHaximus/github-action-composer-php-versions-in-range/releases/tag/v2.1.0" _blank
   click project_release_management_a2 "https://github.com/actions/checkout/releases/tag/v7.0.1" _blank
-  click project_release_management_a20 "https://github.com/WyriHaximus/github-action-next-release-version/releases/tag/v1.1.0" _blank
-  click project_release_management_a21 "https://github.com/mheap/github-action-required-labels/releases/tag/v5.6.0" _blank
-  click project_release_management_a22 "https://github.com/aws-actions/configure-aws-credentials/releases/tag/v6.2.3" _blank
-  click project_release_management_a23 "https://github.com/WyriHaximus/github-action-create-milestone/releases/tag/v1.2.0" _blank
-  click project_release_management_a24 "https://github.com/dcarbone/install-jq-action/releases/tag/v4.0.1" _blank
-  click project_release_management_a25 "https://github.com/actions/github-script/releases/tag/v9.0.0" _blank
+  click project_release_management_a20 "https://github.com/ramsey/composer-install/releases/tag/4.0.0" _blank
+  click project_release_management_a21 "https://github.com/WyriHaximus/github-action-next-release-version/releases/tag/v1.1.0" _blank
+  click project_release_management_a22 "https://github.com/mheap/github-action-required-labels/releases/tag/v5.6.0" _blank
+  click project_release_management_a23 "https://github.com/actions/download-artifact/releases/tag/v8.0.1" _blank
+  click project_release_management_a24 "https://github.com/aws-actions/configure-aws-credentials/releases/tag/v6.2.3" _blank
+  click project_release_management_a25 "https://github.com/WyriHaximus/github-action-create-milestone/releases/tag/v1.2.0" _blank
+  click project_release_management_a26 "https://github.com/dcarbone/install-jq-action/releases/tag/v4.0.1" _blank
+  click project_release_management_a27 "https://github.com/actions/github-script/releases/tag/v9.0.0" _blank
   click project_release_management_a3 "https://github.com/ad-m/github-push-action/releases/tag/v1.3.0" _blank
   click project_release_management_a4 "https://github.com/dawidd6/action-delete-branch/releases/tag/v3.1.0" _blank
   click project_release_management_a5 "https://github.com/haya14busa/action-update-semver/releases/tag/v1.5.1" _blank
   click project_release_management_a6 "https://github.com/softprops/action-gh-release/releases/tag/v3.0.3" _blank
-  click project_release_management_a7 "https://github.com/actions/upload-artifact/releases/tag/v7.0.1" _blank
-  click project_release_management_a8 "https://github.com/WyriHaximus/github-action-get-previous-tag/releases/tag/v2.1.0" _blank
-  click project_release_management_a9 "https://github.com/actions/download-artifact/releases/tag/v8.0.1" _blank
+  click project_release_management_a9 "https://github.com/WyriHaximus/github-action-get-previous-tag/releases/tag/v2.1.0" _blank
   click project_release_management_composer_diff "https://github.com/WyriHaximus/github-workflows/blob/main/.github/workflows/composer-diff.yaml" _blank
   click project_release_management_craft_release "https://github.com/WyriHaximus/github-workflows/blob/main/.github/workflows/craft-release.yaml" _blank
   click project_release_management_diff "https://github.com/WyriHaximus/github-workflows/blob/main/.github/workflows/diff.yaml" _blank
@@ -798,6 +837,7 @@ flowchart TB
 | Input | Type | Description | Default |
 |-------|------|-------------|---------|
 | applicationType | string | The type of project this is, release and deployment wise |  |
+| artifactBackend | string | Where to stage cross-job CI artifacts: github or s3 | github |
 | artifactRetentionDays | number | Number of days to retain uploaded artifacts | 1 |
 | awsAccessKeyIDSecret | string | The secret name that holds the AWS access key ID | CDN_HOSTED_S3_KEY |
 | awsEndpointUrlSecret | string | The secret name that holds the AWS endpoint URL | CDN_HOSTED_S3_ENDPOINT |
@@ -806,6 +846,11 @@ flowchart TB
 | branch | string | The branch to tag the release on |  |
 | cdnAwsCloudFrontDistributionIDSecret | string | The secret name that holds the AWS cloudfront distribution id | CDN_HOSTED_DISTRIBUTION_ID |
 | cdnAwsS3BucketSecret | string | The secret name that holds the AWS S3 bucket name | CDN_HOSTED_S3_BUCKET |
+| ciArtifactsAwsAccessKeyIDSecret | string |  | CI_ARTIFACTS_AWS_KEY |
+| ciArtifactsAwsEndpointUrlSecret | string |  | CI_ARTIFACTS_S3_ENDPOINT |
+| ciArtifactsAwsRegionSecret | string |  | CI_ARTIFACTS_S3_REGION |
+| ciArtifactsAwsSecretAccessKeySecret | string |  | CI_ARTIFACTS_AWS_SECRET |
+| ciArtifactsS3BucketSecret | string |  | CI_ARTIFACTS_S3_BUCKET |
 | commands | string | The commands to execute |  |
 | commandsOutputPath | string | Where to get to resulting files from the commands |  |
 | description | string | Additional information to add above the changelog in the release |  |
@@ -840,7 +885,7 @@ flowchart TB
 
 #### Utils
 
-Scheduled, push, and manual utilities such as GHCR image cleanup.
+Scheduled, push, and manual utilities such as GHCR image cleanup and optional S3 CI artifact cleanup.
 
 ```yaml
 name: Utils
@@ -870,18 +915,21 @@ jobs:
 
 ```mermaid
 flowchart TB
-  project_utils_conductor["conductor.yaml"] --> project_utils_a0("WyriHaximus/github-action-composer-php-versions-in-range@v2.1.0")
-  project_utils_conductor["conductor.yaml"] --> project_utils_a1("actions/checkout@v7.0.1")
-  project_utils_conductor["conductor.yaml"] --> project_utils_a2("packagist/conductor-github-action@1.6.1")
-  project_utils_conductor["conductor.yaml"] --> project_utils_a3("shivammathur/setup-php@2.37.2")
+  project_utils_ci_artifacts_cleanup["ci-artifacts-cleanup.yaml"] --> project_utils_a0("$/.github/actions/ci-artifacts-aws-config")
+  project_utils_conductor["conductor.yaml"] --> project_utils_a1("WyriHaximus/github-action-composer-php-versions-in-range@v2.1.0")
+  project_utils_conductor["conductor.yaml"] --> project_utils_a2("actions/checkout@v7.0.1")
+  project_utils_conductor["conductor.yaml"] --> project_utils_a3("packagist/conductor-github-action@1.6.1")
+  project_utils_conductor["conductor.yaml"] --> project_utils_a4("shivammathur/setup-php@2.37.2")
+  project_utils_project_utils["project-utils.yaml"] --> project_utils_ci_artifacts_cleanup["ci-artifacts-cleanup.yaml"]
   project_utils_project_utils["project-utils.yaml"] --> project_utils_conductor["conductor.yaml"]
   project_utils_project_utils["project-utils.yaml"] --> project_utils_ghcr_cleanup["ghcr-cleanup.yaml"]
-  linkStyle 4,5 stroke:#22c55e,stroke-width:2px
-  linkStyle 0,1,2,3 stroke:#2563eb,stroke-width:2px
-  click project_utils_a0 "https://github.com/WyriHaximus/github-action-composer-php-versions-in-range/releases/tag/v2.1.0" _blank
-  click project_utils_a1 "https://github.com/actions/checkout/releases/tag/v7.0.1" _blank
-  click project_utils_a2 "https://github.com/packagist/conductor-github-action/releases/tag/1.6.1" _blank
-  click project_utils_a3 "https://github.com/shivammathur/setup-php/releases/tag/2.37.2" _blank
+  linkStyle 5,6,7 stroke:#22c55e,stroke-width:2px
+  linkStyle 0,1,2,3,4 stroke:#2563eb,stroke-width:2px
+  click project_utils_a1 "https://github.com/WyriHaximus/github-action-composer-php-versions-in-range/releases/tag/v2.1.0" _blank
+  click project_utils_a2 "https://github.com/actions/checkout/releases/tag/v7.0.1" _blank
+  click project_utils_a3 "https://github.com/packagist/conductor-github-action/releases/tag/1.6.1" _blank
+  click project_utils_a4 "https://github.com/shivammathur/setup-php/releases/tag/2.37.2" _blank
+  click project_utils_ci_artifacts_cleanup "https://github.com/WyriHaximus/github-workflows/blob/main/.github/workflows/ci-artifacts-cleanup.yaml" _blank
   click project_utils_conductor "https://github.com/WyriHaximus/github-workflows/blob/main/.github/workflows/conductor.yaml" _blank
   click project_utils_ghcr_cleanup "https://github.com/WyriHaximus/github-workflows/blob/main/.github/workflows/ghcr-cleanup.yaml" _blank
   click project_utils_project_utils "https://github.com/WyriHaximus/github-workflows/blob/main/.github/workflows/project-utils.yaml" _blank
@@ -919,10 +967,22 @@ the same secret name in the utils workflow. Packages first pushed outside Action
 Actions access configured manually. When the package does not exist or is not accessible, cleanup is
 skipped with a notice instead of failing the workflow.
 
+**S3 CI artifact cleanup** uses the same secret names as S3 artifact upload in project CI. Set
+`disableCiArtifactsCleanup: false` when using `artifactBackend: s3`. Tune `ciArtifactsRetentionDays` for how long
+failed or abandoned run prefixes may stay in the bucket. Per-run prefixes are still removed after successful spread
+OCI merges; scheduled cleanup catches everything else.
+
 ##### Inputs
 
 | Input | Type | Description | Default |
 |-------|------|-------------|---------|
+| ciArtifactsAwsAccessKeyIDSecret | string | Secret name for CI artifacts S3 access key ID | CI_ARTIFACTS_AWS_KEY |
+| ciArtifactsAwsEndpointUrlSecret | string | Secret name for CI artifacts S3 endpoint URL | CI_ARTIFACTS_S3_ENDPOINT |
+| ciArtifactsAwsRegionSecret | string | Secret name for CI artifacts S3 region | CI_ARTIFACTS_S3_REGION |
+| ciArtifactsAwsSecretAccessKeySecret | string | Secret name for CI artifacts S3 secret access key | CI_ARTIFACTS_AWS_SECRET |
+| ciArtifactsRetentionDays | number | Delete CI artifact objects older than this many days | 3 |
+| ciArtifactsS3BucketSecret | string | Secret name for the CI artifacts S3 bucket | CI_ARTIFACTS_S3_BUCKET |
+| disableCiArtifactsCleanup | boolean | Disable CI artifacts S3 cleanup on push, schedule, and workflow_dispatch | true |
 | disableConductor | boolean | Disable the execution of Conductor on `repository_dispatch` with `dependency_update` as event type |  |
 | disableGhcrCleanup | boolean | Disable GHCR image cleanup on `push`, `schedule`, and `workflow_dispatch` |  |
 | ghcrCleanupDisableTaggedCleanup | boolean | Skip tagged version cleanup; untagged-only mode |  |

@@ -155,6 +155,31 @@ ociSparseCheckout: |
   !/tests/data/*
 ```
 
+When `ociSpreadBuild` is enabled, platform-specific image layers are built on separate runners and combined in a
+follow-up job. Those jobs need to pass files between each other using **CI artifacts**. By default they use GitHub
+Actions artifacts (`artifactBackend: github`, controlled with `artifactRetentionDays`). On self-hosted or
+capacity-constrained setups, you can store the same payloads in S3 instead:
+
+```yaml
+with:
+  ociSpreadBuild: true
+  artifactBackend: s3
+```
+
+Set `artifactBackend` on the **Projects CI** entry point (`project.yaml`). The spread OCI workflow uploads under
+`{run_id}/{run_attempt}/{artifact_name}/` in the bucket and removes that prefix after a successful merge when using S3.
+
+Configure the repository with these secrets (names are configurable via `ciArtifacts*Secret` inputs; defaults shown):
+
+* `CI_ARTIFACTS_S3_BUCKET` — bucket name
+* `CI_ARTIFACTS_AWS_KEY` — access key ID
+* `CI_ARTIFACTS_AWS_SECRET` — secret access key
+* `CI_ARTIFACTS_S3_REGION` — region (for example `de` on Bunny Storage)
+* `CI_ARTIFACTS_S3_ENDPOINT` — optional; set for S3-compatible endpoints (Bunny, MinIO, etc.). Leave unset for native AWS S3.
+
+Reusable workflows `artifact-upload.yaml` and `artifact-download.yaml`, and composite actions under
+`.github/actions/ci-artifacts-*`, implement the same backend switch for other workflows if needed.
+
 To kick off retagging simple set `ociRetag` to `true` on the Release Management entry point.
 
 ### Helm
@@ -256,6 +281,17 @@ The caller workflow needs `contents: read` when Conductor is enabled.
 Project Utils can prune old container images from GHCR on `push` to configured branches, on a nightly schedule, and
 on manual `workflow_dispatch`. Set `disableGhcrCleanup: true` to skip it. See the Projects Utils usage section below for tag
 retention rules, PAT configuration, and inputs.
+
+#### CI artifacts cleanup (S3)
+
+When spread OCI builds (or other jobs) use `artifactBackend: s3`, objects can remain in the bucket if a run fails
+before per-run cleanup or when cleanup is disabled. **Project Utils** can delete stale objects on `push`, `schedule`,
+and `workflow_dispatch`. This is **off by default** (`disableCiArtifactsCleanup: true`). Enable it only when the
+repository uses S3-backed CI artifacts and defines the same `CI_ARTIFACTS_*` secrets as for CI.
+
+The job lists the bucket and deletes objects whose `LastModified` is older than `ciArtifactsRetentionDays` (default
+`3`). If `CI_ARTIFACTS_S3_BUCKET` is not set, cleanup is skipped with a notice. The job uses `continue-on-error: true`
+so a misconfigured bucket does not fail the utils workflow.
 
 ### TerraForm
 
@@ -474,7 +510,7 @@ jobs:
 
 #### Utils
 
-Scheduled, push, and manual utilities such as GHCR image cleanup.
+Scheduled, push, and manual utilities such as GHCR image cleanup and optional S3 CI artifact cleanup.
 
 ```yaml
 name: Utils
@@ -532,6 +568,11 @@ images with a PAT via `ociPushSecretSecret` (for example `CR_PAT`), set `ghcrCle
 the same secret name in the utils workflow. Packages first pushed outside Actions may need Manage
 Actions access configured manually. When the package does not exist or is not accessible, cleanup is
 skipped with a notice instead of failing the workflow.
+
+**S3 CI artifact cleanup** uses the same secret names as S3 artifact upload in project CI. Set
+`disableCiArtifactsCleanup: false` when using `artifactBackend: s3`. Tune `ciArtifactsRetentionDays` for how long
+failed or abandoned run prefixes may stay in the bucket. Per-run prefixes are still removed after successful spread
+OCI merges; scheduled cleanup catches everything else.
 
 ##### Inputs
 

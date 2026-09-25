@@ -29,6 +29,17 @@ file_put_contents(dirname(__DIR__) . '/README.md', $renderedReadme);
 function loadInputs(string $fileName): array
 {
     $inputs = Yaml::parse(file_get_contents($fileName))['on']['workflow_call']['inputs'];
+    foreach ($inputs as &$input) {
+        if (!array_key_exists('default', $input)) {
+            continue;
+        }
+        if ($input['default'] === true) {
+            $input['default'] = 'true';
+        } elseif ($input['default'] === false) {
+            $input['default'] = '';
+        }
+    }
+    unset($input);
     ksort($inputs);
 
     return $inputs;
