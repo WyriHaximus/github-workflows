@@ -21,13 +21,14 @@ ifeq ("$(IN_DOCKER)","TRUE")
 	DOCKER_RUN:=
 	DOCKER_SHELL:=
 else
-	DOCKER_RUN:=docker run --rm -i \
+	DOCKER_SECURITY_OPS=--cap-drop=ALL --security-opt="no-new-privileges=true" --user="`id -u`:`id -g`"
+	DOCKER_RUN:=docker run --rm -i ${DOCKER_SECURITY_OPS} \
 		-v "`pwd`:`pwd`" \
 		-v "${COMPOSER_CACHE_DIR}:${COMPOSER_CONTAINER_CACHE_DIR}" \
 		-w "`pwd`" \
 		${CONTAINER_NAME}
 ifeq ($(TTY_AVAILABLE),0)
-	DOCKER_SHELL:=docker run --rm -it \
+	DOCKER_SHELL:=docker run --rm -it ${DOCKER_SECURITY_OPS} \
 		-v "`pwd`:`pwd`" \
 		-v "${COMPOSER_CACHE_DIR}:${COMPOSER_CONTAINER_CACHE_DIR}" \
 		-w "`pwd`" \
