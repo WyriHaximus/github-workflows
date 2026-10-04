@@ -36,9 +36,11 @@ shell: ## Provides Shell access in the expected environment ####
 	$(DOCKER_RUN) bash
 
 install: ## Install dependencies ####
+	$(DOCKER_RUN) git config --global --add safe.directory "$$(pwd)"
 	$(DOCKER_RUN) composer install
 
 update: ## Update dependencies ####
+	$(DOCKER_RUN) git config --global --add safe.directory "$$(pwd)"
 	$(DOCKER_RUN) composer update -W
 
 outdated: ## Show outdated dependencies ####
