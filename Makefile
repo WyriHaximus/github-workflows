@@ -49,10 +49,10 @@ shell: ## Provides Shell access in the expected environment ####
 	$(DOCKER_SHELL) bash
 
 install: ## Install dependencies ####
-	$(DOCKER_RUN) sh -ec 'git config --global --add safe.directory "$$(pwd)" && composer install'
+	$(DOCKER_RUN) sh -ec 'GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=safe.directory GIT_CONFIG_VALUE_0="$$(pwd)" composer install'
 
 update: ## Update dependencies ####
-	$(DOCKER_RUN) sh -ec 'git config --global --add safe.directory "$$(pwd)" && composer update -W'
+	$(DOCKER_RUN) sh -ec 'GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=safe.directory GIT_CONFIG_VALUE_0="$$(pwd)" composer update -W'
 
 outdated: ## Show outdated dependencies ####
 	$(DOCKER_RUN) composer outdated
