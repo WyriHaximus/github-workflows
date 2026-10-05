@@ -732,7 +732,7 @@ flowchart TB
   project_release_management_oci_retag["oci-retag.yaml"] --> project_release_management_a12("docker/login-action@v4.6.0")
   project_release_management_oci_retag["oci-retag.yaml"] --> project_release_management_a13("docker/setup-buildx-action@v4.4.1")
   project_release_management_oci_retag["oci-retag.yaml"] --> project_release_management_a14("docker/setup-qemu-action@v4.4.0")
-  project_release_management_oci_retag["oci-retag.yaml"] --> project_release_management_a15("int128/wait-for-docker-image-action@v1.29.0")
+  project_release_management_oci_retag["oci-retag.yaml"] --> project_release_management_a15("int128/wait-for-docker-image-action@v1.30.0")
   project_release_management_oci_retag["oci-retag.yaml"] --> project_release_management_a16("nick-invision/retry@v4.0.0")
   project_release_management_oci_retag["oci-retag.yaml"] --> project_release_management_a17("wyrihaximus/github-action-oci-image-supported-platforms@v1.0.0")
   project_release_management_project_craft_release_cdn_build_commands["project-craft-release-cdn-build-commands.yaml"] --> project_release_management_a2("actions/checkout@v7.0.1")
@@ -788,7 +788,7 @@ flowchart TB
   click project_release_management_a12 "https://github.com/docker/login-action/releases/tag/v4.6.0" _blank
   click project_release_management_a13 "https://github.com/docker/setup-buildx-action/releases/tag/v4.4.1" _blank
   click project_release_management_a14 "https://github.com/docker/setup-qemu-action/releases/tag/v4.4.0" _blank
-  click project_release_management_a15 "https://github.com/int128/wait-for-docker-image-action/releases/tag/v1.29.0" _blank
+  click project_release_management_a15 "https://github.com/int128/wait-for-docker-image-action/releases/tag/v1.30.0" _blank
   click project_release_management_a16 "https://github.com/nick-invision/retry/releases/tag/v4.0.0" _blank
   click project_release_management_a17 "https://github.com/wyrihaximus/github-action-oci-image-supported-platforms/releases/tag/v1.0.0" _blank
   click project_release_management_a18 "https://github.com/actions/upload-artifact/releases/tag/v7.0.1" _blank
