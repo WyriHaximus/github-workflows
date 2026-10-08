@@ -79,8 +79,12 @@ jobs:
               response="$(aws s3api list-objects-v2 --bucket "${CI_ARTIFACTS_S3_BUCKET}" "${endpoint_args[@]}")"
             fi
             keys="$(printf '%s' "$response" | jq -r --argjson cutoff "$cutoff_epoch" '
+              def s3_last_modified_epoch:
+                sub("\\.[0-9]+"; "")
+                | if test("\\+00:00$") then gsub("\\+00:00$"; "Z") else . end
+                | fromdateiso8601;
               (.Contents // [])
-              | map(select((.LastModified | fromdateiso8601) < $cutoff))
+              | map(select((.LastModified | s3_last_modified_epoch) < $cutoff))
               | .[].Key
             ')"
             if [ -n "$keys" ]; then
