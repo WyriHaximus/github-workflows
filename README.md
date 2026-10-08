@@ -355,7 +355,7 @@ flowchart TB
   package_ci["ci.yaml"] --> package_a1("actions/checkout@v7.0.1")
   package_ci["ci.yaml"] --> package_a2("actions/github-script@v9.0.0")
   package_ci["ci.yaml"] --> package_a3("ramsey/composer-install@4.0.0")
-  package_ci["ci.yaml"] --> package_a4("shivammathur/setup-php@2.37.2")
+  package_ci["ci.yaml"] --> package_a4("shivammathur/setup-php@2.40.0")
   package_markdown_check_links["markdown-check-links.yaml"] --> package_a1("actions/checkout@v7.0.1")
   package_markdown_check_links["markdown-check-links.yaml"] --> package_a5("umbrelladocs/action-linkspector@v1.5.5")
   package_supported_threading_matrix["supported-threading-matrix.yaml"] --> package_a2("actions/github-script@v9.0.0")
@@ -368,7 +368,7 @@ flowchart TB
   click package_a1 "https://github.com/actions/checkout/releases/tag/v7.0.1" _blank
   click package_a2 "https://github.com/actions/github-script/releases/tag/v9.0.0" _blank
   click package_a3 "https://github.com/ramsey/composer-install/releases/tag/4.0.0" _blank
-  click package_a4 "https://github.com/shivammathur/setup-php/releases/tag/2.37.2" _blank
+  click package_a4 "https://github.com/shivammathur/setup-php/releases/tag/2.40.0" _blank
   click package_a5 "https://github.com/umbrelladocs/action-linkspector/releases/tag/v1.5.5" _blank
   click package_ci "https://github.com/WyriHaximus/github-workflows/blob/main/.github/workflows/ci.yaml" _blank
   click package_markdown_check_links "https://github.com/WyriHaximus/github-workflows/blob/main/.github/workflows/markdown-check-links.yaml" _blank
@@ -541,14 +541,14 @@ flowchart TB
   package_utils_conductor["conductor.yaml"] --> package_utils_a0("WyriHaximus/github-action-composer-php-versions-in-range@v2.1.0")
   package_utils_conductor["conductor.yaml"] --> package_utils_a1("actions/checkout@v7.0.1")
   package_utils_conductor["conductor.yaml"] --> package_utils_a2("packagist/conductor-github-action@1.7.0")
-  package_utils_conductor["conductor.yaml"] --> package_utils_a3("shivammathur/setup-php@2.37.2")
+  package_utils_conductor["conductor.yaml"] --> package_utils_a3("shivammathur/setup-php@2.40.0")
   package_utils_package_utils["package-utils.yaml"] --> package_utils_conductor["conductor.yaml"]
   linkStyle 4 stroke:#22c55e,stroke-width:2px
   linkStyle 0,1,2,3 stroke:#2563eb,stroke-width:2px
   click package_utils_a0 "https://github.com/WyriHaximus/github-action-composer-php-versions-in-range/releases/tag/v2.1.0" _blank
   click package_utils_a1 "https://github.com/actions/checkout/releases/tag/v7.0.1" _blank
   click package_utils_a2 "https://github.com/packagist/conductor-github-action/releases/tag/1.7.0" _blank
-  click package_utils_a3 "https://github.com/shivammathur/setup-php/releases/tag/2.37.2" _blank
+  click package_utils_a3 "https://github.com/shivammathur/setup-php/releases/tag/2.40.0" _blank
   click package_utils_conductor "https://github.com/WyriHaximus/github-workflows/blob/main/.github/workflows/conductor.yaml" _blank
   click package_utils_package_utils "https://github.com/WyriHaximus/github-workflows/blob/main/.github/workflows/package-utils.yaml" _blank
 ```
@@ -599,7 +599,7 @@ flowchart TB
   project_ci["ci.yaml"] --> project_a1("actions/checkout@v7.0.1")
   project_ci["ci.yaml"] --> project_a2("actions/github-script@v9.0.0")
   project_ci["ci.yaml"] --> project_a3("ramsey/composer-install@4.0.0")
-  project_ci["ci.yaml"] --> project_a4("shivammathur/setup-php@2.37.2")
+  project_ci["ci.yaml"] --> project_a4("shivammathur/setup-php@2.40.0")
   project_markdown_check_links["markdown-check-links.yaml"] --> project_a1("actions/checkout@v7.0.1")
   project_markdown_check_links["markdown-check-links.yaml"] --> project_a5("umbrelladocs/action-linkspector@v1.5.5")
   project_oci_build_single["oci-build-single.yaml"] --> project_a1("actions/checkout@v7.0.1")
@@ -627,7 +627,7 @@ flowchart TB
   click project_a1 "https://github.com/actions/checkout/releases/tag/v7.0.1" _blank
   click project_a2 "https://github.com/actions/github-script/releases/tag/v9.0.0" _blank
   click project_a3 "https://github.com/ramsey/composer-install/releases/tag/4.0.0" _blank
-  click project_a4 "https://github.com/shivammathur/setup-php/releases/tag/2.37.2" _blank
+  click project_a4 "https://github.com/shivammathur/setup-php/releases/tag/2.40.0" _blank
   click project_a5 "https://github.com/umbrelladocs/action-linkspector/releases/tag/v1.5.5" _blank
   click project_a6 "https://github.com/docker/login-action/releases/tag/v4.6.0" _blank
   click project_a7 "https://github.com/docker/setup-buildx-action/releases/tag/v4.4.1" _blank
@@ -919,7 +919,7 @@ flowchart TB
   project_utils_conductor["conductor.yaml"] --> project_utils_a1("WyriHaximus/github-action-composer-php-versions-in-range@v2.1.0")
   project_utils_conductor["conductor.yaml"] --> project_utils_a2("actions/checkout@v7.0.1")
   project_utils_conductor["conductor.yaml"] --> project_utils_a3("packagist/conductor-github-action@1.7.0")
-  project_utils_conductor["conductor.yaml"] --> project_utils_a4("shivammathur/setup-php@2.37.2")
+  project_utils_conductor["conductor.yaml"] --> project_utils_a4("shivammathur/setup-php@2.40.0")
   project_utils_project_utils["project-utils.yaml"] --> project_utils_ci_artifacts_cleanup["ci-artifacts-cleanup.yaml"]
   project_utils_project_utils["project-utils.yaml"] --> project_utils_conductor["conductor.yaml"]
   project_utils_project_utils["project-utils.yaml"] --> project_utils_ghcr_cleanup["ghcr-cleanup.yaml"]
@@ -928,7 +928,7 @@ flowchart TB
   click project_utils_a1 "https://github.com/WyriHaximus/github-action-composer-php-versions-in-range/releases/tag/v2.1.0" _blank
   click project_utils_a2 "https://github.com/actions/checkout/releases/tag/v7.0.1" _blank
   click project_utils_a3 "https://github.com/packagist/conductor-github-action/releases/tag/1.7.0" _blank
-  click project_utils_a4 "https://github.com/shivammathur/setup-php/releases/tag/2.37.2" _blank
+  click project_utils_a4 "https://github.com/shivammathur/setup-php/releases/tag/2.40.0" _blank
   click project_utils_ci_artifacts_cleanup "https://github.com/WyriHaximus/github-workflows/blob/main/.github/workflows/ci-artifacts-cleanup.yaml" _blank
   click project_utils_conductor "https://github.com/WyriHaximus/github-workflows/blob/main/.github/workflows/conductor.yaml" _blank
   click project_utils_ghcr_cleanup "https://github.com/WyriHaximus/github-workflows/blob/main/.github/workflows/ghcr-cleanup.yaml" _blank
