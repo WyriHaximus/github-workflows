@@ -65,4 +65,8 @@ runs:
         if [ -n "${{ inputs.awsEndpointUrl }}" ]; then
           endpoint_args=(--endpoint-url "${{ inputs.awsEndpointUrl }}")
         fi
-        aws s3 cp "${{ inputs.path }}" "s3://${{ inputs.s3Bucket }}/${{ inputs.s3KeyPrefix }}/" --recursive "${endpoint_args[@]}"
+        if [ -d "${{ inputs.path }}" ]; then
+          aws s3 cp "${{ inputs.path }}" "s3://${{ inputs.s3Bucket }}/${{ inputs.s3KeyPrefix }}/" --recursive "${endpoint_args[@]}"
+        else
+          aws s3 cp "${{ inputs.path }}" "s3://${{ inputs.s3Bucket }}/${{ inputs.s3KeyPrefix }}/$(basename "${{ inputs.path }}")" "${endpoint_args[@]}"
+        fi

@@ -735,24 +735,24 @@ flowchart TB
   project_release_management_oci_retag["oci-retag.yaml"] --> project_release_management_a15("int128/wait-for-docker-image-action@v1.31.0")
   project_release_management_oci_retag["oci-retag.yaml"] --> project_release_management_a16("nick-invision/retry@v4.0.0")
   project_release_management_oci_retag["oci-retag.yaml"] --> project_release_management_a17("wyrihaximus/github-action-oci-image-supported-platforms@v1.0.0")
+  project_release_management_project_craft_release_cdn_build_commands["project-craft-release-cdn-build-commands.yaml"] --> project_release_management_a7("$/.github/actions/ci-artifacts-upload")
   project_release_management_project_craft_release_cdn_build_commands["project-craft-release-cdn-build-commands.yaml"] --> project_release_management_a2("actions/checkout@v7.0.1")
-  project_release_management_project_craft_release_cdn_build_commands["project-craft-release-cdn-build-commands.yaml"] --> project_release_management_a18("actions/upload-artifact@v7.0.2")
-  project_release_management_project_craft_release_serverless["project-craft-release-serverless.yaml"] --> project_release_management_a19("WyriHaximus/github-action-composer-php-versions-in-range@v2.1.0")
+  project_release_management_project_craft_release_serverless["project-craft-release-serverless.yaml"] --> project_release_management_a18("WyriHaximus/github-action-composer-php-versions-in-range@v2.1.0")
   project_release_management_project_craft_release_serverless["project-craft-release-serverless.yaml"] --> project_release_management_a2("actions/checkout@v7.0.1")
-  project_release_management_project_craft_release_serverless["project-craft-release-serverless.yaml"] --> project_release_management_a20("ramsey/composer-install@4.0.0")
+  project_release_management_project_craft_release_serverless["project-craft-release-serverless.yaml"] --> project_release_management_a19("ramsey/composer-install@4.0.0")
+  project_release_management_project_craft_release_static["project-craft-release-static.yaml"] --> project_release_management_a7("$/.github/actions/ci-artifacts-upload")
   project_release_management_project_craft_release_static["project-craft-release-static.yaml"] --> project_release_management_a2("actions/checkout@v7.0.1")
-  project_release_management_project_craft_release_static["project-craft-release-static.yaml"] --> project_release_management_a18("actions/upload-artifact@v7.0.2")
   project_release_management_project_set_milestone_on_pr["project-set-milestone-on-pr.yaml"] --> project_release_management_a9("WyriHaximus/github-action-get-previous-tag@v2.1.0")
-  project_release_management_project_set_milestone_on_pr["project-set-milestone-on-pr.yaml"] --> project_release_management_a21("WyriHaximus/github-action-next-release-version@v1.1.0")
+  project_release_management_project_set_milestone_on_pr["project-set-milestone-on-pr.yaml"] --> project_release_management_a20("WyriHaximus/github-action-next-release-version@v1.1.0")
   project_release_management_project_set_milestone_on_pr["project-set-milestone-on-pr.yaml"] --> project_release_management_a2("actions/checkout@v7.0.1")
-  project_release_management_required_labels["required-labels.yaml"] --> project_release_management_a22("mheap/github-action-required-labels@v5.6.0")
-  project_release_management_s3_upload["s3-upload.yaml"] --> project_release_management_a23("actions/download-artifact@v8.0.2")
-  project_release_management_s3_upload["s3-upload.yaml"] --> project_release_management_a24("aws-actions/configure-aws-credentials@v6.3.0")
-  project_release_management_set_milestone_on_pr["set-milestone-on-pr.yaml"] --> project_release_management_a25("WyriHaximus/github-action-create-milestone@v1.2.0")
-  project_release_management_set_milestone_on_pr["set-milestone-on-pr.yaml"] --> project_release_management_a26("dcarbone/install-jq-action@v4.0.1")
+  project_release_management_required_labels["required-labels.yaml"] --> project_release_management_a21("mheap/github-action-required-labels@v5.6.0")
+  project_release_management_s3_upload["s3-upload.yaml"] --> project_release_management_a8("$/.github/actions/ci-artifacts-download")
+  project_release_management_s3_upload["s3-upload.yaml"] --> project_release_management_a22("aws-actions/configure-aws-credentials@v6.3.0")
+  project_release_management_set_milestone_on_pr["set-milestone-on-pr.yaml"] --> project_release_management_a23("WyriHaximus/github-action-create-milestone@v1.2.0")
+  project_release_management_set_milestone_on_pr["set-milestone-on-pr.yaml"] --> project_release_management_a24("dcarbone/install-jq-action@v4.0.1")
   project_release_management_terraform_apply["terraform-apply.yaml"] --> project_release_management_a2("actions/checkout@v7.0.1")
   project_release_management_terraform_diff["terraform-diff.yaml"] --> project_release_management_a2("actions/checkout@v7.0.1")
-  project_release_management_terraform_diff["terraform-diff.yaml"] --> project_release_management_a27("actions/github-script@v9.0.0")
+  project_release_management_terraform_diff["terraform-diff.yaml"] --> project_release_management_a25("actions/github-script@v9.0.0")
   project_release_management_terraform_diff["terraform-diff.yaml"] --> project_release_management_a10("marocchino/sticky-pull-request-comment@v3.0.5")
   project_release_management_diff["diff.yaml"] --> project_release_management_composer_diff["composer-diff.yaml"]
   project_release_management_diff["diff.yaml"] --> project_release_management_helm_diff["helm-diff.yaml"]
@@ -791,17 +791,15 @@ flowchart TB
   click project_release_management_a15 "https://github.com/int128/wait-for-docker-image-action/releases/tag/v1.31.0" _blank
   click project_release_management_a16 "https://github.com/nick-invision/retry/releases/tag/v4.0.0" _blank
   click project_release_management_a17 "https://github.com/wyrihaximus/github-action-oci-image-supported-platforms/releases/tag/v1.0.0" _blank
-  click project_release_management_a18 "https://github.com/actions/upload-artifact/releases/tag/v7.0.2" _blank
-  click project_release_management_a19 "https://github.com/WyriHaximus/github-action-composer-php-versions-in-range/releases/tag/v2.1.0" _blank
+  click project_release_management_a18 "https://github.com/WyriHaximus/github-action-composer-php-versions-in-range/releases/tag/v2.1.0" _blank
+  click project_release_management_a19 "https://github.com/ramsey/composer-install/releases/tag/4.0.0" _blank
   click project_release_management_a2 "https://github.com/actions/checkout/releases/tag/v7.0.1" _blank
-  click project_release_management_a20 "https://github.com/ramsey/composer-install/releases/tag/4.0.0" _blank
-  click project_release_management_a21 "https://github.com/WyriHaximus/github-action-next-release-version/releases/tag/v1.1.0" _blank
-  click project_release_management_a22 "https://github.com/mheap/github-action-required-labels/releases/tag/v5.6.0" _blank
-  click project_release_management_a23 "https://github.com/actions/download-artifact/releases/tag/v8.0.2" _blank
-  click project_release_management_a24 "https://github.com/aws-actions/configure-aws-credentials/releases/tag/v6.3.0" _blank
-  click project_release_management_a25 "https://github.com/WyriHaximus/github-action-create-milestone/releases/tag/v1.2.0" _blank
-  click project_release_management_a26 "https://github.com/dcarbone/install-jq-action/releases/tag/v4.0.1" _blank
-  click project_release_management_a27 "https://github.com/actions/github-script/releases/tag/v9.0.0" _blank
+  click project_release_management_a20 "https://github.com/WyriHaximus/github-action-next-release-version/releases/tag/v1.1.0" _blank
+  click project_release_management_a21 "https://github.com/mheap/github-action-required-labels/releases/tag/v5.6.0" _blank
+  click project_release_management_a22 "https://github.com/aws-actions/configure-aws-credentials/releases/tag/v6.3.0" _blank
+  click project_release_management_a23 "https://github.com/WyriHaximus/github-action-create-milestone/releases/tag/v1.2.0" _blank
+  click project_release_management_a24 "https://github.com/dcarbone/install-jq-action/releases/tag/v4.0.1" _blank
+  click project_release_management_a25 "https://github.com/actions/github-script/releases/tag/v9.0.0" _blank
   click project_release_management_a3 "https://github.com/ad-m/github-push-action/releases/tag/v1.3.0" _blank
   click project_release_management_a4 "https://github.com/dawidd6/action-delete-branch/releases/tag/v3.1.0" _blank
   click project_release_management_a5 "https://github.com/haya14busa/action-update-semver/releases/tag/v1.5.1" _blank

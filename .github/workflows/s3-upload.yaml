@@ -45,7 +45,32 @@ on:
       cdnAwsCloudFrontDistributionIDSecret:
         description: The secret name that holds the AWS cloudfront distribution id
         default: "CDN_HOSTED_DISTRIBUTION_ID"
-        required: true
+        required: false
+        type: string
+      artifactBackend:
+        description: "Where to stage cross-job CI artifacts: github or s3"
+        default: "github"
+        required: false
+        type: string
+      ciArtifactsS3BucketSecret:
+        default: "CI_ARTIFACTS_S3_BUCKET"
+        required: false
+        type: string
+      ciArtifactsAwsAccessKeyIDSecret:
+        default: "CI_ARTIFACTS_AWS_KEY"
+        required: false
+        type: string
+      ciArtifactsAwsSecretAccessKeySecret:
+        default: "CI_ARTIFACTS_AWS_SECRET"
+        required: false
+        type: string
+      ciArtifactsAwsRegionSecret:
+        default: "CI_ARTIFACTS_S3_REGION"
+        required: false
+        type: string
+      ciArtifactsAwsEndpointUrlSecret:
+        default: "CI_ARTIFACTS_S3_ENDPOINT"
+        required: false
         type: string
 jobs:
   static-cdn-hosted-deploy-aws:
@@ -55,10 +80,18 @@ jobs:
       awsEndpointUrlSecret: ${{ secrets[inputs.awsEndpointUrlSecret] }}
       cdnAwsCloudFrontDistributionIDSecret: ${{ secrets[inputs.cdnAwsCloudFrontDistributionIDSecret] }}
     steps:
-      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+      - name: Download build artifact
+        uses: $/.github/actions/ci-artifacts-download
         with:
-          name: ${{ inputs.distBall }}
-          path: ${{ inputs.workingDirectory }}${{ inputs.distBall }}-artifact
+          backend: ${{ inputs.artifactBackend }}
+          artifactName: ${{ inputs.distBall }}
+          downloadPath: ${{ inputs.workingDirectory }}${{ inputs.distBall }}-artifact
+          s3Bucket: ${{ secrets[inputs.ciArtifactsS3BucketSecret] }}
+          s3RunPrefix: ${{ github.run_id }}/${{ github.run_attempt }}/${{ inputs.distBall }}
+          awsAccessKeyId: ${{ secrets[inputs.ciArtifactsAwsAccessKeyIDSecret] }}
+          awsSecretAccessKey: ${{ secrets[inputs.ciArtifactsAwsSecretAccessKeySecret] }}
+          awsRegion: ${{ secrets[inputs.ciArtifactsAwsRegionSecret] }}
+          awsEndpointUrl: ${{ secrets[inputs.ciArtifactsAwsEndpointUrlSecret] }}
       - name: Extract build output
         run: |
           mkdir -p "${{ inputs.distBall }}"
@@ -90,7 +123,7 @@ jobs:
         if: env.awsEndpointUrlSecret != ''
         run: aws s3 cp ${{ inputs.workingDirectory }}${{ inputs.distBall }} s3://${{ secrets[inputs.cdnAwsS3BucketSecret] }} --recursive --acl=public-read --exclude="*" --include "*.html" --cache-control max-age=3200,no-cache,no-store,must-revalidate --endpoint-url ${{ secrets[inputs.awsEndpointUrlSecret] }}
       - name: Invalidate Cloudfront
-        if: ${{ env.cdnAwsCloudFrontDistributionIDSecret != '' }}
+        if: ${{ env.cdnAwsCloudFrontDistributionIDSecret != '' && env.awsEndpointUrlSecret == '' }}
         run: aws cloudfront create-invalidation --distribution-id=${{ secrets[inputs.cdnAwsCloudFrontDistributionIDSecret] }} --paths '/*'
       - name: Clean up AWS CLI credentials
         if: ${{ env.awsEndpointUrlSecret != '' || failure() }}

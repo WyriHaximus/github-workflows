@@ -339,7 +339,13 @@ jobs:
       awsEndpointUrlSecret: ${{ inputs.awsEndpointUrlSecret }}
       cdnAwsS3BucketSecret: ${{ inputs.cdnAwsS3BucketSecret }}
       cdnAwsCloudFrontDistributionIDSecret: ${{ inputs.cdnAwsCloudFrontDistributionIDSecret }}
+      artifactBackend: ${{ inputs.artifactBackend }}
       artifactRetentionDays: ${{ inputs.artifactRetentionDays }}
+      ciArtifactsS3BucketSecret: ${{ inputs.ciArtifactsS3BucketSecret }}
+      ciArtifactsAwsAccessKeyIDSecret: ${{ inputs.ciArtifactsAwsAccessKeyIDSecret }}
+      ciArtifactsAwsSecretAccessKeySecret: ${{ inputs.ciArtifactsAwsSecretAccessKeySecret }}
+      ciArtifactsAwsRegionSecret: ${{ inputs.ciArtifactsAwsRegionSecret }}
+      ciArtifactsAwsEndpointUrlSecret: ${{ inputs.ciArtifactsAwsEndpointUrlSecret }}
   deploy-release-serverless:
     name: "Deploy Release: Serverless"
     needs:
@@ -373,4 +379,10 @@ jobs:
       awsEndpointUrlSecret: ${{ inputs.awsEndpointUrlSecret }}
       cdnAwsS3BucketSecret: ${{ inputs.cdnAwsS3BucketSecret }}
       cdnAwsCloudFrontDistributionIDSecret: ${{ inputs.cdnAwsCloudFrontDistributionIDSecret }}
+      artifactBackend: ${{ inputs.artifactBackend }}
       artifactRetentionDays: ${{ inputs.artifactRetentionDays }}
+      ciArtifactsS3BucketSecret: ${{ inputs.ciArtifactsS3BucketSecret }}
+      ciArtifactsAwsAccessKeyIDSecret: ${{ inputs.ciArtifactsAwsAccessKeyIDSecret }}
+      ciArtifactsAwsSecretAccessKeySecret: ${{ inputs.ciArtifactsAwsSecretAccessKeySecret }}
+      ciArtifactsAwsRegionSecret: ${{ inputs.ciArtifactsAwsRegionSecret }}
+      ciArtifactsAwsEndpointUrlSecret: ${{ inputs.ciArtifactsAwsEndpointUrlSecret }}
