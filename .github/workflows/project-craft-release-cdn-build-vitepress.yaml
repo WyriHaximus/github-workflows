@@ -27,11 +27,36 @@ on:
         default: "milestone-dist"
         required: true
         type: string
+      artifactBackend:
+        description: "Where to stage cross-job CI artifacts: github or s3"
+        default: "github"
+        required: false
+        type: string
       artifactRetentionDays:
         description: Number of days to retain uploaded artifacts
         default: 1
         required: false
         type: number
+      ciArtifactsS3BucketSecret:
+        default: "CI_ARTIFACTS_S3_BUCKET"
+        required: false
+        type: string
+      ciArtifactsAwsAccessKeyIDSecret:
+        default: "CI_ARTIFACTS_AWS_KEY"
+        required: false
+        type: string
+      ciArtifactsAwsSecretAccessKeySecret:
+        default: "CI_ARTIFACTS_AWS_SECRET"
+        required: false
+        type: string
+      ciArtifactsAwsRegionSecret:
+        default: "CI_ARTIFACTS_S3_REGION"
+        required: false
+        type: string
+      ciArtifactsAwsEndpointUrlSecret:
+        default: "CI_ARTIFACTS_S3_ENDPOINT"
+        required: false
+        type: string
 jobs:
   build-assets:
     name: Build Vitepress Assets
@@ -45,4 +70,10 @@ jobs:
         npm ci
         npm run docs:build ${{ inputs.vitePressDirectory }}
       commandsOutputPath: ${{ inputs.vitePressDirectory }}/.${{ inputs.applicationType }}/dist
+      artifactBackend: ${{ inputs.artifactBackend }}
       artifactRetentionDays: ${{ inputs.artifactRetentionDays }}
+      ciArtifactsS3BucketSecret: ${{ inputs.ciArtifactsS3BucketSecret }}
+      ciArtifactsAwsAccessKeyIDSecret: ${{ inputs.ciArtifactsAwsAccessKeyIDSecret }}
+      ciArtifactsAwsSecretAccessKeySecret: ${{ inputs.ciArtifactsAwsSecretAccessKeySecret }}
+      ciArtifactsAwsRegionSecret: ${{ inputs.ciArtifactsAwsRegionSecret }}
+      ciArtifactsAwsEndpointUrlSecret: ${{ inputs.ciArtifactsAwsEndpointUrlSecret }}

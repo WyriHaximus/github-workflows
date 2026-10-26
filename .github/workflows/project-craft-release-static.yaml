@@ -49,13 +49,38 @@ on:
       cdnAwsCloudFrontDistributionIDSecret:
         description: The secret name that holds the AWS cloudfront distribution id
         default: "CDN_HOSTED_DISTRIBUTION_ID"
-        required: true
+        required: false
+        type: string
+      artifactBackend:
+        description: "Where to stage cross-job CI artifacts: github or s3"
+        default: "github"
+        required: false
         type: string
       artifactRetentionDays:
         description: Number of days to retain uploaded artifacts
         default: 1
         required: false
         type: number
+      ciArtifactsS3BucketSecret:
+        default: "CI_ARTIFACTS_S3_BUCKET"
+        required: false
+        type: string
+      ciArtifactsAwsAccessKeyIDSecret:
+        default: "CI_ARTIFACTS_AWS_KEY"
+        required: false
+        type: string
+      ciArtifactsAwsSecretAccessKeySecret:
+        default: "CI_ARTIFACTS_AWS_SECRET"
+        required: false
+        type: string
+      ciArtifactsAwsRegionSecret:
+        default: "CI_ARTIFACTS_S3_REGION"
+        required: false
+        type: string
+      ciArtifactsAwsEndpointUrlSecret:
+        default: "CI_ARTIFACTS_S3_ENDPOINT"
+        required: false
+        type: string
 jobs:
   build-assets:
     name: Zip up static assets for upload
@@ -73,11 +98,19 @@ jobs:
       - name: Archive static assets
         run: tar -czf "${{ inputs.milestone }}-dist.tar.gz" -C "${{ inputs.staticFilesPath }}" .
         working-directory: ${{ inputs.workingDirectory }}
-      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+      - name: Upload build artifact
+        uses: $/.github/actions/ci-artifacts-upload
         with:
-          name: ${{ inputs.milestone }}-dist
+          backend: ${{ inputs.artifactBackend }}
+          artifactName: ${{ inputs.milestone }}-dist
           path: ${{ inputs.workingDirectory }}${{ inputs.milestone }}-dist.tar.gz
-          retention-days: ${{ inputs.artifactRetentionDays }}
+          retentionDays: ${{ inputs.artifactRetentionDays }}
+          s3Bucket: ${{ secrets[inputs.ciArtifactsS3BucketSecret] }}
+          s3KeyPrefix: ${{ github.run_id }}/${{ github.run_attempt }}/${{ inputs.milestone }}-dist
+          awsAccessKeyId: ${{ secrets[inputs.ciArtifactsAwsAccessKeyIDSecret] }}
+          awsSecretAccessKey: ${{ secrets[inputs.ciArtifactsAwsSecretAccessKeySecret] }}
+          awsRegion: ${{ secrets[inputs.ciArtifactsAwsRegionSecret] }}
+          awsEndpointUrl: ${{ secrets[inputs.ciArtifactsAwsEndpointUrlSecret] }}
   cdn-hosted-deploy:
     name: Deploy assets to CDN and invalidate caches
     needs:
@@ -94,3 +127,9 @@ jobs:
       awsEndpointUrlSecret: ${{ inputs.awsEndpointUrlSecret }}
       cdnAwsS3BucketSecret: ${{ inputs.cdnAwsS3BucketSecret }}
       cdnAwsCloudFrontDistributionIDSecret: ${{ inputs.cdnAwsCloudFrontDistributionIDSecret }}
+      artifactBackend: ${{ inputs.artifactBackend }}
+      ciArtifactsS3BucketSecret: ${{ inputs.ciArtifactsS3BucketSecret }}
+      ciArtifactsAwsAccessKeyIDSecret: ${{ inputs.ciArtifactsAwsAccessKeyIDSecret }}
+      ciArtifactsAwsSecretAccessKeySecret: ${{ inputs.ciArtifactsAwsSecretAccessKeySecret }}
+      ciArtifactsAwsRegionSecret: ${{ inputs.ciArtifactsAwsRegionSecret }}
+      ciArtifactsAwsEndpointUrlSecret: ${{ inputs.ciArtifactsAwsEndpointUrlSecret }}
