@@ -435,7 +435,7 @@ flowchart TB
   package_release_management_craft_release["craft-release.yaml"] --> package_release_management_a3("ad-m/github-push-action@v1.3.0")
   package_release_management_craft_release["craft-release.yaml"] --> package_release_management_a4("dawidd6/action-delete-branch@v3.1.0")
   package_release_management_craft_release["craft-release.yaml"] --> package_release_management_a5("haya14busa/action-update-semver@v1.5.1")
-  package_release_management_craft_release["craft-release.yaml"] --> package_release_management_a6("softprops/action-gh-release@v3.0.3")
+  package_release_management_craft_release["craft-release.yaml"] --> package_release_management_a6("softprops/action-gh-release@v3.0.4")
   package_release_management_helm_dependencies["helm-dependencies.yaml"] --> package_release_management_a2("actions/checkout@v7.0.1")
   package_release_management_helm_diff["helm-diff.yaml"] --> package_release_management_a7("$/.github/actions/ci-artifacts-download")
   package_release_management_helm_diff["helm-diff.yaml"] --> package_release_management_a8("$/.github/actions/ci-artifacts-upload")
@@ -484,7 +484,7 @@ flowchart TB
   click package_release_management_a3 "https://github.com/ad-m/github-push-action/releases/tag/v1.3.0" _blank
   click package_release_management_a4 "https://github.com/dawidd6/action-delete-branch/releases/tag/v3.1.0" _blank
   click package_release_management_a5 "https://github.com/haya14busa/action-update-semver/releases/tag/v1.5.1" _blank
-  click package_release_management_a6 "https://github.com/softprops/action-gh-release/releases/tag/v3.0.3" _blank
+  click package_release_management_a6 "https://github.com/softprops/action-gh-release/releases/tag/v3.0.4" _blank
   click package_release_management_a9 "https://github.com/WyriHaximus/github-action-get-previous-tag/releases/tag/v2.1.0" _blank
   click package_release_management_composer_diff "https://github.com/WyriHaximus/github-workflows/blob/main/.github/workflows/composer-diff.yaml" _blank
   click package_release_management_craft_release "https://github.com/WyriHaximus/github-workflows/blob/main/.github/workflows/craft-release.yaml" _blank
@@ -717,7 +717,7 @@ flowchart TB
   project_release_management_craft_release["craft-release.yaml"] --> project_release_management_a3("ad-m/github-push-action@v1.3.0")
   project_release_management_craft_release["craft-release.yaml"] --> project_release_management_a4("dawidd6/action-delete-branch@v3.1.0")
   project_release_management_craft_release["craft-release.yaml"] --> project_release_management_a5("haya14busa/action-update-semver@v1.5.1")
-  project_release_management_craft_release["craft-release.yaml"] --> project_release_management_a6("softprops/action-gh-release@v3.0.3")
+  project_release_management_craft_release["craft-release.yaml"] --> project_release_management_a6("softprops/action-gh-release@v3.0.4")
   project_release_management_helm_dependencies["helm-dependencies.yaml"] --> project_release_management_a2("actions/checkout@v7.0.1")
   project_release_management_helm_deploy["helm-deploy.yaml"] --> project_release_management_a7("$/.github/actions/ci-artifacts-upload")
   project_release_management_helm_deploy["helm-deploy.yaml"] --> project_release_management_a2("actions/checkout@v7.0.1")
@@ -803,7 +803,7 @@ flowchart TB
   click project_release_management_a3 "https://github.com/ad-m/github-push-action/releases/tag/v1.3.0" _blank
   click project_release_management_a4 "https://github.com/dawidd6/action-delete-branch/releases/tag/v3.1.0" _blank
   click project_release_management_a5 "https://github.com/haya14busa/action-update-semver/releases/tag/v1.5.1" _blank
-  click project_release_management_a6 "https://github.com/softprops/action-gh-release/releases/tag/v3.0.3" _blank
+  click project_release_management_a6 "https://github.com/softprops/action-gh-release/releases/tag/v3.0.4" _blank
   click project_release_management_a9 "https://github.com/WyriHaximus/github-action-get-previous-tag/releases/tag/v2.1.0" _blank
   click project_release_management_composer_diff "https://github.com/WyriHaximus/github-workflows/blob/main/.github/workflows/composer-diff.yaml" _blank
   click project_release_management_craft_release "https://github.com/WyriHaximus/github-workflows/blob/main/.github/workflows/craft-release.yaml" _blank
