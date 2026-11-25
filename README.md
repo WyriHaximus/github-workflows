@@ -351,7 +351,7 @@ jobs:
 
 ```mermaid
 flowchart TB
-  package_ci["ci.yaml"] --> package_a0("WyriHaximus/github-action-composer-php-versions-in-range@v2.1.0")
+  package_ci["ci.yaml"] --> package_a0("WyriHaximus/github-action-composer-php-versions-in-range@v2.2.0")
   package_ci["ci.yaml"] --> package_a1("actions/checkout@v7.0.1")
   package_ci["ci.yaml"] --> package_a2("actions/github-script@v9.0.0")
   package_ci["ci.yaml"] --> package_a3("ramsey/composer-install@4.0.0")
@@ -364,7 +364,7 @@ flowchart TB
   package_package["package.yaml"] --> package_markdown_check_links["markdown-check-links.yaml"]
   linkStyle 8,9,10 stroke:#22c55e,stroke-width:2px
   linkStyle 0,1,2,3,4,5,6,7 stroke:#2563eb,stroke-width:2px
-  click package_a0 "https://github.com/WyriHaximus/github-action-composer-php-versions-in-range/releases/tag/v2.1.0" _blank
+  click package_a0 "https://github.com/WyriHaximus/github-action-composer-php-versions-in-range/releases/tag/v2.2.0" _blank
   click package_a1 "https://github.com/actions/checkout/releases/tag/v7.0.1" _blank
   click package_a2 "https://github.com/actions/github-script/releases/tag/v9.0.0" _blank
   click package_a3 "https://github.com/ramsey/composer-install/releases/tag/4.0.0" _blank
@@ -445,7 +445,7 @@ flowchart TB
   package_release_management_helm_exec["helm-exec.yaml"] --> package_release_management_a7("$/.github/actions/ci-artifacts-download")
   package_release_management_helm_exec["helm-exec.yaml"] --> package_release_management_a8("$/.github/actions/ci-artifacts-upload")
   package_release_management_helm_exec["helm-exec.yaml"] --> package_release_management_a11("WyriHaximus/github-action-helm3@v4.0.2")
-  package_release_management_package_set_milestone_on_pr["package-set-milestone-on-pr.yaml"] --> package_release_management_a12("WyriHaximus/github-action-composer-php-versions-in-range@v2.1.0")
+  package_release_management_package_set_milestone_on_pr["package-set-milestone-on-pr.yaml"] --> package_release_management_a12("WyriHaximus/github-action-composer-php-versions-in-range@v2.2.0")
   package_release_management_package_set_milestone_on_pr["package-set-milestone-on-pr.yaml"] --> package_release_management_a9("WyriHaximus/github-action-get-previous-tag@v2.1.0")
   package_release_management_package_set_milestone_on_pr["package-set-milestone-on-pr.yaml"] --> package_release_management_a13("WyriHaximus/github-action-next-semvers@v1.2.1")
   package_release_management_package_set_milestone_on_pr["package-set-milestone-on-pr.yaml"] --> package_release_management_a2("actions/checkout@v7.0.1")
@@ -474,7 +474,7 @@ flowchart TB
   click package_release_management_a1 "https://github.com/WyriHaximus/github-action-jwage-changelog-generator/releases/tag/v1.4.0" _blank
   click package_release_management_a10 "https://github.com/marocchino/sticky-pull-request-comment/releases/tag/v3.0.5" _blank
   click package_release_management_a11 "https://github.com/WyriHaximus/github-action-helm3/releases/tag/v4.0.2" _blank
-  click package_release_management_a12 "https://github.com/WyriHaximus/github-action-composer-php-versions-in-range/releases/tag/v2.1.0" _blank
+  click package_release_management_a12 "https://github.com/WyriHaximus/github-action-composer-php-versions-in-range/releases/tag/v2.2.0" _blank
   click package_release_management_a13 "https://github.com/WyriHaximus/github-action-next-semvers/releases/tag/v1.2.1" _blank
   click package_release_management_a14 "https://github.com/dcarbone/install-jq-action/releases/tag/v4.0.1" _blank
   click package_release_management_a15 "https://github.com/mheap/github-action-required-labels/releases/tag/v5.6.0" _blank
@@ -538,14 +538,14 @@ jobs:
 
 ```mermaid
 flowchart TB
-  package_utils_conductor["conductor.yaml"] --> package_utils_a0("WyriHaximus/github-action-composer-php-versions-in-range@v2.1.0")
+  package_utils_conductor["conductor.yaml"] --> package_utils_a0("WyriHaximus/github-action-composer-php-versions-in-range@v2.2.0")
   package_utils_conductor["conductor.yaml"] --> package_utils_a1("actions/checkout@v7.0.1")
   package_utils_conductor["conductor.yaml"] --> package_utils_a2("packagist/conductor-github-action@1.7.0")
   package_utils_conductor["conductor.yaml"] --> package_utils_a3("shivammathur/setup-php@2.40.0")
   package_utils_package_utils["package-utils.yaml"] --> package_utils_conductor["conductor.yaml"]
   linkStyle 4 stroke:#22c55e,stroke-width:2px
   linkStyle 0,1,2,3 stroke:#2563eb,stroke-width:2px
-  click package_utils_a0 "https://github.com/WyriHaximus/github-action-composer-php-versions-in-range/releases/tag/v2.1.0" _blank
+  click package_utils_a0 "https://github.com/WyriHaximus/github-action-composer-php-versions-in-range/releases/tag/v2.2.0" _blank
   click package_utils_a1 "https://github.com/actions/checkout/releases/tag/v7.0.1" _blank
   click package_utils_a2 "https://github.com/packagist/conductor-github-action/releases/tag/1.7.0" _blank
   click package_utils_a3 "https://github.com/shivammathur/setup-php/releases/tag/2.40.0" _blank
@@ -595,7 +595,7 @@ jobs:
 
 ```mermaid
 flowchart TB
-  project_ci["ci.yaml"] --> project_a0("WyriHaximus/github-action-composer-php-versions-in-range@v2.1.0")
+  project_ci["ci.yaml"] --> project_a0("WyriHaximus/github-action-composer-php-versions-in-range@v2.2.0")
   project_ci["ci.yaml"] --> project_a1("actions/checkout@v7.0.1")
   project_ci["ci.yaml"] --> project_a2("actions/github-script@v9.0.0")
   project_ci["ci.yaml"] --> project_a3("ramsey/composer-install@4.0.0")
@@ -623,7 +623,7 @@ flowchart TB
   project_project["project.yaml"] --> project_oci_build_spread["oci-build-spread.yaml"]
   linkStyle 21,22,23,24,25 stroke:#22c55e,stroke-width:2px
   linkStyle 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20 stroke:#2563eb,stroke-width:2px
-  click project_a0 "https://github.com/WyriHaximus/github-action-composer-php-versions-in-range/releases/tag/v2.1.0" _blank
+  click project_a0 "https://github.com/WyriHaximus/github-action-composer-php-versions-in-range/releases/tag/v2.2.0" _blank
   click project_a1 "https://github.com/actions/checkout/releases/tag/v7.0.1" _blank
   click project_a2 "https://github.com/actions/github-script/releases/tag/v9.0.0" _blank
   click project_a3 "https://github.com/ramsey/composer-install/releases/tag/4.0.0" _blank
@@ -737,7 +737,7 @@ flowchart TB
   project_release_management_oci_retag["oci-retag.yaml"] --> project_release_management_a17("wyrihaximus/github-action-oci-image-supported-platforms@v1.0.0")
   project_release_management_project_craft_release_cdn_build_commands["project-craft-release-cdn-build-commands.yaml"] --> project_release_management_a7("$/.github/actions/ci-artifacts-upload")
   project_release_management_project_craft_release_cdn_build_commands["project-craft-release-cdn-build-commands.yaml"] --> project_release_management_a2("actions/checkout@v7.0.1")
-  project_release_management_project_craft_release_serverless["project-craft-release-serverless.yaml"] --> project_release_management_a18("WyriHaximus/github-action-composer-php-versions-in-range@v2.1.0")
+  project_release_management_project_craft_release_serverless["project-craft-release-serverless.yaml"] --> project_release_management_a18("WyriHaximus/github-action-composer-php-versions-in-range@v2.2.0")
   project_release_management_project_craft_release_serverless["project-craft-release-serverless.yaml"] --> project_release_management_a2("actions/checkout@v7.0.1")
   project_release_management_project_craft_release_serverless["project-craft-release-serverless.yaml"] --> project_release_management_a19("ramsey/composer-install@4.0.0")
   project_release_management_project_craft_release_static["project-craft-release-static.yaml"] --> project_release_management_a7("$/.github/actions/ci-artifacts-upload")
@@ -791,7 +791,7 @@ flowchart TB
   click project_release_management_a15 "https://github.com/int128/wait-for-docker-image-action/releases/tag/v1.32.0" _blank
   click project_release_management_a16 "https://github.com/nick-invision/retry/releases/tag/v4.0.0" _blank
   click project_release_management_a17 "https://github.com/wyrihaximus/github-action-oci-image-supported-platforms/releases/tag/v1.0.0" _blank
-  click project_release_management_a18 "https://github.com/WyriHaximus/github-action-composer-php-versions-in-range/releases/tag/v2.1.0" _blank
+  click project_release_management_a18 "https://github.com/WyriHaximus/github-action-composer-php-versions-in-range/releases/tag/v2.2.0" _blank
   click project_release_management_a19 "https://github.com/ramsey/composer-install/releases/tag/4.0.0" _blank
   click project_release_management_a2 "https://github.com/actions/checkout/releases/tag/v7.0.1" _blank
   click project_release_management_a20 "https://github.com/WyriHaximus/github-action-next-release-version/releases/tag/v1.1.0" _blank
@@ -914,7 +914,7 @@ jobs:
 ```mermaid
 flowchart TB
   project_utils_ci_artifacts_cleanup["ci-artifacts-cleanup.yaml"] --> project_utils_a0("$/.github/actions/ci-artifacts-aws-config")
-  project_utils_conductor["conductor.yaml"] --> project_utils_a1("WyriHaximus/github-action-composer-php-versions-in-range@v2.1.0")
+  project_utils_conductor["conductor.yaml"] --> project_utils_a1("WyriHaximus/github-action-composer-php-versions-in-range@v2.2.0")
   project_utils_conductor["conductor.yaml"] --> project_utils_a2("actions/checkout@v7.0.1")
   project_utils_conductor["conductor.yaml"] --> project_utils_a3("packagist/conductor-github-action@1.7.0")
   project_utils_conductor["conductor.yaml"] --> project_utils_a4("shivammathur/setup-php@2.40.0")
@@ -923,7 +923,7 @@ flowchart TB
   project_utils_project_utils["project-utils.yaml"] --> project_utils_ghcr_cleanup["ghcr-cleanup.yaml"]
   linkStyle 5,6,7 stroke:#22c55e,stroke-width:2px
   linkStyle 0,1,2,3,4 stroke:#2563eb,stroke-width:2px
-  click project_utils_a1 "https://github.com/WyriHaximus/github-action-composer-php-versions-in-range/releases/tag/v2.1.0" _blank
+  click project_utils_a1 "https://github.com/WyriHaximus/github-action-composer-php-versions-in-range/releases/tag/v2.2.0" _blank
   click project_utils_a2 "https://github.com/actions/checkout/releases/tag/v7.0.1" _blank
   click project_utils_a3 "https://github.com/packagist/conductor-github-action/releases/tag/1.7.0" _blank
   click project_utils_a4 "https://github.com/shivammathur/setup-php/releases/tag/2.40.0" _blank
