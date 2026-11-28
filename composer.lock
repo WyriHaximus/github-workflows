@@ -235,16 +235,16 @@
         },
         {
             "name": "symfony/yaml",
-            "version": "v8.1.12",
+            "version": "v8.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/yaml.git",
-                "reference": "deb300ddc3ef3eab0476569fd88d14e3b194881a"
+                "reference": "f73c6c770da98c69037cccfebc314cead3333599"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/yaml/zipball/deb300ddc3ef3eab0476569fd88d14e3b194881a",
-                "reference": "deb300ddc3ef3eab0476569fd88d14e3b194881a",
+                "url": "https://api.github.com/repos/symfony/yaml/zipball/f73c6c770da98c69037cccfebc314cead3333599",
+                "reference": "f73c6c770da98c69037cccfebc314cead3333599",
                 "shasum": ""
             },
             "require": {
@@ -252,10 +252,11 @@
                 "symfony/polyfill-ctype": "^1.8"
             },
             "conflict": {
-                "symfony/console": "<7.4"
+                "symfony/console": "<8.2"
             },
             "require-dev": {
-                "symfony/console": "^7.4|^8.0",
+                "opis/json-schema": "^2.6",
+                "symfony/console": "^8.2",
                 "yaml/yaml-test-suite": "*"
             },
             "bin": [
@@ -287,7 +288,7 @@
             "description": "Loads and dumps YAML files",
             "homepage": "https://symfony.com",
             "support": {
-                "source": "https://github.com/symfony/yaml/tree/v8.1.12"
+                "source": "https://github.com/symfony/yaml/tree/v8.2.0"
             },
             "funding": [
                 {
@@ -307,8 +308,8 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-11-16T12:51:10+00:00",
-            "published-time": "2026-11-25T09:28:53+00:00"
+            "time": "2026-11-27T13:28:56+00:00",
+            "published-time": "2026-11-28T12:11:52+00:00"
         },
         {
             "name": "twig/twig",
